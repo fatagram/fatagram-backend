@@ -25,6 +25,12 @@
     <ProjectReference Include="..\Fatagram.Application\Fatagram.Application.csproj" />
     <ProjectReference Include="..\Fatagram.Domain\Fatagram.Domain.csproj" />
     <ProjectReference Include="..\Fatagram.Infrastructure\Fatagram.Infrastructure.csproj" />
+    <ProjectReference Include="..\Fatagram.Shared\Fatagram.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\avatars\" />
+    <Folder Include="wwwroot\backgrounds\" />
   </ItemGroup>
 
 </Project>

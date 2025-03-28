@@ -22,7 +22,7 @@ namespace Fatagram.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Fatagram_API.Models.Account", b =>
+            modelBuilder.Entity("Fatagram.Domain.Models.Account", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,7 +30,7 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("date")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
@@ -39,11 +39,11 @@ namespace Fatagram.Infrastructure.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("password_hash");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("date")
                         .HasColumnName("updated_at");
 
                     b.Property<Guid>("UserId")
@@ -52,53 +52,50 @@ namespace Fatagram.Infrastructure.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Accounts");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("ce895895-ca82-4d94-a6a6-46754ad98ae3"),
-                            CreatedAt = new DateTime(2025, 3, 5, 16, 39, 8, 303, DateTimeKind.Utc).AddTicks(3521),
-                            IsActive = true,
-                            PasswordHash = "$2a$11$951kdmSudSKJ8jY8Z4dapO5LfsuKQ6jDAyRsEiShDeSmeTKsNYVtC",
-                            UpdatedAt = new DateTime(2025, 3, 5, 16, 39, 8, 95, DateTimeKind.Utc).AddTicks(7051),
-                            UserId = new Guid("62318dfc-a701-4351-9461-5bbeda795823"),
-                            Username = "phatngoc"
-                        });
+                    b.ToTable("accounts");
                 });
 
-            modelBuilder.Entity("Fatagram_API.Models.RefreshToken", b =>
+            modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
                 {
-                    b.Property<string>("Token")
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("token");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("account_id");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_date");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("date")
+                        .HasColumnName("created_at");
 
                     b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("date")
                         .HasColumnName("expiry_date");
 
-                    b.HasKey("Token");
+                    b.Property<Guid>("Token")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("token");
 
-                    b.ToTable("RefreshTokens");
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("refresh_tokens");
                 });
 
-            modelBuilder.Entity("Fatagram_API.Models.User", b =>
+            modelBuilder.Entity("Fatagram.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -109,67 +106,129 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("avatar");
 
+                    b.Property<string>("Background")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("background");
+
                     b.Property<string>("Bio")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("bio");
 
                     b.Property<DateTime?>("BirthDay")
-                        .HasColumnType("datetime2")
+                        .HasColumnType("date")
                         .HasColumnName("birth_day");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("email");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("first_name");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("full_name");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("varchar(10)")
                         .HasColumnName("phone");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("username");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("62318dfc-a701-4351-9461-5bbeda795823"),
-                            Bio = "FatPro Vip VCL",
-                            Email = "ngocphatc2710@gmail.com",
-                            FirstName = "Phat",
-                            FullName = "Ngoc Phat",
-                            LastName = "Ngoc"
-                        });
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasFilter("[username] IS NOT NULL");
+
+                    b.ToTable("users");
                 });
 
-            modelBuilder.Entity("Fatagram_API.Models.Account", b =>
+            modelBuilder.Entity("Fatagram.Domain.Models.UserPrivacy", b =>
                 {
-                    b.HasOne("Fatagram_API.Models.User", "User")
-                        .WithOne("Account")
-                        .HasForeignKey("Fatagram_API.Models.Account", "UserId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Field")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("field");
+
+                    b.Property<string>("PrivacyLevel")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("level");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_privacies");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.Account", b =>
+                {
+                    b.HasOne("Fatagram.Domain.Models.User", "User")
+                        .WithMany("Accounts")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Fatagram_API.Models.User", b =>
+            modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
                 {
+                    b.HasOne("Fatagram.Domain.Models.Account", "Account")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.UserPrivacy", b =>
+                {
+                    b.HasOne("Fatagram.Domain.Models.User", "User")
+                        .WithMany("Privacies")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.Account", b =>
+                {
+                    b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.User", b =>
+                {
+                    b.Navigation("Accounts");
+
+                    b.Navigation("Privacies");
                 });
 #pragma warning restore 612, 618
         }

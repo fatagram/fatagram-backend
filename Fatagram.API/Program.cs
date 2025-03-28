@@ -1,14 +1,6 @@
-using Fatagram.API.Authentication;
-using Fatagram.Application;
-using Fatagram.Application.Services;
-using Fatagram.Application.Services.Interfaces;
-using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories;
-using Fatagram.Infrastructure.Repositories.Interfaces;
-using Fatagram.Infrastructure.Repositories.MockDB;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Fatagram.Application.Common;
+using Fatagram.Application.Services.ImageService;
+using Fatagram.Application.Services.ImageService.Interface;
 
 namespace Fatagram.API
 {
@@ -25,35 +17,27 @@ namespace Fatagram.API
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
             
+
             // Dependency injection
+            builder.Services.AddHttpContextAccessor();
+
 
             // Scoped for services
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUserPrivacyService, UserPrivacyService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            builder.Services.AddScoped<IPrivacySettingsService, PrivacySettingsService>();
-            builder.Services.AddScoped<IOtherUserService, OtherUserService>();
+            builder.Services.AddScoped<IImageService, WwwrootImageService>();
+
+
+            builder.Services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+            builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             builder.Services.AddAutoMapper(typeof(Mapping));
-
-            // For MockDB
-            if (builder.Configuration.GetValue<bool>("UseMockDB"))
-            {
-                // Use singleton for MockDB because we want to keep the data
-                builder.Services.AddSingleton<IUserRepository, MUserRepository>();
-                builder.Services.AddSingleton<IAccountRepository, MAccountRepository>();
-                builder.Services.AddSingleton<IRefreshTokenRepository, MRefreshTokenRepository>();
-                builder.Services.AddSingleton<IPrivarySettingRepository, MPrivacySettingRepository>();
-
-            }
-            else
-            {
-                builder.Services.AddScoped<IUserRepository, UserRepository>();
-                builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-                builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-            }
 
 
             // Singleton
@@ -93,15 +77,17 @@ namespace Fatagram.API
             builder.Services.AddAuthentication("JwtAuthenticationScheme")
                 .AddScheme<AuthenticationSchemeOptions, JwtAuthenticationHandler>("JwtAuthenticationScheme", null);
 
+            var certPath = builder.Configuration["PfxPath"] ?? "";
+            var certPassword = "chaungocphat123";
 
             // Add authorization
             builder.WebHost.ConfigureKestrel(options =>
             {
                 options.ListenAnyIP(5000);
-                //options.ListenAnyIP(5001, listenOptions =>
-                //{
-                //    listenOptions.UseHttps();
-                //});
+                options.ListenAnyIP(5001, listenOptions =>
+                {
+                    listenOptions.UseHttps(certPath, certPassword);
+                });
             });
 
 
@@ -119,9 +105,9 @@ namespace Fatagram.API
             app.UseCors(_myAllowSpecificOrigins);
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+
             // Check access token
-
-
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

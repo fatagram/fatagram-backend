@@ -11,19 +11,29 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<UserPrivacy> UserPrivacies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Account)
-                .WithOne(a => a.User)
-                .HasForeignKey<Account>(a => a.UserId);
+            modelBuilder.Entity<Account>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Accounts)
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            var userId = Guid.NewGuid();
+            modelBuilder.Entity<UserPrivacy>()
+                .HasOne(up => up.User)
+                .WithMany(u => u.Privacies)
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.Account)
+                .WithMany(a => a.RefreshTokens)
+                .HasForeignKey(rt => rt.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

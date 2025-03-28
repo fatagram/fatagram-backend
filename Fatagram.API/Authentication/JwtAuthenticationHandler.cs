@@ -1,6 +1,7 @@
-﻿using Fatagram.Application.Services.Interfaces;
+﻿using Fatagram.Application.Services.JwtServices.Interface;
 using Fatagram.Application.Utils;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Text.Encodings.Web;
@@ -37,11 +38,11 @@ namespace Fatagram.API.Authentication
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Get token from header
-            if (!Request.Headers.ContainsKey("Authorization"))
+            if (!Request.Cookies.TryGetValue("accessToken", out var token) || string.IsNullOrWhiteSpace(token))
                 return Task.FromResult(AuthenticateResult.Fail("Missing Authorization Header"));
 
             // Get token from header
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "").Trim();
+            // var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "").Trim();
             Debug.WriteLine($"Token: {token}");
 
             try
@@ -50,7 +51,7 @@ namespace Fatagram.API.Authentication
                 if (!res.IsSuccess || res.Data == null)
                 {
                     Debug.WriteLine("Invalid token");
-                    return Task.FromResult(AuthenticateResult.Fail(ErrorCodes.TOKEN_INVALID));
+                    return Task.FromResult(AuthenticateResult.Fail(ErrorCodes.ACCESS_TOKEN_INVALID));
                 }
 
                 var ticket = new AuthenticationTicket(res.Data, "JwtCustomScheme");

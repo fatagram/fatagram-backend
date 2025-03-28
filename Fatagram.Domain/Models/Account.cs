@@ -5,37 +5,70 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fatagram.Domain.Models
 {
+    /// <summary>
+    /// Represents an account in the system.
+    /// </summary>
+    [Table("accounts")]
+    [Index(nameof(Username), IsUnique = true)]
     public class Account
     {
-        [Column("id")]
-        [Key]
+        /// <summary>
+        /// Gets or sets the unique identifier for the account.
+        /// </summary>
+        [Column("id", TypeName = "uniqueidentifier")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        [Column("username")]
+        /// <summary>
+        /// Gets or sets the username for the account.
+        /// </summary>
+        [Column("username", TypeName = "nvarchar(50)")]
         [Required]
         public string Username { get; set; } = string.Empty;
 
-        [Column("password_hash")]
+        /// <summary>
+        /// Gets or sets the password hash for the account.
+        /// </summary>
+        [Column("password_hash", TypeName = "varchar(100)")]
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
-        [Column("is_active")]
+        /// <summary>
+        /// Gets or sets a value indicating whether the account is active.
+        /// </summary>
+        [Column("is_active", TypeName = "bit")]
         [Required]
         public bool IsActive { get; set; } = true;
 
-        [Column("created_at")]
+        /// <summary>
+        /// Gets or sets the date and time when the account was created.
+        /// </summary>
+        [Column("created_at", TypeName = "date")]
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        /// <summary>
+        /// Gets or sets the date and time when the account was last updated.
+        /// </summary>
+        [Column("updated_at", TypeName = "date")]
         [Required]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        // 1 - 1 reltionship with User
 
-        [Column("user_id")]
+        /// <summary>
+        /// Gets or sets the unique identifier of the associated user.
+        /// </summary>
+        [Column("user_id", TypeName = "uniqueidentifier")]
         [Required]
         public Guid UserId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the associated user.
+        /// </summary>
         public User? User { get; set; }
+
+        /// <summary>
+        /// Gets or sets the refresh token for the account.
+        /// </summary>
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

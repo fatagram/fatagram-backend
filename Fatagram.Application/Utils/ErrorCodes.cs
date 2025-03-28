@@ -1,4 +1,6 @@
-﻿namespace Fatagram.Application.Utils
+﻿using System.Runtime.CompilerServices;
+
+namespace Fatagram.Application.Utils
 {
     /// <summary>
     /// Error codes
@@ -44,7 +46,7 @@
         /// <summary>
         /// Token invalid
         /// </summary>
-        public const string TOKEN_INVALID = "TOKEN_INVALID";
+        public const string ACCESS_TOKEN_INVALID = "TOKEN_INVALID";
 
         #endregion
 
@@ -131,6 +133,14 @@
         /// Login: Create user failed
         /// </summary>
         public const string WRONG_PASSWORD = "WRONG_PASSWORD";
+
+        /// <summary>
+        /// Invalid input
+        /// </summary>
+        public const string INVALID_INPUT = "INVALID_INPUT";
+
+
+        public const string EMAIL_EXISTED = "EMAIL_EXISTED";
 
         #endregion
 

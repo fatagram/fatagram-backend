@@ -6,20 +6,24 @@ namespace Fatagram.Domain.Models
     /// <summary>
     /// Refresh token model
     /// </summary>
+    [Table("refresh_tokens")]
     public class RefreshToken
     {
+        [Column("id", TypeName = "uniqueidentifier")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Token
         /// </summary>
-        [Column("token")]
-        [Key]
-        public string Token { get; set; } = string.Empty;
+        [Column("token", TypeName= "uniqueidentifier")]
+        [Required]
+        public Guid Token { get; set; }
 
         /// <summary>
         /// Account id
         /// </summary>
-        [Column("account_id")]
+        [Column("account_id", TypeName = "uniqueidentifier")]
         [Required]
         public Guid AccountId { get; set; }
 
@@ -27,7 +31,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Expiry date
         /// </summary>
-        [Column("expiry_date")]
+        [Column("expiry_date", TypeName = "date")]
         [Required]
         public DateTime ExpiryDate { get; set; }
 
@@ -35,8 +39,14 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Created at
         /// </summary>
-        [Column("created_at")]
+        [Column("created_at", TypeName = "date")]
         public DateTime CreatedAt { get; set; }
+
+
+        /// <summary>
+        /// Account
+        /// </summary>
+        public Account Account { get; set; } = null!;
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Net;
+using System.Text.Json.Serialization;
 
 namespace Fatagram.API.Utils
 {
@@ -12,7 +13,13 @@ namespace Fatagram.API.Utils
         /// Status code
         /// </summary>
         [JsonPropertyName("status")]
-        public string Status { get; set; }
+        public int Status { get; set; }
+
+        /// <summary>
+        /// Title
+        /// </summary>
+        [JsonPropertyName("title")]
+        public string Title { get; set; } = "Success";
 
         /// <summary>
         /// Data
@@ -20,13 +27,11 @@ namespace Fatagram.API.Utils
         [JsonPropertyName("data")]
         public T? Data { get; set; }
 
-
         /// <summary>
         /// Message
         /// </summary>
         [JsonPropertyName("message")]
         public string? Message { get; set; }
-
 
         /// <summary>
         /// Error
@@ -34,50 +39,84 @@ namespace Fatagram.API.Utils
         [JsonPropertyName("error")]
         public ApiError? Error { get; set; }
 
-
         // Constructor
-        public ApiResponse(string status, T? data, string? message)
+        public ApiResponse(int status, string title, T? data = default, ApiError? error = null, string? message = null)
         {
             Status = status;
+            Title = title;
             Data = data;
-            Message = message;
-            Error = null; // Không có lỗi
-        }
-
-        public ApiResponse(string status, T? data)
-        {
-            Status = status;
-            Data = data;
-            Error = null; // Không có lỗi
-        }
-
-
-        // Constructor
-        public ApiResponse(string status, ApiError error, string? message)
-        {
-            Status = status;
             Error = error;
             Message = message;
-            Data = default; // Không có dữ liệu
         }
 
-        // Constructor
-        public ApiResponse(string status, ApiError error)
-        {
-            Status = status;
-            Error = error;
-            Data = default; // Không có dữ liệus
-        }
+        /// <summary>
+        /// Suucess response
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static ApiResponse<T> Success(
+            string? title = null,
+            T? data = default,
+            string? message = null) 
+           => new ApiResponse<T>((int)HttpStatusCode.OK, title ?? "Success", data, null, message);
+        
+        /// <summary>
+        /// BadRequest response
+        /// </summary>
+        /// <param name="error"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static ApiResponse<T> BadRequest(
+            string? title = null,
+            T? data = default,
+            ApiError? error = null,
+            string? message = null)
+            => new ApiResponse<T>((int)HttpStatusCode.BadRequest, title ?? "Bad Request", data, error, message);
+        
+        /// <summary>
+        /// NotFound response
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="error"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static ApiResponse<T> NotFound(
+            string? title = null, 
+            T? data = default, 
+            ApiError? error = null, 
+            string? message = null)
+            => new ApiResponse<T>((int)HttpStatusCode.NotFound, title ?? "Not Found", data, error, message);
+
+        /// <summary>
+        /// Unauthorized response
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="data"></param>
+        /// <param name="error"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static ApiResponse<T> InternalServerError(
+            string? title = null, 
+            T? data = default,  
+            ApiError? error = null,
+            string? message = null)
+            => new ApiResponse<T>((int)HttpStatusCode.InternalServerError, title ?? "Internal Server Error", data, error, message);
     }
-
 
     // Class ApiError
     public class ApiError
     {
+        /// <summary>
+        /// Code
+        /// </summary>
         [JsonPropertyName("code")]
-        public string?[]? Code { get; set; }
+        public IEnumerable<string?>? Code { get; set; }
 
+        /// <summary>
+        /// Message
+        /// </summary>
         [JsonPropertyName("message")]
-        public string?[]? Message { get; set; }
+        public string? Message { get; set; }
     }
 }

@@ -39,6 +39,23 @@ namespace Fatagram.Application.Services.UserServices
             _mapper = mapper;
         }
 
+        public async Task<Result<string>> CheckUserExistAsync(string userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetUser(userId);
+                if (user is null) return Result<string>.Failure("USER_NOT_FOUND");
+                return Result<string>.Success("USER_FOUND");
+            }
+            catch
+            {
+                return Result<string>.Failure("USER_NOT_FOUND");
+            }
+        }
+
+        public Task<Result<string>> CheckUserExistAsync(Guid userId)
+            => CheckUserExistAsync(userId.ToString());
+
 
         /// <summary>
         /// Get user info by fields

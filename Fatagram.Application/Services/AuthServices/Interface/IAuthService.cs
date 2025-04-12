@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Shared.Utils;
+using Fatagram.Application.Dtos.Token;
 
 namespace Fatagram.Application.Services.AuthServices.Interface
 {
@@ -15,7 +16,7 @@ namespace Fatagram.Application.Services.AuthServices.Interface
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<Result<string>> Login(LoginDto loginDto);
+        Task<Result<LoginResponseDto>> Login(LoginDto loginDto);
 
     }
 }

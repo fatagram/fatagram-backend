@@ -9,14 +9,11 @@ namespace Fatagram.Domain.Models
     [Table("refresh_tokens")]
     public class RefreshToken
     {
-        [Column("id", TypeName = "uniqueidentifier")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Token
         /// </summary>
         [Column("token", TypeName= "uniqueidentifier")]
+        [Key]
         [Required]
         public Guid Token { get; set; }
 

@@ -5,6 +5,7 @@ using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Shared.Utils;
+using Fatagram.Application.Dtos.Token;
 
 namespace Fatagram.Application.Services.AuthService
 {
@@ -35,21 +36,29 @@ namespace Fatagram.Application.Services.AuthService
         ///     Information about user's login
         /// </param>
         /// <returns></returns>
-        public async Task<Result<string>> Login(LoginDto request)
+        public async Task<Result<LoginResponseDto>> Login(LoginDto request)
         {
             try
             {
                 var getAccountResult = await _accountRepository.GetAccountByUsernameAsync(request.Username);
-                if (getAccountResult is null) return Result<string>.Failure(ErrorCodes.ACCOUNT_NOT_FOUND);
+                if (getAccountResult is null) return Result<LoginResponseDto>.Failure(ErrorCodes.ACCOUNT_NOT_FOUND);
 
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, getAccountResult.PasswordHash))
-                    return Result<string>.Failure(ErrorCodes.WRONG_PASSWORD);
+                    return Result<LoginResponseDto>.Failure(ErrorCodes.WRONG_PASSWORD);
 
-                return Result<string>.Success("LOGIN_SUCCESS");
+                var user = await _userRepository.GetUserByUsernameAsync(request.Username);
+                if (user is null)
+                    return Result<LoginResponseDto>.Failure("USER_NOT_FOUND");
+
+                return Result<LoginResponseDto>.Success(new LoginResponseDto()
+                {
+                    UserId = user.Id.ToString(),
+                    Username = user.Username,
+                });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Result<string>.Failure("LOGIN_FAILED");
+                return Result<LoginResponseDto>.Failure("LOGIN_FAILED");
             }
         }
     }

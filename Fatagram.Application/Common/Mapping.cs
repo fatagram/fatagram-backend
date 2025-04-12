@@ -18,7 +18,9 @@ namespace Fatagram.Application.Common
             CreateMap<User, UserDto>();
 
             CreateMap<RegisterDto, Account>();
-            CreateMap<RegisterDto, User>();
+            CreateMap<RegisterDto, User>()
+                .ForMember(dest => dest.Username, opt => opt.Ignore());
+
 
             CreateMap<UpdateUserPrivacyDto, UserPrivacy>();
             CreateMap<UserPrivacy, UpdateUserPrivacyDto>();

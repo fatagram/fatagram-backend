@@ -185,5 +185,20 @@ namespace Fatagram_API.Controllers
                     data: res.Data
                 ));
         }
+
+
+        [HttpGet("user-exist")]
+        public async Task<IActionResult> CheckUserExist(string key)
+        {
+            var res = await _userService.CheckUserExistAsync(key);
+            if (res.IsSuccess) return Ok();
+            return NotFound(ApiResponse<string>.NotFound(
+                    error: new ApiError()
+                    {
+                        Code = new[] { res.ErrorCode },
+                        Message = "Failed to check user exist"
+                    }
+                ));
+        }
     }
 }

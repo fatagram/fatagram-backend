@@ -47,7 +47,7 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
         /// <returns>A task that represents the asynchronous operation. The task result contains the result of the operation.</returns>
         public async Task DeleteRefreshTokenAsync(string refreshToken)
         {
-            var token = await _dbContext.RefreshTokens.FindAsync(refreshToken);
+            var token = await _dbContext.RefreshTokens.FindAsync(refreshToken.ToGuid());
             if (token == null)
             {
                 throw new KeyNotFoundException();

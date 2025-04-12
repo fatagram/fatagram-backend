@@ -62,6 +62,15 @@ namespace Fatagram.Application.Services.UserServices.Interface
         /// <returns></returns>
         Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(Guid targetId, string fields);
 
+        /// <summary>
+        /// Check if a user exists
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task<Result<string>> CheckUserExistAsync(string userId);
+        Task<Result<string>> CheckUserExistAsync(Guid userId);
+
+
 
     }
 }

@@ -44,11 +44,13 @@ namespace Fatagram.API.Controllers
                     data: result.Data,
                     message: "Register successfully"
                 )) :
-                BadRequest(ApiResponse<string>.BadRequest(error: new ApiError()
-                {
-                    Code = new[] { result.ErrorCode },
-                    Message = "Register failed"
-                }));
+                BadRequest(ApiResponse<string>.BadRequest(
+                        error: new ApiError()
+                        {
+                            Code = new[] { result.ErrorCode },
+                            Message = "Register failed"
+                        }
+                    ));
         }
 
         /// <summary>

@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# wwwroot folder for ASP.NET Core projects
+wwwroot/
+Fatagram.API/wwwroot/
+appsettings.Local.json
+Fatagram.API/appsettings.Local.json

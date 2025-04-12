@@ -1,3 +1,4 @@
+using Fatagram.API.Dependencies;
 using Fatagram.Application.Common;
 using Fatagram.Application.Services.ImageService;
 using Fatagram.Application.Services.ImageService.Interface;
@@ -13,42 +14,17 @@ namespace Fatagram.API
             builder.Configuration
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-            ;
 
             // Add services to the container.
-
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            
+
+            builder.AddDependencies();
 
             // Dependency injection
             builder.Services.AddHttpContextAccessor();
-
-
-            // Scoped for services
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IUserPrivacyService, UserPrivacyService>();
-            builder.Services.AddScoped<ITokenService, TokenService>();
-            builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            builder.Services.AddScoped<IImageService, WwwrootImageService>();
-
-
-            builder.Services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-            builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-
-            builder.Services.AddAutoMapper(typeof(Mapping));
-
-
-            // Singleton
-            builder.Services.AddSingleton<JwtHmacSha256Service>();
-            builder.Services.AddSingleton(TimeProvider.System);
-
 
             // Turn off ModelStateInvalidFilter
             builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -56,14 +32,12 @@ namespace Fatagram.API
                 options.SuppressModelStateInvalidFilter = true;
             });
 
-
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var _myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
 
             // Add CORS
             builder.Services.AddCors(options =>
@@ -83,7 +57,7 @@ namespace Fatagram.API
                 .AddScheme<AuthenticationSchemeOptions, JwtAuthenticationHandler>("JwtAuthenticationScheme", null);
 
             var certPath = builder.Configuration["PfxPath"] ?? "";
-            var certPassword = "chaungocphat123";
+            var certPassword = builder.Configuration["PfxPassword"];
 
             // Add authorization
             builder.WebHost.ConfigureKestrel(options =>
@@ -95,8 +69,6 @@ namespace Fatagram.API
                 });
             });
 
-
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -105,7 +77,6 @@ namespace Fatagram.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
 
             app.UseCors(_myAllowSpecificOrigins);
             app.UseHttpsRedirection();

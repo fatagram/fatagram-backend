@@ -59,16 +59,18 @@ namespace Fatagram.API.Controllers
                     ));
                 }
 
-                Response.Cookies.Append("accessToken", res.Data.AccessToken, new Microsoft.AspNetCore.Http.CookieOptions
+                Response.Cookies.Append("accessToken", res.Data.AccessToken, new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None,
+                    SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromMinutes(60)
                 });
+                if (result.Data is not null)
+                    result.Data.RefreshToken = res.Data.RefreshToken;
 
-                return Ok(ApiResponse<TokenDto>.Success(
-                        data: new TokenDto() { RefreshToken = res.Data.RefreshToken },
+                return Ok(ApiResponse<LoginResponseDto>.Success(
+                        data: result.Data,
                         message: "Login successfully"
                     ));
             }
@@ -98,11 +100,11 @@ namespace Fatagram.API.Controllers
                     }
                 ));
             }
-            var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None,
+                SameSite = SameSiteMode.None,
                 MaxAge = TimeSpan.FromMinutes(60)
             };
             Response.Cookies.Append("accessToken", res.Data, cookieOptions);
@@ -111,6 +113,33 @@ namespace Fatagram.API.Controllers
                     data: new TokenDto() { RefreshToken = request.RefreshToken }
                 ));
         }
+
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
+        {
+            var res = await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
+            if (!res.IsSuccess)
+            {
+                return BadRequest(ApiResponse<string>.BadRequest(
+                    error: new ApiError()
+                    {
+                        Code = new[] { res.ErrorCode }
+                    }
+                ));
+            }
+            Response.Cookies.Append("accessToken", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.Now.AddDays(-1)
+            });
+            return Ok(ApiResponse<string>.Success(
+                    message: "Logout successfully"
+                ));
+        }
+
 
         /// <summary>
         /// Ping access token

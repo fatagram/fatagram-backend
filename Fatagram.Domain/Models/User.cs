@@ -17,7 +17,6 @@ namespace Fatagram.Domain.Models
         /// Gets or sets the unique identifier for the user.
         /// </summary>
         [Column("id", TypeName = "uniqueidentifier")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
         /// <summary>

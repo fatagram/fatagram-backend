@@ -29,7 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Dependencies\" />
     <Folder Include="wwwroot\avatars\" />
     <Folder Include="wwwroot\backgrounds\" />
   </ItemGroup>

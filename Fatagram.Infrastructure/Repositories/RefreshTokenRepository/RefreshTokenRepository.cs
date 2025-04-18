@@ -4,7 +4,6 @@ using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Linq.Expressions;
 
 namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository

@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using Fatagram.Application.Checker;
 using Fatagram.Application.Dtos.User;
+using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Services.UserServices.Interface;
 using Fatagram.Application.Utils;
+using Fatagram.Application.Validation;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Domain.Utils;
@@ -22,6 +25,7 @@ namespace Fatagram.Application.Services.UserServices
         private readonly IUserRepository _userRepository;
         private readonly IUserPrivacyRepository _userPrivacyRepository;
         private readonly IMapper _mapper;
+        private readonly UserChecker _userChecker;
 
         private List<string> _canNotUpdateProperties = new List<string>()
         {
@@ -31,12 +35,14 @@ namespace Fatagram.Application.Services.UserServices
         public UserService(IAccountRepository accountRepository,
             IUserRepository userRepository, 
             IUserPrivacyRepository userPrivacyRepository, 
-            IMapper mapper)
+            IMapper mapper,
+            UserChecker userChecker)
         {
             _accountRepository = accountRepository;
             _userRepository = userRepository;
             _userPrivacyRepository = userPrivacyRepository;
             _mapper = mapper;
+            _userChecker = userChecker;
         }
 
         public async Task<Result<string>> CheckUserExistAsync(string userId)
@@ -45,7 +51,7 @@ namespace Fatagram.Application.Services.UserServices
             {
                 var user = await _userRepository.GetUser(userId);
                 if (user is null) return Result<string>.Failure("USER_NOT_FOUND");
-                return Result<string>.Success("USER_FOUND");
+                return Result<string>.Success();
             }
             catch
             {
@@ -193,7 +199,7 @@ namespace Fatagram.Application.Services.UserServices
         /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns> </returns>
-        public async Task<Result<string>> UpdateUserAsync(string userId, UpdateUserDto updateUserDto)
+        public async Task<Result<UpdateUserDto>> UpdateUserAsync(string userId, UpdateUserDto updateUserDto)
             => await UpdateUserAsync(Guid.Parse(userId), updateUserDto);
 
 
@@ -203,28 +209,73 @@ namespace Fatagram.Application.Services.UserServices
         /// <param name="userId"></param>
         /// <param name="updateUserDto"></param>
         /// <returns></returns>
-        public async Task<Result<string>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
+        public async Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
         {
             try
             {
                 var existingUser = await _userRepository.GetUser(userId.ToString());
-                if (existingUser is null) return Result<string>.Failure("USER_NOT_FOUND");
-                // Update user
-                var user = _mapper.Map<User>(updateUserDto);
+                if (existingUser is null) return Result<UpdateUserDto>.Failure("USER_NOT_FOUND");
 
-                foreach (var prop in typeof(User).GetProperties())
-                {
-                    var value = prop.GetValue(user);
-                    if (value is null || _canNotUpdateProperties.Contains(prop.Name)) continue;
-                    prop.SetValue(existingUser, value);
-                }
+                _mapper.Map(updateUserDto, existingUser);
                 await _userRepository.UpdateUserAsync(existingUser);
-
-                return Result<string>.Success("UPDATE_USER_SUCCESS");
+                return Result<UpdateUserDto>.Success(updateUserDto);
             }
             catch (Exception)
             {
-                return Result<string>.Failure(ErrorCodes.UPDATE_USER_FAILED);
+                return Result<UpdateUserDto>.Failure(ErrorCodes.UPDATE_USER_FAILED);
+            }
+        }
+
+        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto)
+        {
+            try
+            {
+                ValidationHelper.EnsureValidUrlName(changeUrlNameDto.UrlName);
+
+                var user = await _userRepository.GetUser(userId.ToString());
+                if (user == null)
+                    return Result<ChangeUrlNameDto>.Failure("USER_NOT_FOUND", "User not found");
+                var existUser = await _userRepository.GetUser(changeUrlNameDto.UrlName);
+
+                if (existUser != null && existUser.Id != user.Id)
+                {
+                    return Result<ChangeUrlNameDto>.Failure("URL_NAME_ALREADY_EXIST", "Url name is exist.");
+                }
+
+                user.UrlName = changeUrlNameDto.UrlName;
+                await _userRepository.UpdateUserAsync(user);
+                return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
+            }
+            catch(AppValidationException ex)
+            {
+                return Result<ChangeUrlNameDto>.Failure(ex.ErrorCode, ex.Message);
+            }
+            catch(Exception)
+            {
+                return Result<ChangeUrlNameDto>.Failure("UPDATE_URL_NAME_FAILED", "Update url name failed");
+            }
+        }
+
+        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(string userId, ChangeUrlNameDto changeUrlNameDto)
+            => await UpdateUrlNameAsync(userId.ToGuid(), changeUrlNameDto);
+
+        public async Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto)
+        {
+            try
+            {
+                var user = await _userRepository.GetUser(userId);
+                if (user == null)
+                    return Result<ChangeNameDto>.Failure("USER_NOT_FOUND", "User not found");
+
+                user.FirstName = changeNameDto.FirstName;
+                user.LastName = changeNameDto.LastName;
+                user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
+                await _userRepository.UpdateUserAsync(user);
+                return Result<ChangeNameDto>.Success(changeNameDto);
+            }
+            catch (Exception ex)
+            {
+                return Result<ChangeNameDto>.Failure("UPDATE_NAME_FAILED", ex.Message);
             }
         }
     }

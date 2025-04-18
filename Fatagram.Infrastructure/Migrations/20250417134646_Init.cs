@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Fatagram.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialState : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,16 +15,17 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    last_name = table.Column<string>(type: "nvarchar(50)", nullable: false),
-                    first_name = table.Column<string>(type: "nvarchar(50)", nullable: false),
-                    full_name = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(100)", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    urlname = table.Column<string>(type: "varchar(50)", nullable: true),
+                    last_name = table.Column<string>(type: "varchar(50)", nullable: false),
+                    first_name = table.Column<string>(type: "varchar(50)", nullable: false),
+                    full_name = table.Column<string>(type: "varchar(100)", nullable: false),
+                    email = table.Column<string>(type: "varchar(100)", nullable: false),
                     phone = table.Column<string>(type: "varchar(10)", nullable: true),
-                    bio = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    background = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    birth_day = table.Column<DateTime>(type: "date", nullable: true)
+                    bio = table.Column<string>(type: "text", nullable: true),
+                    avatar = table.Column<string>(type: "text", nullable: true),
+                    background = table.Column<string>(type: "text", nullable: true),
+                    birth_day = table.Column<DateTime>(type: "timestamptz", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -35,13 +36,13 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "accounts",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    username = table.Column<string>(type: "nvarchar(50)", nullable: false),
-                    password_hash = table.Column<string>(type: "varchar(30)", nullable: false),
-                    is_active = table.Column<bool>(type: "bit", nullable: false),
-                    created_at = table.Column<DateTime>(type: "date", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "date", nullable: false),
-                    user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    username = table.Column<string>(type: "varchar(50)", nullable: false),
+                    password_hash = table.Column<string>(type: "varchar(100)", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,8 +59,8 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "user_privacies",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     field = table.Column<string>(type: "varchar(10)", nullable: false),
                     level = table.Column<string>(type: "varchar(10)", nullable: false)
                 },
@@ -78,10 +79,10 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "refresh_tokens",
                 columns: table => new
                 {
-                    token = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    account_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    expiry_date = table.Column<DateTime>(type: "date", nullable: false),
-                    created_at = table.Column<DateTime>(type: "date", nullable: false)
+                    token = table.Column<Guid>(type: "uuid", nullable: false),
+                    account_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,8 +109,7 @@ namespace Fatagram.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_refresh_tokens_account_id",
                 table: "refresh_tokens",
-                column: "account_id",
-                unique: true);
+                column: "account_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_user_privacies_user_id",
@@ -120,6 +120,12 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "IX_users_email",
                 table: "users",
                 column: "email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_urlname",
+                table: "users",
+                column: "urlname",
                 unique: true);
         }
 

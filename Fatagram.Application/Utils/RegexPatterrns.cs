@@ -36,14 +36,14 @@ namespace Fatagram.Application.Utils
 
         /// <summary>
         /// Regular expression pattern for validating last names.
-        /// Allows only alphabetic characters.
+        /// Allows only alphabetic characters, including Vietnamese characters.
         /// </summary>
-        public const string LastName = @"^[a-zA-Z]+$";
+        public const string LastName = @"^[\p{L}]+$";
 
         /// <summary>
         /// Regular expression pattern for validating first names.
-        /// Allows only alphabetic characters.
+        /// Allows only alphabetic characters, including Vietnamese characters.
         /// </summary>
-        public const string FirstName = @"^[a-zA-Z]+$";
+        public const string FirstName = @"^[\p{L}]+$";
     }
 }

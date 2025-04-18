@@ -1,6 +1,7 @@
 ﻿using Fatagram.Application.Services.ImageService.Interface;
 using Fatagram.Application.Services.ImageService;
 using Fatagram.Application.Common;
+using Fatagram.Application.Checker;
 
 namespace Fatagram.API.Dependencies
 {
@@ -14,6 +15,8 @@ namespace Fatagram.API.Dependencies
             builder.Services.AddScoped<IUserPrivacyService, UserPrivacyService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<UserChecker>();
+
             builder.Services.AddScoped<IJwtService, JwtHmacSha256Service>();
             builder.Services.AddScoped<IImageService, WwwrootImageService>();
 

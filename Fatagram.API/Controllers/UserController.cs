@@ -1,5 +1,7 @@
 ﻿using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User;
+using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Application.Services.ImageService.Interface;
 using Fatagram.Application.Services.UserPrivacyServices.Interface;
 using Fatagram.Application.Services.UserServices.Interface;
@@ -37,12 +39,12 @@ namespace Fatagram_API.Controllers
         public async Task<IActionResult> GetUserProfile(string id, [FromQuery]string fields)
         {
             var hasJwt = HttpContext.User.Identity?.IsAuthenticated ?? false;
-            if (fields == null) 
+            if (fields == null)
                 return BadRequest(ApiResponse<string>.BadRequest(
                     error: new ApiError()
                     {
                         Code = new[] { "FIELDS_REQUIRED" },
-                        Message = "Fields are required"
+                        Message = "Fields are required."
                     }
                 ));
 
@@ -82,7 +84,7 @@ namespace Fatagram_API.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpPut("update-user")]
+        [HttpPut()]
         public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -97,7 +99,7 @@ namespace Fatagram_API.Controllers
                     }
                 ));
 
-            return Ok(ApiResponse<string>.Success(
+            return Ok(ApiResponse<UpdateUserDto>.Success(
                     data: res.Data
                 ));
         }
@@ -125,13 +127,13 @@ namespace Fatagram_API.Controllers
         }
 
 
-        [HttpPut("upload/avatar")]
+        [HttpPatch("avatar")]
         public async Task<IActionResult> UploadAvatarAsync(IFormFile file)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
 
-            var res = await _imageService.SaveImageAsync(file.OpenReadStream(), Path.GetExtension(file.FileName), "avatars");
+            var res = await _imageService.SaveImageAsync(ImageSize.Small, file.OpenReadStream(), Path.GetExtension(file.FileName), "avatars");
             if (!res.IsSuccess) return BadRequest(ApiResponse<string>.BadRequest(
                     error: new ApiError()
                     {
@@ -155,15 +157,14 @@ namespace Fatagram_API.Controllers
         }
 
 
-
         [Authorize]
-        [HttpPut("upload/background")]
+        [HttpPatch("background")]
         public async Task<IActionResult> UploadBackgroundAsync(IFormFile file)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
 
-            var res = await _imageService.SaveImageAsync(file.OpenReadStream(), Path.GetExtension(file.FileName), "backgrounds");
+            var res = await _imageService.SaveImageAsync(ImageSize.Large, file.OpenReadStream(), Path.GetExtension(file.FileName), "backgrounds");
             if (!res.IsSuccess) return BadRequest(ApiResponse<string>.BadRequest(
                     error: new ApiError()
                     {
@@ -186,6 +187,61 @@ namespace Fatagram_API.Controllers
                 ));
         }
 
+
+        [Authorize]
+        [HttpPatch("url-name")]
+        public async Task<IActionResult> UpdateUrlNameAsync([FromBody] ChangeUrlNameDto changeUrlNameDto)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var res = await _userService.UpdateUrlNameAsync(userId, changeUrlNameDto);
+            if (!res.IsSuccess) return BadRequest(ApiResponse<string>.BadRequest(
+                    error: new ApiError()
+                    {
+                        Code = new[] { res.ErrorCode },
+                        Message = res.ErrorMessage
+                    }
+                ));
+
+            return Ok(ApiResponse<ChangeUrlNameDto>.Success(
+                    data: res.Data
+                ));
+        }
+
+        [Authorize]
+        [HttpPatch("name")]
+        public async Task<IActionResult> UpdateNameAsync([FromBody] ChangeNameDto updateNameDto)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return BadRequest(ApiResponse<ChangeNameDto>.BadRequest(
+                    error: new ApiError()
+                    {
+                        Code = errors,
+                        Message = "Invalid input"
+                    }
+                ));
+            }
+
+            var res = await _userService.UpdateNameAsync(userId, updateNameDto);
+
+            if (!res.IsSuccess) return BadRequest(ApiResponse<ChangeNameDto>.BadRequest(
+                    error: new ApiError()
+                    {
+                        Code = new[] { res.ErrorCode },
+                        Message = "Failed to update user name."
+                    }
+                ));
+
+            return Ok(ApiResponse<ChangeNameDto>.Success(
+                    data: res.Data
+                ));
+        }
 
         [HttpGet("user-exist")]
         public async Task<IActionResult> CheckUserExist(string key)

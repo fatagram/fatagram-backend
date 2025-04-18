@@ -5,7 +5,6 @@ using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;

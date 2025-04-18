@@ -17,6 +17,6 @@ namespace Fatagram.Application.Dtos.Token
         public string UserId { get; set; } = string.Empty;
 
         [Required]
-        public string? Username { get; set; }
+        public string? UrlName { get; set; }
     }
 }

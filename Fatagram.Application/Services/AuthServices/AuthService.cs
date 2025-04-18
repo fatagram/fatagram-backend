@@ -53,7 +53,7 @@ namespace Fatagram.Application.Services.AuthService
                 return Result<LoginResponseDto>.Success(new LoginResponseDto()
                 {
                     UserId = user.Id.ToString(),
-                    Username = user.Username,
+                    UrlName = user.UrlName,
                 });
             }
             catch (Exception)

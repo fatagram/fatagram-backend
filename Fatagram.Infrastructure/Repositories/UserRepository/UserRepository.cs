@@ -40,17 +40,14 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
         /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
         public async Task<User?> GetUser(string key)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == key.ToGuid() || u.Username == key);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == key.ToGuid() || u.UrlName == key);
             return user;
         }
 
-        ///// <summary>
-        ///// Gets a user by their unique identifier asynchronously.
-        ///// </summary>
-        ///// <param name="id">The unique identifier of the user as a string.</param>
-        ///// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
-        //public async Task<User?> GetUserByIdAsync(string id)
-        //    => await GetUserByIdAsync(id.ToGuid());
+        public Task<User?> GetUserByUrlNameAsync(string username)
+        {
+            return _dbContext.Users.FirstOrDefaultAsync(u => u.UrlName == username);
+        }
 
         /// <summary>
         /// Gets a user by their username asynchronously.

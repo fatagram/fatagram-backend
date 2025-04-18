@@ -12,7 +12,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Token
         /// </summary>
-        [Column("token", TypeName= "uniqueidentifier")]
+        [Column("token", TypeName= "uuid")]
         [Key]
         [Required]
         public Guid Token { get; set; }
@@ -20,7 +20,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Account id
         /// </summary>
-        [Column("account_id", TypeName = "uniqueidentifier")]
+        [Column("account_id", TypeName = "uuid")]
         [Required]
         public Guid AccountId { get; set; }
 
@@ -28,7 +28,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Expiry date
         /// </summary>
-        [Column("expiry_date", TypeName = "date")]
+        [Column("expiry_date", TypeName = "timestamptz")]
         [Required]
         public DateTime ExpiryDate { get; set; }
 
@@ -36,7 +36,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Created at
         /// </summary>
-        [Column("created_at", TypeName = "date")]
+        [Column("created_at", TypeName = "timestamptz")]
         public DateTime CreatedAt { get; set; }
 
 

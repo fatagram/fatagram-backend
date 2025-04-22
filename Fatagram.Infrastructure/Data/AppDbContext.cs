@@ -17,11 +17,19 @@ namespace Fatagram.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<User>()
+                .Property(u => u.Version)
+                .IsRowVersion();
+
             modelBuilder.Entity<Account>()
                 .HasOne(a => a.User)
                 .WithMany(u => u.Accounts)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Account>()
+                .Property(a => a.Version)
+                .IsRowVersion();
 
             modelBuilder.Entity<UserPrivacy>()
                 .HasOne(up => up.User)

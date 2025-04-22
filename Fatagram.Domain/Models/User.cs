@@ -86,6 +86,10 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the account associated with the user.
         /// </summary>
+
+        [Timestamp]
+        [Column("xmin")]
+        public uint Version { get; set; }
         
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
 

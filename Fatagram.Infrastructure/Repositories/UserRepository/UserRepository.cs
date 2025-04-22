@@ -3,6 +3,7 @@ using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Metrics;
 
 namespace Fatagram.Infrastructure.Repositories.UserRepository
 {
@@ -62,6 +63,14 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
                     .FirstOrDefaultAsync();
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            return user;
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            var user = await _dbContext.Users
+                    .Where(a => a.Email == email)
+                    .FirstOrDefaultAsync();
             return user;
         }
 

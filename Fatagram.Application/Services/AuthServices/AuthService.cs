@@ -6,6 +6,7 @@ using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Shared.Utils;
 using Fatagram.Application.Dtos.Token;
+using Fatagram.Application.Exceptions;
 
 namespace Fatagram.Application.Services.AuthService
 {
@@ -38,28 +39,21 @@ namespace Fatagram.Application.Services.AuthService
         /// <returns></returns>
         public async Task<Result<LoginResponseDto>> Login(LoginDto request)
         {
-            try
+            var getAccountResult = await _accountRepository.GetAccountByUsernameAsync(request.Username);
+            if (getAccountResult is null) throw new AccountNotFoundException();
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, getAccountResult.PasswordHash))
+                throw new AppException(ErrorCodes.WRONG_PASSWORD);
+
+            var user = await _userRepository.GetUserByUsernameAsync(request.Username);
+            if (user is null)
+                throw new UserNotFoundException();
+
+            return Result<LoginResponseDto>.Success(new LoginResponseDto()
             {
-                var getAccountResult = await _accountRepository.GetAccountByUsernameAsync(request.Username);
-                if (getAccountResult is null) return Result<LoginResponseDto>.Failure(ErrorCodes.ACCOUNT_NOT_FOUND);
-
-                if (!BCrypt.Net.BCrypt.Verify(request.Password, getAccountResult.PasswordHash))
-                    return Result<LoginResponseDto>.Failure(ErrorCodes.WRONG_PASSWORD);
-
-                var user = await _userRepository.GetUserByUsernameAsync(request.Username);
-                if (user is null)
-                    return Result<LoginResponseDto>.Failure("USER_NOT_FOUND");
-
-                return Result<LoginResponseDto>.Success(new LoginResponseDto()
-                {
-                    UserId = user.Id.ToString(),
-                    UrlName = user.UrlName,
-                });
-            }
-            catch (Exception)
-            {
-                return Result<LoginResponseDto>.Failure("LOGIN_FAILED");
-            }
+                UserId = user.Id.ToString(),
+                UrlName = user.UrlName,
+            });
         }
     }
 }

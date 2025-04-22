@@ -6,6 +6,7 @@ using Fatagram.API.Utils;
 using Fatagram.Application.Services.AccountServices.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Account;
+using Fatagram.Application.Exceptions;
 
 namespace Fatagram.API.Controllers
 {
@@ -29,28 +30,14 @@ namespace Fatagram.API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(ApiResponse<string>.BadRequest(
-                        error: new ApiError()
-                        {
-                            Code = errors,
-                            Message = "Invalid input"
-                        }
-                    ));
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                throw new ValidateException(errors: errors);
             }
             var result = await _accountService.Register(request);
-            return result.IsSuccess ?
-                Ok(ApiResponse<string>.Success(
-                    data: result.Data,
-                    message: "Register successfully"
-                )) :
-                BadRequest(ApiResponse<string>.BadRequest(
-                        error: new ApiError()
-                        {
-                            Code = new[] { result.ErrorCode },
-                            Message = "Register failed"
-                        }
-                    ));
+            return Ok(ApiResponse<string>.Success(
+                   data: result.Data,
+                   message: "Register successfully"
+               ));
         }
 
         /// <summary>
@@ -63,20 +50,11 @@ namespace Fatagram.API.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return Unauthorized();
+            if (userId == null) throw new UnauthorizedException();
 
             var result = await _accountService.ChangePasswordAsync(userId, request);
-            return result.IsSuccess ?
-                Ok(ApiResponse<string>.Success(
-                    data: result.Data,
-                    message: "Change password successfully"
-                    )) :
-                BadRequest(ApiResponse<string>.BadRequest(
-                    error: new ApiError()
-                    {
-                        Code = new[] { result.ErrorCode },
-                        Message = "Change password failed"
-                    }
+            return Ok(ApiResponse<string>.Success(
+                    data: result.Data
                 ));
         }
     }

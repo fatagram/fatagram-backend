@@ -1,6 +1,7 @@
 ﻿using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
+using Fatagram.Application.Exceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -35,49 +36,30 @@ namespace Fatagram.API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(ApiResponse<string>.BadRequest(
-                    error: new ApiError()
-                    {
-                        Code = errors,
-                        Message = "Invalid input"
-                    }
-                ));
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                throw new ValidateException(errors: errors);
             }
             var result = await _authService.Login(request);
-            if (result.IsSuccess)
+            var res = await _tokenService.GenerateTokensAsync(request.Username);
+            if (res.Data == null)
             {
-                var res = await _tokenService.GenerateTokensAsync(request.Username);
-                if (!res.IsSuccess || res.Data == null)
-                {
-                    return BadRequest(ApiResponse<string>.BadRequest(
-                        error: new ApiError()
-                        {
-                            Code = new[] { res.ErrorCode },
-                        }
-                    ));
-                }
-
-                Response.Cookies.Append("accessToken", res.Data.AccessToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None,
-                    MaxAge = TimeSpan.FromMinutes(60)
-                });
-                if (result.Data is not null)
-                    result.Data.RefreshToken = res.Data.RefreshToken;
-
-                return Ok(ApiResponse<LoginResponseDto>.Success(
-                        data: result.Data,
-                        message: "Login successfully"
-                    ));
+                throw new DataNullException();
             }
-            return BadRequest(ApiResponse<string>.BadRequest(
-                error: new ApiError
-                {
-                    Code = new[] { result.ErrorCode }
-                }));
+
+            Response.Cookies.Append("accessToken", res.Data.AccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                MaxAge = TimeSpan.FromMinutes(60)
+            });
+
+            if (result.Data is not null)
+                result.Data.RefreshToken = res.Data.RefreshToken;
+
+            return Ok(ApiResponse<LoginResponseDto>.Success(
+                    data: result.Data
+                ));
         }
 
         /// <summary>
@@ -89,16 +71,12 @@ namespace Fatagram.API.Controllers
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
             var res = await _tokenService.RefreshAccessTokenAsync(request.RefreshToken);
-            if (!res.IsSuccess || res.Data == null)
-            {
-                await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
-                return BadRequest(ApiResponse<string>.BadRequest(
-                    error:new ApiError()
-                    {
-                        Code = new[] { res.ErrorCode }
-                    }
-                ));
-            }
+            //if (!res.IsSuccess || res.Data == null)
+            //{
+            //    await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
+
+            //}
+            if (res.Data is null) throw new DataNullException();
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -118,15 +96,6 @@ namespace Fatagram.API.Controllers
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
         {
             var res = await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
-            if (!res.IsSuccess)
-            {
-                return BadRequest(ApiResponse<string>.BadRequest(
-                    error: new ApiError()
-                    {
-                        Code = new[] { res.ErrorCode }
-                    }
-                ));
-            }
             Response.Cookies.Append("accessToken", "", new CookieOptions
             {
                 HttpOnly = true,
@@ -134,9 +103,7 @@ namespace Fatagram.API.Controllers
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(-1)
             });
-            return Ok(ApiResponse<string>.Success(
-                    message: "Logout successfully"
-                ));
+            return Ok(ApiResponse<string>.Success());
         }
 
 

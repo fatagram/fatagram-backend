@@ -61,6 +61,13 @@ namespace Fatagram.Domain.Models
         public Guid UserId { get; set; }
 
         /// <summary>
+        /// Gets or sets the version of the account entity for concurrency control.
+        /// </summary>
+        [Timestamp]
+        [Column("xmin")]
+        public uint Version { get; set; } = 0;
+
+        /// <summary>
         /// Gets or sets the associated user.
         /// </summary>
         public User? User { get; set; }

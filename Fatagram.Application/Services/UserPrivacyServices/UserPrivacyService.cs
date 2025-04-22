@@ -31,19 +31,11 @@ namespace Fatagram.Application.Services.UserPrivacyServices
         /// <returns></returns>
         public async Task<Result<string>> UpdateUserPrivacyAsync(string userId, UpdateUserPrivacyDto updateUserPrivacyDto)
         {
-            try
-            {
-                var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
-                userPrivacy.UserId = userId.ToGuid();
-                await _userPrivacyRepository.SetPrivacyLevelAsync(userPrivacy);
+            var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
+            userPrivacy.UserId = userId.ToGuid();
+            await _userPrivacyRepository.SetPrivacyLevelAsync(userPrivacy);
 
-                return Result<string>.Success("User privacy updated successfully");
-            }
-            catch (Exception ex)
-            {
-                return Result<string>.Failure("ERROR", ex.Message);
-            }
-            
+            return Result<string>.Success();
         }
     }
 }

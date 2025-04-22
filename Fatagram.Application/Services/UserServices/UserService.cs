@@ -2,6 +2,7 @@
 using Fatagram.Application.Checker;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Application.Exceptions;
 using Fatagram.Application.Services.UserServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Application.Validation;
@@ -47,16 +48,9 @@ namespace Fatagram.Application.Services.UserServices
 
         public async Task<Result<string>> CheckUserExistAsync(string userId)
         {
-            try
-            {
-                var user = await _userRepository.GetUser(userId);
-                if (user is null) return Result<string>.Failure("USER_NOT_FOUND");
-                return Result<string>.Success();
-            }
-            catch
-            {
-                return Result<string>.Failure("USER_NOT_FOUND");
-            }
+            var user = await _userRepository.GetUser(userId);
+            if (user is null) throw new UserNotFoundException();
+            return Result<string>.Success();
         }
 
         public Task<Result<string>> CheckUserExistAsync(Guid userId)
@@ -71,53 +65,45 @@ namespace Fatagram.Application.Services.UserServices
         /// <returns></returns>
         public async Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(string senderId, string target, string fields)
         {
-            try
+            var res = await _userRepository.GetUser(target);
+            if (res is null) throw new UserNotFoundException();
+
+            var privacyDict = new Dictionary<string, string?>();
+            var listField = fields.Split(',').ToList();
+            foreach (var field in listField)
             {
-                var res = await _userRepository.GetUser(target);
-                if (res is null) return Result<GetUserProfileDto>.Failure("USER_NOT_FOUND");
-
-                var privacyDict = new Dictionary<string, string?>();
-                var listField = fields.Split(',').ToList();
-                foreach (var field in listField)
+                var value = res.GetPropertyValue(field);
+                if (value is not null)
                 {
-                    var value = res.GetPropertyValue(field);
-                    if (value is not null)
-                    {
-                        privacyDict.Add(field, value?.ToString());
-                    }
+                    privacyDict.Add(field, value?.ToString());
                 }
-                var targetId = res.Id.ToString();
-                if (senderId == targetId)
-                {
-                    return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-                    {
-                        Infos = privacyDict,
-                        IsOwner = true
-                    });
-                }
-                var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
-
-                foreach (var field in listField)
-                {
-                    privacyDict[field] = privacyLevels[field] switch
-                    {
-                        PrivacyLevel.Public => privacyDict[field],
-                        PrivacyLevel.Private => null,
-                        _ => null
-                    };
-                }
-
+            }
+            var targetId = res.Id.ToString();
+            if (senderId == targetId)
+            {
                 return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
                 {
                     Infos = privacyDict,
-                    IsOwner = false
+                    IsOwner = true
                 });
             }
-            catch (Exception)
+            var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
+
+            foreach (var field in listField)
             {
-                return Result<GetUserProfileDto>.Failure("GET_USER_INFO_FAILED");
+                privacyDict[field] = privacyLevels[field] switch
+                {
+                    PrivacyLevel.Public => privacyDict[field],
+                    PrivacyLevel.Private => null,
+                    _ => null
+                };
             }
-            
+
+            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
+            {
+                Infos = privacyDict,
+                IsOwner = false
+            });
         }
 
         /// <summary>
@@ -137,50 +123,44 @@ namespace Fatagram.Application.Services.UserServices
         /// <returns></returns>
         public async Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(string target, string fields)
         {
-            try
+            if (string.IsNullOrEmpty(fields)) throw new AppException("FIELD_IS_NULL");
+            var res = await _userRepository.GetUser(target);
+            if (res is null) throw new UserNotFoundException();
+
+            var privacyDict = new Dictionary<string, string?>();
+            var listField = fields.Split(',').ToList();
+            foreach (var field in listField)
             {
-                var res = await _userRepository.GetUser(target);
-                if (res is null) return Result<GetUserProfileDto>.Failure("USER_NOT_FOUND");
-
-                var privacyDict = new Dictionary<string, string?>();
-                var listField = fields.Split(',').ToList();
-                foreach (var field in listField)
+                var value = res.GetPropertyValue(field);
+                if (value is not null)
                 {
-                    var value = res.GetPropertyValue(field);
-                    if (value is not null)
-                    {
-                        privacyDict.Add(field, value?.ToString());
-                    }
+                    privacyDict.Add(field, value?.ToString());
                 }
-
-                var targetId = res.Id.ToString();
-                var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
-
-                foreach (var field in listField)
-                {
-                    if (!privacyDict.ContainsKey(field))
-                    {
-                        privacyDict[field] = null;
-                        continue;
-                    }
-                    privacyDict[field] = privacyLevels[field] switch
-                    {
-                        PrivacyLevel.Public => privacyDict[field],
-                        PrivacyLevel.Private => null,
-                        _ => null
-                    };
-                }
-
-                return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-                {
-                    Infos = privacyDict,
-                    IsOwner = false
-                });
             }
-            catch (Exception)
+
+            var targetId = res.Id.ToString();
+            var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
+
+            foreach (var field in listField)
             {
-                return Result<GetUserProfileDto>.Failure("GET_USER_INFO_FAILED");
+                if (!privacyDict.ContainsKey(field))
+                {
+                    privacyDict[field] = null;
+                    continue;
+                }
+                privacyDict[field] = privacyLevels[field] switch
+                {
+                    PrivacyLevel.Public => privacyDict[field],
+                    PrivacyLevel.Private => null,
+                    _ => null
+                };
             }
+
+            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
+            {
+                Infos = privacyDict,
+                IsOwner = false
+            });
         }
 
         /// <summary>
@@ -211,49 +191,29 @@ namespace Fatagram.Application.Services.UserServices
         /// <returns></returns>
         public async Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
         {
-            try
-            {
-                var existingUser = await _userRepository.GetUser(userId.ToString());
-                if (existingUser is null) return Result<UpdateUserDto>.Failure("USER_NOT_FOUND");
+            var existingUser = await _userRepository.GetUser(userId.ToString());
+            if (existingUser is null) throw new UserNotFoundException();
 
-                _mapper.Map(updateUserDto, existingUser);
-                await _userRepository.UpdateUserAsync(existingUser);
-                return Result<UpdateUserDto>.Success(updateUserDto);
-            }
-            catch (Exception)
-            {
-                return Result<UpdateUserDto>.Failure(ErrorCodes.UPDATE_USER_FAILED);
-            }
+            _mapper.Map(updateUserDto, existingUser);
+            await _userRepository.UpdateUserAsync(existingUser);
+            return Result<UpdateUserDto>.Success(updateUserDto);
         }
 
         public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto)
         {
-            try
-            {
-                ValidationHelper.EnsureValidUrlName(changeUrlNameDto.UrlName);
+            ValidationHelper.EnsureValidUrlName(changeUrlNameDto.UrlName);
 
-                var user = await _userRepository.GetUser(userId.ToString());
-                if (user == null)
-                    return Result<ChangeUrlNameDto>.Failure("USER_NOT_FOUND", "User not found");
-                var existUser = await _userRepository.GetUser(changeUrlNameDto.UrlName);
+            var user = await _userRepository.GetUser(userId.ToString());
+            if (user == null)
+                throw new UserNotFoundException();
+            var existUser = await _userRepository.GetUser(changeUrlNameDto.UrlName);
 
-                if (existUser != null && existUser.Id != user.Id)
-                {
-                    return Result<ChangeUrlNameDto>.Failure("URL_NAME_ALREADY_EXIST", "Url name is exist.");
-                }
+            if (existUser != null && existUser.Id != user.Id)
+                throw new AppException("URLNAME_EXIST");
 
-                user.UrlName = changeUrlNameDto.UrlName;
-                await _userRepository.UpdateUserAsync(user);
-                return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
-            }
-            catch(AppValidationException ex)
-            {
-                return Result<ChangeUrlNameDto>.Failure(ex.ErrorCode, ex.Message);
-            }
-            catch(Exception)
-            {
-                return Result<ChangeUrlNameDto>.Failure("UPDATE_URL_NAME_FAILED", "Update url name failed");
-            }
+            user.UrlName = changeUrlNameDto.UrlName;
+            await _userRepository.UpdateUserAsync(user);
+            return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
         }
 
         public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(string userId, ChangeUrlNameDto changeUrlNameDto)
@@ -261,22 +221,14 @@ namespace Fatagram.Application.Services.UserServices
 
         public async Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto)
         {
-            try
-            {
-                var user = await _userRepository.GetUser(userId);
-                if (user == null)
-                    return Result<ChangeNameDto>.Failure("USER_NOT_FOUND", "User not found");
+            var user = await _userRepository.GetUser(userId);
+            if (user == null) throw new UserNotFoundException();
 
-                user.FirstName = changeNameDto.FirstName;
-                user.LastName = changeNameDto.LastName;
-                user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
-                await _userRepository.UpdateUserAsync(user);
-                return Result<ChangeNameDto>.Success(changeNameDto);
-            }
-            catch (Exception ex)
-            {
-                return Result<ChangeNameDto>.Failure("UPDATE_NAME_FAILED", ex.Message);
-            }
+            user.FirstName = changeNameDto.FirstName;
+            user.LastName = changeNameDto.LastName;
+            user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
+            await _userRepository.UpdateUserAsync(user);
+            return Result<ChangeNameDto>.Success(changeNameDto);
         }
     }
 }

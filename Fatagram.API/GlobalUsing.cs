@@ -24,6 +24,9 @@ global using Fatagram.Infrastructure.Repositories.RefreshTokenRepository;
 global using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 global using Fatagram.Infrastructure.Repositories.UserRepository;
 global using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+global using Fatagram.Application.Common;
+global using Fatagram.Application.Services.ImageService;
+global using Fatagram.Application.Services.ImageService.Interface;
 
 
 // Framework Usings

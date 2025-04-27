@@ -48,11 +48,14 @@ namespace Fatagram.API.Extensions.ServiceCollectionExtensions
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(null));
                 });
 
-
             // Add authentication
             services.AddAuthentication("JwtAuthenticationScheme")
                 .AddScheme<AuthenticationSchemeOptions, JwtAuthenticationHandler>("JwtAuthenticationScheme", null);
 
+            // SignalR
+            services.AddSignalR();
+
+            // Add application services
             services.AddDependencies();
         }
     }

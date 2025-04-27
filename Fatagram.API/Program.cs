@@ -3,7 +3,10 @@ using Fatagram.API.Extensions.Dependencies;
 using Fatagram.API.Extensions.ExceptionHandlerExtensions;
 using Fatagram.API.Extensions.ServiceCollectionExtensions;
 using Fatagram.API.Extensions.WebApplicationBuilderExtensions;
+using Fatagram.API.Hubs;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
+using System.Xml;
 
 namespace Fatagram.API
 {
@@ -31,8 +34,13 @@ namespace Fatagram.API
                 app.UseSwaggerUI();
             }
 
+            app.UseRouting();
+
             // Cors 
             app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
+
+            // SignalR Hubs
+            app.MapHub<NotificationHub>("/hubs/notification");
 
             // Exception handling
             app.ConfigureExceptionHandler();
@@ -50,6 +58,17 @@ namespace Fatagram.API
 
             // Routing
             app.MapControllers();
+
+            var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
+
+            _ = Task.Run(async () =>
+            {
+                while(true)
+                {
+                    await Task.Delay(5000);
+                    await hubContext.Clients.All.SendAsync("ReceiveNotification", "Hello from server!");
+                }
+            });
 
             // Start the application
             app.Run();

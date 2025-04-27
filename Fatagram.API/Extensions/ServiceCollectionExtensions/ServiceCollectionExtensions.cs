@@ -2,6 +2,7 @@
 using Fatagram.API.Extensions.Dependencies;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics;
+using System.Text.Json.Serialization;
 
 namespace Fatagram.API.Extensions.ServiceCollectionExtensions
 {
@@ -39,6 +40,13 @@ namespace Fatagram.API.Extensions.ServiceCollectionExtensions
                                 .AllowCredentials();
                         });
             });
+
+
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(null));
+                });
 
 
             // Add authentication

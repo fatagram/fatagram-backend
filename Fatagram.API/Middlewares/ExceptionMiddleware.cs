@@ -2,6 +2,7 @@
 using Fatagram.API.Utils;
 using Fatagram.Application.Exceptions;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Net;
 
 namespace Fatagram.API.Middlewares
@@ -25,7 +26,9 @@ namespace Fatagram.API.Middlewares
             }
             catch (Exception ex)
             {
+                // Color for log
                 _logger.LogError($"An error occurred {ex}");
+
 
                 await HanldeExceptionAsync(context, ex);
             }

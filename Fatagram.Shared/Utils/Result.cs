@@ -1,4 +1,6 @@
-﻿namespace Fatagram.Shared.Utils
+﻿using System.Text.Json.Serialization;
+
+namespace Fatagram.Shared.Utils
 {
     /// <summary>
     /// A generic result class to return a result with a data object or an error code
@@ -14,19 +16,23 @@
         /// <summary>
         /// The data object
         /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public T? Data { get; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Message { get; }
 
         /// <summary>
         /// The error code
         /// </summary>
-        public string? ErrorCode { get; } = "UNKNOWN_ERROR";
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ErrorCode { get; }
 
         /// <summary>
         /// The error message
         /// </summary>
-        public string? ErrorMessage { get; } = "An unknown error occurred";
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ErrorMessage { get; }
 
         private Result(bool isSuccess = true, T? data = default, string? message = null, string? errorCode = null, string? errorMessage = null)
         {

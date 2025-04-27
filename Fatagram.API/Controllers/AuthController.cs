@@ -1,4 +1,5 @@
-﻿using Fatagram.API.Utils;
+﻿using Fatagram.API.Extensions.Constrains;
+using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
@@ -19,11 +20,13 @@ namespace Fatagram.API.Controllers
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
         // private readonly IUserService _userService;
+
+        private bool _isSecureCookies = !Setups.IsForLAN;
+
         public AuthController(IAuthService authService, ITokenService tokenService)
         {
             _authService = authService;
             _tokenService = tokenService;
-            // _userService = userService;
         }
 
         /// <summary>
@@ -49,8 +52,8 @@ namespace Fatagram.API.Controllers
             Response.Cookies.Append("accessToken", res.Data.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = _isSecureCookies,
+                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
                 MaxAge = TimeSpan.FromMinutes(60)
             });
 
@@ -80,8 +83,8 @@ namespace Fatagram.API.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = _isSecureCookies,
+                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
                 MaxAge = TimeSpan.FromMinutes(60)
             };
             Response.Cookies.Append("accessToken", res.Data, cookieOptions);
@@ -95,12 +98,16 @@ namespace Fatagram.API.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
         {
-            var res = await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
+            try
+            {
+                if (request.RefreshToken != null) await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
+            }
+            catch(Exception) { }
             Response.Cookies.Append("accessToken", "", new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = _isSecureCookies,
+                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(-1)
             });
             return Ok(ApiResponse<string>.Success());

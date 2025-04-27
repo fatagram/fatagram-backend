@@ -25,7 +25,9 @@ namespace Fatagram.Infrastructure.Migrations
                     bio = table.Column<string>(type: "text", nullable: true),
                     avatar = table.Column<string>(type: "text", nullable: true),
                     background = table.Column<string>(type: "text", nullable: true),
-                    birth_day = table.Column<DateTime>(type: "timestamptz", nullable: true)
+                    birth_day = table.Column<DateTime>(type: "timestamptz", nullable: true),
+                    gender = table.Column<string>(type: "varchar(10)", nullable: true),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,7 +44,8 @@ namespace Fatagram.Infrastructure.Migrations
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false)
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {

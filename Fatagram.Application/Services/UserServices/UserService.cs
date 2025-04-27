@@ -14,6 +14,7 @@ using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
+using Microsoft.AspNetCore.Http;
 
 namespace Fatagram.Application.Services.UserServices
 {
@@ -27,6 +28,7 @@ namespace Fatagram.Application.Services.UserServices
         private readonly IUserPrivacyRepository _userPrivacyRepository;
         private readonly IMapper _mapper;
         private readonly UserChecker _userChecker;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         private List<string> _canNotUpdateProperties = new List<string>()
         {
@@ -37,13 +39,15 @@ namespace Fatagram.Application.Services.UserServices
             IUserRepository userRepository, 
             IUserPrivacyRepository userPrivacyRepository, 
             IMapper mapper,
-            UserChecker userChecker)
+            UserChecker userChecker,
+            IHttpContextAccessor httpContextAccessor)
         {
             _accountRepository = accountRepository;
             _userRepository = userRepository;
             _userPrivacyRepository = userPrivacyRepository;
             _mapper = mapper;
             _userChecker = userChecker;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Result<string>> CheckUserExistAsync(string userId)

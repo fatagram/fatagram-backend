@@ -1,4 +1,5 @@
-﻿using Fatagram.Domain.Models;
+﻿using Fatagram.Domain.Enums;
+using Fatagram.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -16,6 +17,7 @@ namespace Fatagram.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
 
             modelBuilder.Entity<User>()
                 .Property(u => u.Version)

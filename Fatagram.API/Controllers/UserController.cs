@@ -89,7 +89,7 @@ namespace Fatagram_API.Controllers
                 ));
         }
 
-
+        [Authorize]
         [HttpPatch("avatar")]
         public async Task<IActionResult> UploadAvatarAsync(IFormFile file)
         {
@@ -97,6 +97,10 @@ namespace Fatagram_API.Controllers
             if (userId == null) throw new UnauthorizedException();
 
             var res = await _imageService.SaveImageAsync(ImageSize.Small, file.OpenReadStream(), Path.GetExtension(file.FileName), "avatars");
+            await _userService.UpdateUserAsync(userId, new UpdateUserDto()
+            {
+                Avatar = res.Data
+            });
 
             return Ok(ApiResponse<string>.Success(
                     data: res.Data
@@ -112,9 +116,13 @@ namespace Fatagram_API.Controllers
             if (userId == null) return Unauthorized();
 
             var res = await _imageService.SaveImageAsync(ImageSize.Large, file.OpenReadStream(), Path.GetExtension(file.FileName), "backgrounds");
+            await _userService.UpdateUserAsync(userId, new UpdateUserDto()
+            {
+                Background = res.Data
+            });
 
             return Ok(ApiResponse<string>.Success(
-                    data: res.Data
+                   data: res.Data
                 ));
         }
 
@@ -158,6 +166,17 @@ namespace Fatagram_API.Controllers
         {
             var res = await _userService.CheckUserExistAsync(key);
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) throw new UnauthorizedException();
+
+            var res = await _userService.GetUserInfoAuthenticatedAsync(userId, userId, "id,urlName");
+            return Ok(ApiResponse<object>.Success(res.Data));
         }
     }
 }

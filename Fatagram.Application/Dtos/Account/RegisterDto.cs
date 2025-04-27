@@ -1,4 +1,5 @@
 ﻿using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Fatagram.Application.Dtos.Account
@@ -48,5 +49,9 @@ namespace Fatagram.Application.Dtos.Account
         /// </summary>
         [RegularExpression(RegexPatterrns.Phone, ErrorMessage = ErrorCodes.PHONE_NUMBER_NOT_CORRECT_FORMAT)]
         public string? Phone { get; set; }
+
+        public DateTime? BirthDay { get; set; }
+
+        public Gender? Gender { get; set; } = Domain.Enums.Gender.Other;
     }
 }

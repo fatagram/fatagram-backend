@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Fatagram.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
@@ -84,12 +85,19 @@ namespace Fatagram.Domain.Models
         public DateTime? BirthDay { get; set; }
 
         /// <summary>
+        /// Gender of the user
+        /// </summary>
+        [Column("gender", TypeName = "varchar(10)")]
+        public Gender? Gender { get; set; }
+
+        /// <summary>
         /// Gets or sets the account associated with the user.
         /// </summary>
 
         [Timestamp]
         [Column("xmin")]
         public uint Version { get; set; }
+
         
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
 

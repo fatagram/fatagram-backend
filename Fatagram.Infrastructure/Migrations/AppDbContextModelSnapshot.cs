@@ -135,6 +135,10 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("full_name");
 
+                    b.Property<string>("Gender")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("gender");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("varchar(50)")

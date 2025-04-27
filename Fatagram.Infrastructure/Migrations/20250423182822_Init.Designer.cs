@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250421060758_UpdateVersioning")]
-    partial class UpdateVersioning
+    [Migration("20250423182822_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -137,6 +137,10 @@ namespace Fatagram.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("full_name");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("gender");
 
                     b.Property<string>("LastName")
                         .IsRequired()

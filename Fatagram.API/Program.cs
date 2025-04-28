@@ -61,15 +61,6 @@ namespace Fatagram.API
 
             var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
 
-            _ = Task.Run(async () =>
-            {
-                while(true)
-                {
-                    await Task.Delay(5000);
-                    await hubContext.Clients.All.SendAsync("ReceiveNotification", "Hello from server!");
-                }
-            });
-
             // Start the application
             app.Run();
         }

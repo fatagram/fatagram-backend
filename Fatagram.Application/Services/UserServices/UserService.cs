@@ -10,11 +10,15 @@ using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Domain.Utils;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
+using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
 using Microsoft.AspNetCore.Http;
+using System.Net.NetworkInformation;
+using System.Security.AccessControl;
 
 namespace Fatagram.Application.Services.UserServices
 {
@@ -26,6 +30,8 @@ namespace Fatagram.Application.Services.UserServices
         private readonly IAccountRepository _accountRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserPrivacyRepository _userPrivacyRepository;
+        private readonly IFriendshipRepository _friendshipRepository;
+        private readonly IFriendRequestRepository _friendRequestRepository;
         private readonly IMapper _mapper;
         private readonly UserChecker _userChecker;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -38,6 +44,8 @@ namespace Fatagram.Application.Services.UserServices
         public UserService(IAccountRepository accountRepository,
             IUserRepository userRepository, 
             IUserPrivacyRepository userPrivacyRepository, 
+            IFriendshipRepository friendshipRepository,
+            IFriendRequestRepository friendRequestRepository,
             IMapper mapper,
             UserChecker userChecker,
             IHttpContextAccessor httpContextAccessor)
@@ -45,6 +53,8 @@ namespace Fatagram.Application.Services.UserServices
             _accountRepository = accountRepository;
             _userRepository = userRepository;
             _userPrivacyRepository = userPrivacyRepository;
+            _friendshipRepository = friendshipRepository;
+            _friendRequestRepository = friendRequestRepository;
             _mapper = mapper;
             _userChecker = userChecker;
             _httpContextAccessor = httpContextAccessor;
@@ -77,10 +87,7 @@ namespace Fatagram.Application.Services.UserServices
             foreach (var field in listField)
             {
                 var value = res.GetPropertyValue(field);
-                if (value is not null)
-                {
-                    privacyDict.Add(field, value?.ToString());
-                }
+                privacyDict.Add(field, value?.ToString());
             }
             var targetId = res.Id.ToString();
             if (senderId == targetId)
@@ -136,10 +143,7 @@ namespace Fatagram.Application.Services.UserServices
             foreach (var field in listField)
             {
                 var value = res.GetPropertyValue(field);
-                if (value is not null)
-                {
-                    privacyDict.Add(field, value?.ToString());
-                }
+                privacyDict.Add(field, value?.ToString());
             }
 
             var targetId = res.Id.ToString();
@@ -147,11 +151,6 @@ namespace Fatagram.Application.Services.UserServices
 
             foreach (var field in listField)
             {
-                if (!privacyDict.ContainsKey(field))
-                {
-                    privacyDict[field] = null;
-                    continue;
-                }
                 privacyDict[field] = privacyLevels[field] switch
                 {
                     PrivacyLevel.Public => privacyDict[field],
@@ -233,6 +232,118 @@ namespace Fatagram.Application.Services.UserServices
             user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
             await _userRepository.UpdateUserAsync(user);
             return Result<ChangeNameDto>.Success(changeNameDto);
+        }
+
+        public async Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId)
+        {
+            if ((await _friendshipRepository.GetAsync(senderId, receiverId)) != null)
+                throw new Exception("FRIENDSHIP_ALREADY_EXIST");
+
+            if ((await _friendRequestRepository.GetAsync(senderId, receiverId)) != null
+                || (await _friendRequestRepository.GetAsync(receiverId, senderId)) != null)
+            {
+                throw new AppException("REQUEST_ALREADY_EXIST");
+            }
+
+            var newFriendRequest = new FriendRequest
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _friendRequestRepository.AddAsync(newFriendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId)
+        {
+            var friendshipExist = await _friendshipRepository.GetAsync(acceptorId, requesterId);
+            if (friendshipExist != null) throw new AppException("FRIENDSHIP_ALREADY_EXIST");
+
+            var friendRequest = await _friendRequestRepository.GetAsync(requesterId, acceptorId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            var newFrienship = new Friendship
+            {
+                User1Id = requesterId,
+                User2Id = acceptorId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _friendshipRepository.AddAsync(newFrienship);
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> CancelAddFriendAsync(Guid senderId, Guid receiverId)
+        {
+            var friendRequest = await _friendRequestRepository.GetAsync(senderId, receiverId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> DeclineAddFriendRequestAsync(Guid declinerId, Guid requesterId)
+        {
+            var friendRequest = await _friendRequestRepository.GetAsync(requesterId, declinerId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId)
+        {
+            var friendship = await _friendshipRepository.GetAsync(userId, friendId);
+            if (friendship == null)
+                throw new AppException("FRIENDSHIP_NOT_EXIST");
+
+            await _friendshipRepository.DeleteAsync(friendship);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId)
+        {
+            var friendship = await _friendshipRepository.GetAsync(sourceId, desId);
+            if (friendship != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.Friend
+            });
+
+            var friendRequest = await _friendRequestRepository.GetAsync(sourceId, desId);
+            if (friendRequest != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.SentByMe
+            });
+
+            var friendReceived = await _friendRequestRepository.GetAsync(desId, sourceId);
+            if (friendReceived != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.SentByThem
+            });
+
+            return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.None
+            });
+        }
+
+        public async Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId)
+        {
+            var user = await _userRepository.GetUser(userId.ToString());
+            if (user == null)
+                throw new UserNotFoundException();
+
+            var count = await _friendshipRepository.CountAsync(userId);
+            return Result<GetNumberOfFriendsDto>.Success(new GetNumberOfFriendsDto()
+            {
+                NumberOfFriends = count
+            });
         }
     }
 }

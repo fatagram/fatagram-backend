@@ -106,5 +106,15 @@ namespace Fatagram.Domain.Models
         /// Gets or sets the posts created by the user.
         /// </summary>
         public ICollection<UserPrivacy> Privacies { get; set; } = new List<UserPrivacy>();
+
+        // Friend requests
+        public ICollection<FriendRequest> FriendRequests { get; set; } = new List<FriendRequest>();
+
+        // Friend requests received
+        public ICollection<FriendRequest> FriendRequestsReceived { get; set; } = new List<FriendRequest>();
+
+        // Friendships
+        public ICollection<Friendship> FriendshipAsUser1 { get; set; } = new List<Friendship>();
+        public ICollection<Friendship> FriendshipAsUser2 { get; set; } = new List<Friendship>();
     }
 }

@@ -32,7 +32,7 @@ namespace Fatagram.Application.Utils
         /// Regular expression pattern for validating phone numbers.
         /// Requires at least 10 digits.
         /// </summary>
-        public const string Phone = @"^[0-9]{10,}$";
+        public const string Phone = @"^0[0-9]{9,}$";
 
         /// <summary>
         /// Regular expression pattern for validating last names.

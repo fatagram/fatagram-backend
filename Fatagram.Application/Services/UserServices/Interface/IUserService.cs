@@ -94,7 +94,18 @@ namespace Fatagram.Application.Services.UserServices.Interface
         Task<Result<string>> CheckUserExistAsync(string userId);
         Task<Result<string>> CheckUserExistAsync(Guid userId);
 
+        Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId);
 
+        Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId);
 
+        Task<Result<object>> CancelAddFriendAsync(Guid receiverId, Guid senderId);
+
+        Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId);
+
+        Task<Result<object>> DeclineAddFriendRequestAsync(Guid declinerId, Guid requesterId);
+
+        Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId);
+
+        Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId);
     }
 }

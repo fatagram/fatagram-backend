@@ -2,6 +2,10 @@
 using Fatagram.Application.Services.ImageService;
 using Fatagram.Application.Common;
 using Fatagram.Application.Checker;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository;
+using Fatagram.Infrastructure.Repositories.FriendRequestRepository;
+using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
 
 namespace Fatagram.API.Extensions.Dependencies
 {
@@ -24,6 +28,8 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+            services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
 
             services.AddAutoMapper(typeof(Mapping));
 

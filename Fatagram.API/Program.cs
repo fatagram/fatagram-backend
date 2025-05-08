@@ -23,6 +23,11 @@ namespace Fatagram.API
             // Configure services
             builder.Services.AddServices(builder.Configuration);
             builder.ConfigureKestrelOptions();
+
+            // Max request body size
+            builder.WebHost.UseKestrel(option => {
+                option.Limits.MaxRequestBodySize = 2 * 1024 * 1024; // 2MB
+            });
             
             // Create app 
             var app = builder.Build();

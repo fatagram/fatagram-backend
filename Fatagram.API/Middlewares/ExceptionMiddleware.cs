@@ -29,7 +29,6 @@ namespace Fatagram.API.Middlewares
                 // Color for log
                 _logger.LogError($"An error occurred {ex}");
 
-
                 await HanldeExceptionAsync(context, ex);
             }
         }

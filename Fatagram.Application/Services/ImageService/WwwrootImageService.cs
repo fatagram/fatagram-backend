@@ -5,6 +5,12 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using Fatagram.Application.Services.ImageService.Enum;
+using Fatagram.Shared.Extensions;
+
 
 namespace Fatagram.Application.Services.ImageService
 {
@@ -19,35 +25,54 @@ namespace Fatagram.Application.Services.ImageService
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<Result<string>> SaveImageAsync(Stream imageStream, string fileExtension, string folder)
+
+        public async Task<Result<string>> SaveImageAsync(ImageSize size, Stream imageStream, string fileExtension, string folder)
         {
-            try
+            var folderPath = Path.Combine(_webRootPath, folder);
+            Directory.CreateDirectory(folderPath);
+
+            var fileName = $"{Guid.NewGuid()}.jpg"; // Lưu luôn thành .jpg để đồng bộ format
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var image = await Image.LoadAsync(imageStream)) // Tự detect format
             {
-                var folderPath = Path.Combine(_webRootPath, folder);
-                Directory.CreateDirectory(folderPath);
-
-                var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(folderPath, fileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                if (size == ImageSize.Small)
                 {
-                    await imageStream.CopyToAsync(fileStream);
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(480, 480)
+                    }));
+                }
+                else if (size == ImageSize.Medium)
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(720, 720)
+                    }));
+                }
+                else if (size == ImageSize.Large)
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(1024, 1024)
+                    }));
                 }
 
-                // Lấy BaseUrl động theo request
-                var request = _httpContextAccessor.HttpContext?.Request;
-                if (request == null)
-                    return Result<string>.Failure("Request context is not available.");
+                // Nén chất lượng ảnh (chọn 70-80 là ổn)
+                var encoder = new JpegEncoder { Quality = 75 };
 
-                var baseUrl = $"{request.Scheme}://{request.Host.Value}";
+                await image.SaveAsJpegAsync(filePath, encoder);
+            }
 
-                // Trả về đường dẫn tuyệt đối
-                return Result<string>.Success($"{baseUrl}/{folder}/{fileName}");
-            }
-            catch (Exception ex)
-            {
-                return Result<string>.Failure(ex.Message);
-            }
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request == null)
+                return Result<string>.Failure("Request context is not available.");
+
+            var baseUrl = $"http://192.168.137.1:5000";
+            return Result<string>.Success($"{baseUrl}/{folder}/{fileName}");
         }
     }
 }

@@ -18,13 +18,13 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the unique identifier for the user privacy setting.
         /// </summary>
-        [Column("id", TypeName = "uniqueidentifier")]
+        [Column("id", TypeName = "uuid")]
         public Guid Id { get; set; }
 
         /// <summary>
         /// Gets or sets the unique identifier of the user.
         /// </summary>
-        [Column("user_id", TypeName = "uniqueidentifier")]
+        [Column("user_id", TypeName = "uuid")]
         [Required]
         public Guid UserId { get; set; }
 

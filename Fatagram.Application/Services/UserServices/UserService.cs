@@ -1,15 +1,24 @@
 ﻿using AutoMapper;
+using Fatagram.Application.Checker;
 using Fatagram.Application.Dtos.User;
+using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Application.Exceptions;
 using Fatagram.Application.Services.UserServices.Interface;
 using Fatagram.Application.Utils;
+using Fatagram.Application.Validation;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Domain.Utils;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
+using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
+using Microsoft.AspNetCore.Http;
+using System.Net.NetworkInformation;
+using System.Security.AccessControl;
 
 namespace Fatagram.Application.Services.UserServices
 {
@@ -21,7 +30,11 @@ namespace Fatagram.Application.Services.UserServices
         private readonly IAccountRepository _accountRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserPrivacyRepository _userPrivacyRepository;
+        private readonly IFriendshipRepository _friendshipRepository;
+        private readonly IFriendRequestRepository _friendRequestRepository;
         private readonly IMapper _mapper;
+        private readonly UserChecker _userChecker;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         private List<string> _canNotUpdateProperties = new List<string>()
         {
@@ -31,26 +44,27 @@ namespace Fatagram.Application.Services.UserServices
         public UserService(IAccountRepository accountRepository,
             IUserRepository userRepository, 
             IUserPrivacyRepository userPrivacyRepository, 
-            IMapper mapper)
+            IFriendshipRepository friendshipRepository,
+            IFriendRequestRepository friendRequestRepository,
+            IMapper mapper,
+            UserChecker userChecker,
+            IHttpContextAccessor httpContextAccessor)
         {
             _accountRepository = accountRepository;
             _userRepository = userRepository;
             _userPrivacyRepository = userPrivacyRepository;
+            _friendshipRepository = friendshipRepository;
+            _friendRequestRepository = friendRequestRepository;
             _mapper = mapper;
+            _userChecker = userChecker;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Result<string>> CheckUserExistAsync(string userId)
         {
-            try
-            {
-                var user = await _userRepository.GetUser(userId);
-                if (user is null) return Result<string>.Failure("USER_NOT_FOUND");
-                return Result<string>.Success("USER_FOUND");
-            }
-            catch
-            {
-                return Result<string>.Failure("USER_NOT_FOUND");
-            }
+            var user = await _userRepository.GetUser(userId);
+            if (user is null) throw new UserNotFoundException();
+            return Result<string>.Success();
         }
 
         public Task<Result<string>> CheckUserExistAsync(Guid userId)
@@ -65,53 +79,42 @@ namespace Fatagram.Application.Services.UserServices
         /// <returns></returns>
         public async Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(string senderId, string target, string fields)
         {
-            try
+            var res = await _userRepository.GetUser(target);
+            if (res is null) throw new UserNotFoundException();
+
+            var privacyDict = new Dictionary<string, string?>();
+            var listField = fields.Split(',').ToList();
+            foreach (var field in listField)
             {
-                var res = await _userRepository.GetUser(target);
-                if (res is null) return Result<GetUserProfileDto>.Failure("USER_NOT_FOUND");
-
-                var privacyDict = new Dictionary<string, string?>();
-                var listField = fields.Split(',').ToList();
-                foreach (var field in listField)
-                {
-                    var value = res.GetPropertyValue(field);
-                    if (value is not null)
-                    {
-                        privacyDict.Add(field, value?.ToString());
-                    }
-                }
-                var targetId = res.Id.ToString();
-                if (senderId == targetId)
-                {
-                    return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-                    {
-                        Infos = privacyDict,
-                        IsOwner = true
-                    });
-                }
-                var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
-
-                foreach (var field in listField)
-                {
-                    privacyDict[field] = privacyLevels[field] switch
-                    {
-                        PrivacyLevel.Public => privacyDict[field],
-                        PrivacyLevel.Private => null,
-                        _ => null
-                    };
-                }
-
+                var value = res.GetPropertyValue(field);
+                privacyDict.Add(field, value?.ToString());
+            }
+            var targetId = res.Id.ToString();
+            if (senderId == targetId)
+            {
                 return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
                 {
                     Infos = privacyDict,
-                    IsOwner = false
+                    IsOwner = true
                 });
             }
-            catch (Exception)
+            var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
+
+            foreach (var field in listField)
             {
-                return Result<GetUserProfileDto>.Failure("GET_USER_INFO_FAILED");
+                privacyDict[field] = privacyLevels[field] switch
+                {
+                    PrivacyLevel.Public => privacyDict[field],
+                    PrivacyLevel.Private => null,
+                    _ => null
+                };
             }
-            
+
+            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
+            {
+                Infos = privacyDict,
+                IsOwner = false
+            });
         }
 
         /// <summary>
@@ -131,50 +134,36 @@ namespace Fatagram.Application.Services.UserServices
         /// <returns></returns>
         public async Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(string target, string fields)
         {
-            try
+            if (string.IsNullOrEmpty(fields)) throw new AppException("FIELD_IS_NULL");
+            var res = await _userRepository.GetUser(target);
+            if (res is null) throw new UserNotFoundException();
+
+            var privacyDict = new Dictionary<string, string?>();
+            var listField = fields.Split(',').ToList();
+            foreach (var field in listField)
             {
-                var res = await _userRepository.GetUser(target);
-                if (res is null) return Result<GetUserProfileDto>.Failure("USER_NOT_FOUND");
-
-                var privacyDict = new Dictionary<string, string?>();
-                var listField = fields.Split(',').ToList();
-                foreach (var field in listField)
-                {
-                    var value = res.GetPropertyValue(field);
-                    if (value is not null)
-                    {
-                        privacyDict.Add(field, value?.ToString());
-                    }
-                }
-
-                var targetId = res.Id.ToString();
-                var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
-
-                foreach (var field in listField)
-                {
-                    if (!privacyDict.ContainsKey(field))
-                    {
-                        privacyDict[field] = null;
-                        continue;
-                    }
-                    privacyDict[field] = privacyLevels[field] switch
-                    {
-                        PrivacyLevel.Public => privacyDict[field],
-                        PrivacyLevel.Private => null,
-                        _ => null
-                    };
-                }
-
-                return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-                {
-                    Infos = privacyDict,
-                    IsOwner = false
-                });
+                var value = res.GetPropertyValue(field);
+                privacyDict.Add(field, value?.ToString());
             }
-            catch (Exception)
+
+            var targetId = res.Id.ToString();
+            var privacyLevels = await _userPrivacyRepository.GetPrivacyLevelsAsync(targetId, listField);
+
+            foreach (var field in listField)
             {
-                return Result<GetUserProfileDto>.Failure("GET_USER_INFO_FAILED");
+                privacyDict[field] = privacyLevels[field] switch
+                {
+                    PrivacyLevel.Public => privacyDict[field],
+                    PrivacyLevel.Private => null,
+                    _ => null
+                };
             }
+
+            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
+            {
+                Infos = privacyDict,
+                IsOwner = false
+            });
         }
 
         /// <summary>
@@ -193,7 +182,7 @@ namespace Fatagram.Application.Services.UserServices
         /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns> </returns>
-        public async Task<Result<string>> UpdateUserAsync(string userId, UpdateUserDto updateUserDto)
+        public async Task<Result<UpdateUserDto>> UpdateUserAsync(string userId, UpdateUserDto updateUserDto)
             => await UpdateUserAsync(Guid.Parse(userId), updateUserDto);
 
 
@@ -203,29 +192,158 @@ namespace Fatagram.Application.Services.UserServices
         /// <param name="userId"></param>
         /// <param name="updateUserDto"></param>
         /// <returns></returns>
-        public async Task<Result<string>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
+        public async Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
         {
-            try
-            {
-                var existingUser = await _userRepository.GetUser(userId.ToString());
-                if (existingUser is null) return Result<string>.Failure("USER_NOT_FOUND");
-                // Update user
-                var user = _mapper.Map<User>(updateUserDto);
+            var existingUser = await _userRepository.GetUser(userId.ToString());
+            if (existingUser is null) throw new UserNotFoundException();
 
-                foreach (var prop in typeof(User).GetProperties())
-                {
-                    var value = prop.GetValue(user);
-                    if (value is null || _canNotUpdateProperties.Contains(prop.Name)) continue;
-                    prop.SetValue(existingUser, value);
-                }
-                await _userRepository.UpdateUserAsync(existingUser);
+            _mapper.Map(updateUserDto, existingUser);
+            await _userRepository.UpdateUserAsync(existingUser);
+            return Result<UpdateUserDto>.Success(updateUserDto);
+        }
 
-                return Result<string>.Success("UPDATE_USER_SUCCESS");
-            }
-            catch (Exception)
+        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto)
+        {
+            ValidationHelper.EnsureValidUrlName(changeUrlNameDto.UrlName);
+
+            var user = await _userRepository.GetUser(userId.ToString());
+            if (user == null)
+                throw new UserNotFoundException();
+            var existUser = await _userRepository.GetUser(changeUrlNameDto.UrlName);
+
+            if (existUser != null && existUser.Id != user.Id)
+                throw new AppException("URLNAME_EXIST");
+
+            user.UrlName = changeUrlNameDto.UrlName;
+            await _userRepository.UpdateUserAsync(user);
+            return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
+        }
+
+        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(string userId, ChangeUrlNameDto changeUrlNameDto)
+            => await UpdateUrlNameAsync(userId.ToGuid(), changeUrlNameDto);
+
+        public async Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto)
+        {
+            var user = await _userRepository.GetUser(userId);
+            if (user == null) throw new UserNotFoundException();
+
+            user.FirstName = changeNameDto.FirstName;
+            user.LastName = changeNameDto.LastName;
+            user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
+            await _userRepository.UpdateUserAsync(user);
+            return Result<ChangeNameDto>.Success(changeNameDto);
+        }
+
+        public async Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId)
+        {
+            if ((await _friendshipRepository.GetAsync(senderId, receiverId)) != null)
+                throw new Exception("FRIENDSHIP_ALREADY_EXIST");
+
+            if ((await _friendRequestRepository.GetAsync(senderId, receiverId)) != null
+                || (await _friendRequestRepository.GetAsync(receiverId, senderId)) != null)
             {
-                return Result<string>.Failure(ErrorCodes.UPDATE_USER_FAILED);
+                throw new AppException("REQUEST_ALREADY_EXIST");
             }
+
+            var newFriendRequest = new FriendRequest
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _friendRequestRepository.AddAsync(newFriendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId)
+        {
+            var friendshipExist = await _friendshipRepository.GetAsync(acceptorId, requesterId);
+            if (friendshipExist != null) throw new AppException("FRIENDSHIP_ALREADY_EXIST");
+
+            var friendRequest = await _friendRequestRepository.GetAsync(requesterId, acceptorId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            var newFrienship = new Friendship
+            {
+                User1Id = requesterId,
+                User2Id = acceptorId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _friendshipRepository.AddAsync(newFrienship);
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> CancelAddFriendAsync(Guid senderId, Guid receiverId)
+        {
+            var friendRequest = await _friendRequestRepository.GetAsync(senderId, receiverId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> DeclineAddFriendRequestAsync(Guid declinerId, Guid requesterId)
+        {
+            var friendRequest = await _friendRequestRepository.GetAsync(requesterId, declinerId);
+            if (friendRequest == null)
+                throw new AppException("REQUEST_NOT_EXIST");
+
+            await _friendRequestRepository.DeleteAsync(friendRequest);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId)
+        {
+            var friendship = await _friendshipRepository.GetAsync(userId, friendId);
+            if (friendship == null)
+                throw new AppException("FRIENDSHIP_NOT_EXIST");
+
+            await _friendshipRepository.DeleteAsync(friendship);
+            return Result<object>.Success();
+        }
+
+        public async Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId)
+        {
+            var friendship = await _friendshipRepository.GetAsync(sourceId, desId);
+            if (friendship != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.Friend
+            });
+
+            var friendRequest = await _friendRequestRepository.GetAsync(sourceId, desId);
+            if (friendRequest != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.SentByMe
+            });
+
+            var friendReceived = await _friendRequestRepository.GetAsync(desId, sourceId);
+            if (friendReceived != null) return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.SentByThem
+            });
+
+            return Result<GetFriendShipStatusDto>.Success(new GetFriendShipStatusDto
+            {
+                Status = FriendShipStatus.None
+            });
+        }
+
+        public async Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId)
+        {
+            var user = await _userRepository.GetUser(userId.ToString());
+            if (user == null)
+                throw new UserNotFoundException();
+
+            var count = await _friendshipRepository.CountAsync(userId);
+            return Result<GetNumberOfFriendsDto>.Success(new GetNumberOfFriendsDto()
+            {
+                NumberOfFriends = count
+            });
         }
     }
 }

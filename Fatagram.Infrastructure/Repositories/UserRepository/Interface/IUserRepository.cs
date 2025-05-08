@@ -16,18 +16,25 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         Task<User?> GetUserByUsernameAsync(string username);
 
         /// <summary>
+        /// Get a user by url name
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        Task<User?> GetUserByUrlNameAsync(string username);
+
+        /// <summary>
+        /// Get a user by email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        Task<User?> GetUserByEmailAsync(string email);
+            
+        /// <summary>
         /// Get a user by user id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         Task<User?> GetUser(string key);
-
-        ///// <summary>
-        ///// Get a user by user id
-        ///// </summary>
-        ///// <param name="id"></param>
-        ///// <returns></returns>
-        //Task<User?> GetUserByIdAsync(string id);
 
         /// <summary>
         /// Create a new user

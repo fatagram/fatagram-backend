@@ -41,27 +41,19 @@ namespace Fatagram.API.Authentication
             if (!Request.Cookies.TryGetValue("accessToken", out var token) || string.IsNullOrWhiteSpace(token))
                 return Task.FromResult(AuthenticateResult.Fail("Missing Authorization Header"));
 
-            // Get token from header
-            // var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "").Trim();
-            Debug.WriteLine($"Token: {token}");
-
             try
             {
                 var res = _jwtService.ValidateToken(token);
                 if (!res.IsSuccess || res.Data == null)
                 {
-                    Debug.WriteLine("Invalid token");
                     return Task.FromResult(AuthenticateResult.Fail(ErrorCodes.ACCESS_TOKEN_INVALID));
                 }
-
                 var ticket = new AuthenticationTicket(res.Data, "JwtCustomScheme");
 
-                Debug.WriteLine("Token is valid");
                 return Task.FromResult(AuthenticateResult.Success(ticket));
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Token validation failed: {ex.Message}");
                 return Task.FromResult(AuthenticateResult.Fail($"Token validation failed: {ex.Message}"));
             }
         }

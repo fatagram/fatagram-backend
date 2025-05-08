@@ -3,8 +3,8 @@ using System;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -17,24 +17,24 @@ namespace Fatagram.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.13")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Fatagram.Domain.Models.Account", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamptz")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<string>("PasswordHash")
@@ -43,17 +43,23 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnName("password_hash");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamptz")
                         .HasColumnName("updated_at");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("username");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -65,23 +71,79 @@ namespace Fatagram.Infrastructure.Migrations
                     b.ToTable("accounts");
                 });
 
+            modelBuilder.Entity("Fatagram.Domain.Models.FriendRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("ReceiverId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("receiver_id");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("friend_request");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.Friendship", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("User1Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_1_id");
+
+                    b.Property<Guid>("User2Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_2_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("User1Id");
+
+                    b.HasIndex("User2Id");
+
+                    b.ToTable("friendship");
+                });
+
             modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Token")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("token");
 
                     b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("account_id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamptz")
                         .HasColumnName("created_at");
 
                     b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamptz")
                         .HasColumnName("expiry_date");
 
                     b.HasKey("Token");
@@ -95,61 +157,70 @@ namespace Fatagram.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("avatar");
 
                     b.Property<string>("Background")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("background");
 
                     b.Property<string>("Bio")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("bio");
 
                     b.Property<DateTime?>("BirthDay")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamptz")
                         .HasColumnName("birth_day");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("email");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("first_name");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("full_name");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("gender");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("Phone")
                         .HasColumnType("varchar(10)")
                         .HasColumnName("phone");
 
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("username");
+                    b.Property<string>("UrlName")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("urlname");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("Username")
-                        .IsUnique()
-                        .HasFilter("[username] IS NOT NULL");
+                    b.HasIndex("UrlName")
+                        .IsUnique();
 
                     b.ToTable("users");
                 });
@@ -158,7 +229,7 @@ namespace Fatagram.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Field")
@@ -172,7 +243,7 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnName("level");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
@@ -191,6 +262,44 @@ namespace Fatagram.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.FriendRequest", b =>
+                {
+                    b.HasOne("Fatagram.Domain.Models.User", "Receiver")
+                        .WithMany("FriendRequestsReceived")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Fatagram.Domain.Models.User", "Sender")
+                        .WithMany("FriendRequests")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.Friendship", b =>
+                {
+                    b.HasOne("Fatagram.Domain.Models.User", "User1")
+                        .WithMany("FriendshipAsUser1")
+                        .HasForeignKey("User1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Fatagram.Domain.Models.User", "User2")
+                        .WithMany("FriendshipAsUser2")
+                        .HasForeignKey("User2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User1");
+
+                    b.Navigation("User2");
                 });
 
             modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
@@ -223,6 +332,14 @@ namespace Fatagram.Infrastructure.Migrations
             modelBuilder.Entity("Fatagram.Domain.Models.User", b =>
                 {
                     b.Navigation("Accounts");
+
+                    b.Navigation("FriendRequests");
+
+                    b.Navigation("FriendRequestsReceived");
+
+                    b.Navigation("FriendshipAsUser1");
+
+                    b.Navigation("FriendshipAsUser2");
 
                     b.Navigation("Privacies");
                 });

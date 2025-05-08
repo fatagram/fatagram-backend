@@ -1,4 +1,5 @@
-﻿using Fatagram.Shared.Utils;
+﻿using Fatagram.Application.Services.ImageService.Enum;
+using Fatagram.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Fatagram.Application.Services.ImageService.Interface
 {
     public interface IImageService
     {
-        Task<Result<string>> SaveImageAsync(Stream imageStream, string fileExtension, string folderPath);
+        Task<Result<string>> SaveImageAsync(ImageSize imageSize, Stream imageStream, string fileExtension, string folderPath);
 
     }
 }

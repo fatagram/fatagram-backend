@@ -1,4 +1,5 @@
 ﻿using Fatagram.Application.Utils;
+using SixLabors.ImageSharp.PixelFormats;
 using System.ComponentModel.DataAnnotations;
 
 namespace Fatagram.Application.Dtos.User
@@ -8,14 +9,14 @@ namespace Fatagram.Application.Dtos.User
     /// </summary>
     public class UpdateUserDto
     {
-        [RegularExpression(@"^(?![0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$)(?!.*[_.]{2})(?![_.])(?!.*[_.]$)[a-zA-Z0-9._]{3,20}$")]
+        [RegularExpression(RegexPatterrns.Username)]
         [Required]
         public string? Username { get; set; }
 
         /// <summary>
         /// User's first name
         /// </summary>
-        [RegularExpression(@"^[a-zA-Z]+$", ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterrns.FirstName, ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
         public string? FirstName { get; set; }
 
@@ -23,7 +24,7 @@ namespace Fatagram.Application.Dtos.User
         /// User's last name
         /// </summary>
         /// 
-        [RegularExpression(@"^[a-zA-Z]+$", ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterrns.LastName, ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
         public string? LastName { get; set; }
 
@@ -31,7 +32,7 @@ namespace Fatagram.Application.Dtos.User
         /// User's email
         /// </summary>
         /// 
-        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = ErrorCodes.EMAIL_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterrns.Email, ErrorMessage = ErrorCodes.EMAIL_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.EMAIL_NOT_CORRECT_FORMAT)]
         public string? Email { get; set; }
 
@@ -51,7 +52,7 @@ namespace Fatagram.Application.Dtos.User
         /// User's phone number
         /// </summary>
         /// 
-        [RegularExpression(@"^[0-9]{10,}$", ErrorMessage = ErrorCodes.PHONE_NUMBER_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterrns.Phone, ErrorMessage = ErrorCodes.PHONE_NUMBER_NOT_CORRECT_FORMAT)]
         public string? Phone { get; set; }
     }
 }

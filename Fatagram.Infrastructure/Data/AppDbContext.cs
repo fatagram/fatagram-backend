@@ -1,4 +1,6 @@
-﻿using Fatagram.Domain.Models;
+﻿using Fatagram.Domain.Enums;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -12,28 +14,20 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserPrivacy> UserPrivacies { get; set; }
+        public DbSet<Friendship> Friendships { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Account>()
-                .HasOne(a => a.User)
-                .WithMany(u => u.Accounts)
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.AddUser();
+            modelBuilder.AddAccount();
+            modelBuilder.AddUserPrivacy();
+            modelBuilder.AddRefreshToken();
 
-            modelBuilder.Entity<UserPrivacy>()
-                .HasOne(up => up.User)
-                .WithMany(u => u.Privacies)
-                .HasForeignKey(up => up.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<RefreshToken>()
-                .HasOne(rt => rt.Account)
-                .WithMany(a => a.RefreshTokens)
-                .HasForeignKey(rt => rt.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.AddFriend();
         }
     }
 }

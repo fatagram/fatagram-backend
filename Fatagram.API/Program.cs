@@ -1,7 +1,12 @@
-using Fatagram.API.Dependencies;
-using Fatagram.Application.Common;
-using Fatagram.Application.Services.ImageService;
-using Fatagram.Application.Services.ImageService.Interface;
+using Fatagram.API.Extensions.Constrains;
+using Fatagram.API.Extensions.Dependencies;
+using Fatagram.API.Extensions.ExceptionHandlerExtensions;
+using Fatagram.API.Extensions.ServiceCollectionExtensions;
+using Fatagram.API.Extensions.WebApplicationBuilderExtensions;
+using Fatagram.API.Hubs;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
+using System.Xml;
 
 namespace Fatagram.API
 {
@@ -15,60 +20,16 @@ namespace Fatagram.API
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-            // Add services to the container.
-            builder.Services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            // Configure services
+            builder.Services.AddServices(builder.Configuration);
+            builder.ConfigureKestrelOptions();
+
+            // Max request body size
+            builder.WebHost.UseKestrel(option => {
+                option.Limits.MaxRequestBodySize = 2 * 1024 * 1024; // 2MB
             });
-
-            builder.AddDependencies();
-
-            // Dependency injection
-            builder.Services.AddHttpContextAccessor();
-
-            // Turn off ModelStateInvalidFilter
-            builder.Services.Configure<ApiBehaviorOptions>(options =>
-            {
-                options.SuppressModelStateInvalidFilter = true;
-            });
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            var _myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
-            // Add CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: _myAllowSpecificOrigins,
-                        builder =>
-                        {
-                            builder.SetIsOriginAllowed(origin => true)
-                                .AllowAnyHeader()
-                                .AllowAnyMethod()
-                                .AllowCredentials();
-                        });
-            });
-
-            // Add authentication
-            builder.Services.AddAuthentication("JwtAuthenticationScheme")
-                .AddScheme<AuthenticationSchemeOptions, JwtAuthenticationHandler>("JwtAuthenticationScheme", null);
-
-            var certPath = builder.Configuration["PfxPath"] ?? "";
-            var certPassword = builder.Configuration["PfxPassword"];
-
-            // Add authorization
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                options.ListenAnyIP(5000);
-                options.ListenAnyIP(5001, listenOptions =>
-                {
-                    listenOptions.UseHttps(certPath, certPassword);
-                });
-            });
-
+            
+            // Create app 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -78,16 +39,34 @@ namespace Fatagram.API
                 app.UseSwaggerUI();
             }
 
-            app.UseCors(_myAllowSpecificOrigins);
-            app.UseHttpsRedirection();
+            app.UseRouting();
 
+            // Cors 
+            app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
+
+            // SignalR Hubs
+            app.MapHub<NotificationHub>("/hubs/notification");
+
+            // Exception handling
+            app.ConfigureExceptionHandler();
+
+            // Redirect HTTP to HTTPS
+            if (!Setups.IsForLAN)
+                app.UseHttpsRedirection();
+
+            // Static files
             app.UseStaticFiles();
 
-            // Check access token
+            // Authentication
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Routing
             app.MapControllers();
 
+            var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
+
+            // Start the application
             app.Run();
         }
     }

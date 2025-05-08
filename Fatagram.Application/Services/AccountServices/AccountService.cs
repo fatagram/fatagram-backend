@@ -9,9 +9,8 @@ using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Account;
 using Fatagram.Shared.Utils;
-using Fatagram.Infrastructure.Exceptions.AccountException;
-using Fatagram.Infrastructure.Exceptions.UserExceptions;
 using System.Runtime.Serialization;
+using Fatagram.Application.Exceptions;
 
 namespace Fatagram.Application.Services.AccountServices
 {
@@ -24,7 +23,6 @@ namespace Fatagram.Application.Services.AccountServices
         private readonly IAccountRepository _accountRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-
 
 
         // Constructor
@@ -42,25 +40,29 @@ namespace Fatagram.Application.Services.AccountServices
         /// <returns></returns>
         public async Task<Result<string>> Register(RegisterDto registerDto)
         {
-            try
+            var account = await _accountRepository.GetAccountByUsernameAsync(registerDto.Username);
+            if (account is not null)
             {
-                // Get email, phone, name from registerDto to newUser
-                var newUser = _mapper.Map<User>(registerDto);
+                throw new DuplicateException(ErrorCodes.REGISTER_USERNAME_EXISTED);
+            }
+            var user = await _userRepository.GetUserByEmailAsync(registerDto.Email);
+            if (user is not null)
+            {
+                throw new DuplicateException(ErrorCodes.EMAIL_EXISTED);
+            }
 
-                // Get username and password from registerDto to newAccount
-                var newAccount = _mapper.Map<Account>(registerDto);
-                newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-                
-                newUser.FullName = $"{registerDto.FirstName} {registerDto.LastName}";
-                newUser.Accounts.Add(newAccount);
-                await _userRepository.CreateUserAsync(newUser);
-                
-                return Result<string>.Success("REGISTER_SUCCESS");
-            }
-            catch (Exception)
-            {
-                return Result<string>.Failure("REGISTER_FAILED");
-            }
+            // Get email, phone, name from registerDto to newUser
+            var newUser = _mapper.Map<User>(registerDto);
+
+            // Get username and password from registerDto to newAccount
+            var newAccount = _mapper.Map<Account>(registerDto);
+            newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+
+            newUser.FullName = $"{registerDto.FirstName} {registerDto.LastName}";
+            newUser.Accounts.Add(newAccount);
+            await _userRepository.CreateUserAsync(newUser);
+
+            return Result<string>.Success();
         }
 
 
@@ -72,25 +74,18 @@ namespace Fatagram.Application.Services.AccountServices
         /// <returns></returns>
         public async Task<Result<string>> ChangePasswordAsync(string userId, ChangePasswordDto changePasswordRequest)
         {
-            try
+            var res = await _accountRepository.GetAccountByUserIdAsync(userId);
+            if (res is null) throw new AccountNotFoundException();
+
+            if (!BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, res.PasswordHash))
             {
-                var res = await _accountRepository.GetAccountByUserIdAsync(userId);
-                if (res is null) return Result<string>.Failure(ErrorCodes.ACCOUNT_NOT_FOUND, $"Cannot find account {userId}");
-
-                if (!BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, res.PasswordHash))
-                {
-                    return Result<string>.Failure(ErrorCodes.WRONG_PASSWORD, "Invalid password");
-                }
-
-                res.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
-                await _accountRepository.UpdateAccountAsync(res);
-
-                return Result<string>.Success("CHANGE_PASSWORD_SUCCESS");
+                throw new AppException(ErrorCodes.WRONG_PASSWORD);
             }
-            catch (Exception)
-            {
-                return Result<string>.Failure("CHANGE_PASSWORD_FAILED");
-            }
+
+            res.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
+            await _accountRepository.UpdateAccountAsync(res);
+
+            return Result<string>.Success();
         }
     }
 }

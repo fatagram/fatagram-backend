@@ -49,5 +49,7 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
                 .Where(f => f.User1Id == userId || f.User2Id == userId)
                 .CountAsync();
         }
+
+        
     }
 }

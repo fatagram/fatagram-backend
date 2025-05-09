@@ -107,5 +107,7 @@ namespace Fatagram.Application.Services.UserServices.Interface
         Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId);
 
         Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId);
+
+        Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
     }
 }

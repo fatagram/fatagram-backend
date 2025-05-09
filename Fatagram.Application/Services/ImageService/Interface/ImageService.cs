@@ -11,7 +11,12 @@ namespace Fatagram.Application.Services.ImageService.Interface
 {
     public interface IImageService
     {
-        Task<Result<string>> SaveImageAsync(ImageSize imageSize, Stream imageStream, string fileExtension, string folderPath);
+        Task<Result<string>> SaveImageAsync(
+            ImageSize size, 
+            Stream imageStream, 
+            string fileExtension, 
+            string folder,
+            bool isAvatar = false);
 
     }
 }

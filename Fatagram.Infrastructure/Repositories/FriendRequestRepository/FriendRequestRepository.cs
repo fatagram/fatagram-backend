@@ -36,5 +36,18 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
             return await _dbContext.FriendRequests
                 .FirstOrDefaultAsync(fr => fr.SenderId == senderId && fr.ReceiverId == receiverId);
         }
+
+        public async Task<List<FriendRequest>> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
+        {
+            var friendRequests = await _dbContext.FriendRequests
+                .Where(fr => fr.ReceiverId == userId)
+                .Include(fr => fr.Sender)
+                .OrderByDescending(fr => fr.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return friendRequests;
+        }
     }
 }

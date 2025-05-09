@@ -97,7 +97,12 @@ namespace Fatagram_API.Controllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) throw new UnauthorizedException();
 
-            var res = await _imageService.SaveImageAsync(ImageSize.Small, file.OpenReadStream(), Path.GetExtension(file.FileName), "avatars");
+            var res = await _imageService.SaveImageAsync(
+                ImageSize.Small, 
+                file.OpenReadStream(), 
+                Path.GetExtension(file.FileName), 
+                "avatars",
+                true);
             await _userService.UpdateUserAsync(userId, new UpdateUserDto()
             {
                 Avatar = res.Data
@@ -259,6 +264,19 @@ namespace Fatagram_API.Controllers
             }
             var res = await _userService.GetNumberOfFriendsAsync(targetId.ToGuid());
             return Ok(ApiResponse<GetNumberOfFriendsDto>.Success(
+                    data: res.Data
+                ));
+        }
+    
+        [Authorize]
+        [HttpGet("friend/requests")]
+        public async Task<IActionResult> GetFriendRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) throw new UnauthorizedException();
+
+            var res = await _userService.GetFriendRequestsAsync(userId.ToGuid(), page, pageSize);
+            return Ok(ApiResponse<GetFriendRequestsDto>.Success(
                     data: res.Data
                 ));
         }

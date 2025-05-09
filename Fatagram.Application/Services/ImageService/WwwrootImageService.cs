@@ -25,8 +25,12 @@ namespace Fatagram.Application.Services.ImageService
             _httpContextAccessor = httpContextAccessor;
         }
 
-
-        public async Task<Result<string>> SaveImageAsync(ImageSize size, Stream imageStream, string fileExtension, string folder)
+        public async Task<Result<string>> SaveImageAsync(
+            ImageSize size, 
+            Stream imageStream, 
+            string fileExtension, 
+            string folder,
+            bool isAvatar = false)
         {
             var folderPath = Path.Combine(_webRootPath, folder);
             Directory.CreateDirectory(folderPath);
@@ -36,30 +40,44 @@ namespace Fatagram.Application.Services.ImageService
 
             using (var image = await Image.LoadAsync(imageStream)) // Tự detect format
             {
-                if (size == ImageSize.Small)
+                int minSize = Math.Min(image.Width, image.Height);
+                var cropRectangle = new Rectangle(
+                    (image.Width - minSize) / 2,
+                    (image.Height - minSize) / 2,
+                    minSize,
+                    minSize
+                );
+                
+                image.Mutate(x =>
                 {
-                    image.Mutate(x => x.Resize(new ResizeOptions
+                    if (isAvatar) x.Crop(cropRectangle);
+
+                    if (size == ImageSize.Small)
                     {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(480, 480)
-                    }));
-                }
-                else if (size == ImageSize.Medium)
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
+                        x.Resize(new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(480, 480)
+                        });
+                    }
+                    else if (size == ImageSize.Medium)
                     {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(720, 720)
-                    }));
-                }
-                else if (size == ImageSize.Large)
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
+                        x.Resize(new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(720, 720)
+                        });
+                    }
+                    else if (size == ImageSize.Large)
                     {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(1024, 1024)
-                    }));
-                }
+                        x.Resize(new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(1024, 1024)
+                        });
+                    }
+                });
+
 
                 // Nén chất lượng ảnh (chọn 70-80 là ổn)
                 var encoder = new JpegEncoder { Quality = 75 };

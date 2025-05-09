@@ -12,7 +12,6 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces
         Task AddAsync(Friendship friendship);
         Task DeleteAsync(Friendship friendship);
         Task<Friendship?> GetAsync(Guid user1Id, Guid user2Id);
-
         Task<int> CountAsync(Guid userId);
     }
 }

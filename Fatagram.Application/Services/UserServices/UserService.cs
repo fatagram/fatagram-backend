@@ -345,5 +345,19 @@ namespace Fatagram.Application.Services.UserServices
                 NumberOfFriends = count
             });
         }
+
+        public async Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
+        {
+            var requests = await _friendRequestRepository.GetFriendRequestsAsync(userId, page, pageSize);
+            var total = 0;
+
+            var friendRequests = _mapper.Map<List<FriendRequestDto>>(requests);
+            var ret = new GetFriendRequestsDto()
+            {
+                FriendRequests = friendRequests,
+                TotalCount = total
+            };
+            return Result<GetFriendRequestsDto>.Success(ret);
+        }
     }
 }

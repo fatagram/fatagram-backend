@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Shared.Enums;
+using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Dtos.User
 {
@@ -22,5 +24,21 @@ namespace Fatagram.Application.Dtos.User
     public class GetNumberOfFriendsDto
     {
         public int NumberOfFriends { get; set; }
+    }
+
+
+    public class FriendRequestDto 
+    {
+        public Guid SenderId { get; set; }
+        public string? SenderUrlName { get; set; } = null;
+        public string? SenderAvatar { get; set; }
+        public string? SenderName { get; set; } = null!;
+        public TimeDistance CreatedAt { get; set; } = new(0, TimeUnit.Miliseconds);
+    }
+
+    public class GetFriendRequestsDto 
+    {
+        public List<FriendRequestDto> FriendRequests { get; set; } = new();
+        public int TotalCount { get; set; }
     }
 }

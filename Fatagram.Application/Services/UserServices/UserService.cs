@@ -348,14 +348,14 @@ namespace Fatagram.Application.Services.UserServices
 
         public async Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
         {
-            var requests = await _friendRequestRepository.GetFriendRequestsAsync(userId, page, pageSize);
-            var total = 0;
+            var data = await _friendRequestRepository.GetFriendRequestsAsync(userId, page, pageSize);
+            var total = data.total;
 
-            var friendRequests = _mapper.Map<List<FriendRequestDto>>(requests);
+            var friendRequests = _mapper.Map<List<FriendRequestDto>>(data.requests);
             var ret = new GetFriendRequestsDto()
             {
                 FriendRequests = friendRequests,
-                TotalCount = total
+                Total = total
             };
             return Result<GetFriendRequestsDto>.Success(ret);
         }

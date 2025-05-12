@@ -86,6 +86,17 @@ namespace Fatagram.Application.Services.AccountServices
             await _accountRepository.UpdateAccountAsync(res);
 
             return Result<string>.Success();
+        }   
+
+        public async Task<Result<AccountsDto>> GetAccountsAsync(int page, int pageSize, string? username = null)
+        {
+            var result = await _accountRepository.GetAccountsAsync(page, pageSize, username);
+            var accountsDto = _mapper.Map<IEnumerable<AccountDto>>(result.accounts);
+            return Result<AccountsDto>.Success(new AccountsDto {
+                Accounts = accountsDto.ToList(),
+                TotalPage = result.totalPage,
+                TotalAccount = result.totalAccount
+            });
         }
     }
 }

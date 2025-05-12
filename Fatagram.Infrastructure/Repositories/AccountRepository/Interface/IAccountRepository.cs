@@ -30,7 +30,7 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
         /// <returns></returns>
         Task<Account?> GetAccountByIdAsync(string accountId);
 
-
+        Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(int page, int pageSize, string? username = null);
 
         /// <summary>
         /// Get an account by user id

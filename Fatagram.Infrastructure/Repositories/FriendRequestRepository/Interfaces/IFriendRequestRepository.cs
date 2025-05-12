@@ -12,7 +12,7 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interface
         Task AddAsync(FriendRequest friendRequest);
         Task DeleteAsync(FriendRequest friendRequest);
         Task<FriendRequest?> GetAsync(Guid senderId, Guid receiverId);
-        Task<List<FriendRequest>> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
+        Task<(List<FriendRequest> requests, int total)> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
 
     }
 }

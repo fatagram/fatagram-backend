@@ -95,5 +95,27 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
             _dbContext.Accounts.Update(account);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(int page, int pageSize, string? username = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 1;
+
+            IQueryable<Account> query = _dbContext.Accounts.Include(a => a.User);
+
+            if (!string.IsNullOrEmpty(username))
+            {
+                query = query.Where(a => a.Username.StartsWith(username));
+            }
+
+            var totalAccount = await query.CountAsync();
+            var totalPage = (int)Math.Ceiling((double)totalAccount / pageSize);
+            var accounts = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (accounts, totalPage, totalAccount);
+        }
     }
 }

@@ -50,6 +50,5 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         /// <returns></returns>
         Task UpdateUserAsync(User updateUser);
 
-
     }
 }

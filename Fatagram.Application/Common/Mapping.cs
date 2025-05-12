@@ -27,6 +27,10 @@ namespace Fatagram.Application.Common
 
             CreateMap<User, UserDto>();
 
+            CreateMap<Account, AccountDto>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()));
+
             CreateMap<RegisterDto, Account>();
             CreateMap<RegisterDto, User>()
                 .ForMember(dest => dest.UrlName, opt => opt.Ignore());

@@ -17,7 +17,7 @@ namespace Fatagram.Application.Services.AccountServices.Interface
         /// <returns></returns>
         Task<Result<string>> Register(RegisterDto request);
 
-
+        Task<Result<AccountsDto>> GetAccountsAsync(int page, int pageSize, string? username = null);
 
         /// <summary>
         /// Change the password of a user

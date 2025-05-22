@@ -8,7 +8,8 @@ namespace Fatagram.Application.Exceptions
 {
     public class DataNullException : AppException
     {
-        public DataNullException() : base("DATA_NULL", "Data is null")
+        public DataNullException(string errorCode = "DATA_NULL", string? message = null)
+            : base(errorCode, null, message)
         { }
     }
 }

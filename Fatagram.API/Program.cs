@@ -51,8 +51,8 @@ namespace Fatagram.API
             app.ConfigureExceptionHandler();
 
             // Redirect HTTP to HTTPS
-            if (!Setups.IsForLAN)
-                app.UseHttpsRedirection();
+            // if (!Setups.IsForLAN)
+            //     app.UseHttpsRedirection();
 
             // Static files
             app.UseStaticFiles();

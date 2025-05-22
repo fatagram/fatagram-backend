@@ -33,12 +33,12 @@ namespace Fatagram.Application.Services.TokenServices
         /// <returns></returns>
         public async Task<Result<TokenDto>> GenerateTokensAsync(string username)
         {
-            var res = await _accountRepository.GetAccountByUsernameAsync(username);
+            var res = await _accountRepository.GetByUsernameAsync(username);
             if (res is null) throw new AccountNotFoundException();
             var account = res;
 
             var refreshToken = RefreshTokenService.GenerateRefreshToken().Token;
-            await _refreshTokenRepository.CreateNewRefreshTokenAsync(new RefreshToken()
+            await _refreshTokenRepository.AddAsync(new RefreshToken()
             {
                 AccountId = account.Id,
                 Token = refreshToken.ToGuid(),
@@ -47,8 +47,10 @@ namespace Fatagram.Application.Services.TokenServices
             });
 
             var accessToken = _jwtService.GenerateToken(username, account.UserId).Data;
-            if (accessToken is null) 
-                throw new AppException("GENERATE_ACCESS_TOKEN_FAILED");
+            if (accessToken is null)
+            {
+                return Result<TokenDto>.BadRequest(ErrorCodes.ACCESS_TOKEN_INVALID, "Access token is invalid");
+            }
 
             return Result<TokenDto>.Success(new()
             {
@@ -66,11 +68,17 @@ namespace Fatagram.Application.Services.TokenServices
         public async Task<Result<string>> ValidateRefreshToken(string refreshToken)
         {
             var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
-            if (res is null) throw new AppException(ErrorCodes.REFRESH_TOKEN_INVALID);
+            if (res is null)
+            {
+                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_INVALID, "Refresh token is invalid");
+            }
 
             var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
 
-            if (rtExpiredTime < DateTime.UtcNow) throw new AppException(ErrorCodes.REFRESH_TOKEN_INVALID);
+            if (rtExpiredTime < DateTime.UtcNow)
+            {
+                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_EXPIRED, "Refresh token is expired");
+            }
 
             return Result<string>.Success();
         }
@@ -84,16 +92,22 @@ namespace Fatagram.Application.Services.TokenServices
         {
             // Find accound id by refresh token
             var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
-            if (res is null) throw new AppException("REFRESH_TOKEN_NOT_EXIST");
+            if (res is null)
+            {
+                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_INVALID, "Refresh token is invalid");
+            }
 
             // Find account by account id
-            var getAccountResult = await _accountRepository.GetAccountByIdAsync((Guid)res);
+                var getAccountResult = await _accountRepository.GetAsync((Guid)res);
             if (getAccountResult is null) throw new AccountNotFoundException();
             var account = getAccountResult;
 
             // Check if refresh token is expired
             var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
-            if (rtExpiredTime < DateTime.UtcNow) throw new AppException(ErrorCodes.REFRESH_TOKEN_EXPIRED);
+            if (rtExpiredTime < DateTime.UtcNow)
+            {
+                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_EXPIRED, "Refresh token is expired");
+            }
 
             var token = _jwtService.GenerateToken(account.Username, account.UserId);
             return Result<string>.Success(token.Data);
@@ -106,7 +120,7 @@ namespace Fatagram.Application.Services.TokenServices
         /// <returns></returns>
         public async Task<Result<string>> DeleteRefreshTokenAsync(string refreshToken)
         {
-            await _refreshTokenRepository.DeleteRefreshTokenAsync(refreshToken);
+            await _refreshTokenRepository.DeleteAsync(refreshToken);
             return Result<string>.Success();
         }
     }

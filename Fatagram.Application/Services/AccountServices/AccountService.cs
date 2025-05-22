@@ -11,6 +11,7 @@ using Fatagram.Application.Dtos.Account;
 using Fatagram.Shared.Utils;
 using System.Runtime.Serialization;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 
 namespace Fatagram.Application.Services.AccountServices
 {
@@ -23,7 +24,6 @@ namespace Fatagram.Application.Services.AccountServices
         private readonly IAccountRepository _accountRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-
 
         // Constructor
         public AccountService(IAccountRepository accountRepository, IUserRepository userRepository, IMapper mapper)
@@ -40,31 +40,28 @@ namespace Fatagram.Application.Services.AccountServices
         /// <returns></returns>
         public async Task<Result<string>> Register(RegisterDto registerDto)
         {
-            var account = await _accountRepository.GetAccountByUsernameAsync(registerDto.Username);
+            var account = await _accountRepository.GetByUsernameAsync(registerDto.Username);
             if (account is not null)
             {
-                throw new DuplicateException(ErrorCodes.REGISTER_USERNAME_EXISTED);
+                return Result<string>.BadRequest(ErrorCodes.REGISTER_USERNAME_EXISTED);
             }
-            var user = await _userRepository.GetUserByEmailAsync(registerDto.Email);
+            var user = await _userRepository.GetByEmailAsync(registerDto.Email);
             if (user is not null)
             {
-                throw new DuplicateException(ErrorCodes.EMAIL_EXISTED);
+                return Result<string>.BadRequest(ErrorCodes.EMAIL_EXISTED);
             }
-
             // Get email, phone, name from registerDto to newUser
             var newUser = _mapper.Map<User>(registerDto);
 
             // Get username and password from registerDto to newAccount
             var newAccount = _mapper.Map<Account>(registerDto);
             newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-
             newUser.FullName = $"{registerDto.FirstName} {registerDto.LastName}";
             newUser.Accounts.Add(newAccount);
-            await _userRepository.CreateUserAsync(newUser);
+            await _userRepository.AddAsync(newUser);
 
             return Result<string>.Success();
         }
-
 
         /// <summary>
         /// Change password method
@@ -74,25 +71,28 @@ namespace Fatagram.Application.Services.AccountServices
         /// <returns></returns>
         public async Task<Result<string>> ChangePasswordAsync(string userId, ChangePasswordDto changePasswordRequest)
         {
-            var res = await _accountRepository.GetAccountByUserIdAsync(userId);
-            if (res is null) throw new AccountNotFoundException();
-
+            var res = await _accountRepository.GetByUserIdAsync(userId);
+            if (res is null)
+            {
+                throw new AccountNotFoundException();
+            }
             if (!BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, res.PasswordHash))
             {
-                throw new AppException(ErrorCodes.WRONG_PASSWORD);
+                throw new UnauthorizedException();
             }
-
             res.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
-            await _accountRepository.UpdateAccountAsync(res);
+            await _accountRepository.UpdateAsync(res);
 
             return Result<string>.Success();
         }   
 
+        // For admin 
         public async Task<Result<AccountsDto>> GetAccountsAsync(int page, int pageSize, string? username = null)
         {
             var result = await _accountRepository.GetAccountsAsync(page, pageSize, username);
             var accountsDto = _mapper.Map<IEnumerable<AccountDto>>(result.accounts);
-            return Result<AccountsDto>.Success(new AccountsDto {
+            return Result<AccountsDto>.Success(new AccountsDto
+            {
                 Accounts = accountsDto.ToList(),
                 TotalPage = result.totalPage,
                 TotalAccount = result.totalAccount

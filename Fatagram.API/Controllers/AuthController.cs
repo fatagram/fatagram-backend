@@ -3,8 +3,11 @@ using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
+using Fatagram.Shared.Enums;
+using Fatagram.Shared.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -40,16 +43,19 @@ namespace Fatagram.API.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                throw new ValidateException(errors: errors);
+                throw new ValidateException("UNVALID", errors, "Unvalid data");
             }
-            var result = await _authService.Login(request);
-            var res = await _tokenService.GenerateTokensAsync(request.Username);
-            if (res.Data == null)
+            var loginResult = await _authService.Login(request);
+            if (!loginResult.IsSuccess)
             {
-                throw new DataNullException();
+                return loginResult.ToActionResult();
             }
-
-            Response.Cookies.Append("accessToken", res.Data.AccessToken, new CookieOptions
+            var generateResult = await _tokenService.GenerateTokensAsync(request.Username);
+            if (generateResult.Data == null)
+            {
+                throw new DataNullException("TOKEN_CANNOT_CREATE", "Token cannot be created");
+            }
+            Response.Cookies.Append("accessToken", generateResult.Data.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = _isSecureCookies,
@@ -57,12 +63,10 @@ namespace Fatagram.API.Controllers
                 MaxAge = TimeSpan.FromMinutes(60)
             });
 
-            if (result.Data is not null)
-                result.Data.RefreshToken = res.Data.RefreshToken;
+            if (loginResult.Data is not null)
+                loginResult.Data.RefreshToken = generateResult.Data.RefreshToken;
 
-            return Ok(ApiResponse<LoginResponseDto>.Success(
-                    data: result.Data
-                ));
+            return loginResult.ToActionResult();
         }
 
         /// <summary>
@@ -70,7 +74,7 @@ namespace Fatagram.API.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPost("refresh-token")]
+        [HttpPost("refreshToken")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
             var res = await _tokenService.RefreshAccessTokenAsync(request.RefreshToken);
@@ -122,7 +126,7 @@ namespace Fatagram.API.Controllers
         [HttpGet("ping")]
         public IActionResult Ping()
         {
-            return NoContent();
+            return Ok();
         }
     }
 }

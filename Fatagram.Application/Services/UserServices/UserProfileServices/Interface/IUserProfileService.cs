@@ -1,14 +1,14 @@
-﻿using Fatagram.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Fatagram.Application.Dtos.User;
-using Fatagram.Shared.Utils;
 using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Shared.Utils;
 
-namespace Fatagram.Application.Services.UserServices.Interface
+namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interface
 {
-    /// <summary>
-    /// Interface for the user service
-    /// </summary>
-    public interface IUserService
+    public interface IUserProfileService
     {
         /// <summary>
         /// Update a user info
@@ -93,21 +93,5 @@ namespace Fatagram.Application.Services.UserServices.Interface
         /// <returns></returns>
         Task<Result<string>> CheckUserExistAsync(string userId);
         Task<Result<string>> CheckUserExistAsync(Guid userId);
-
-        Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId);
-
-        Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId);
-
-        Task<Result<object>> CancelAddFriendAsync(Guid receiverId, Guid senderId);
-
-        Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId);
-
-        Task<Result<object>> DeclineAddFriendRequestAsync(Guid declinerId, Guid requesterId);
-
-        Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId);
-
-        Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId);
-
-        Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
     }
 }

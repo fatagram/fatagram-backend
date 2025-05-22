@@ -2,7 +2,6 @@
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Shared.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -32,7 +31,7 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
         /// <param name="expiredTime">The expiration time of the refresh token.</param>
         /// <param name="createdTime">The creation time of the refresh token.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the result of the operation.</returns>
-        public async Task CreateNewRefreshTokenAsync(RefreshToken refreshToken)
+        public async Task AddAsync(RefreshToken refreshToken)
         {
             await _dbContext.RefreshTokens.AddAsync(refreshToken);
             await _dbContext.SaveChangesAsync();
@@ -44,7 +43,7 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
         /// </summary>
         /// <param name="refreshToken">The refresh token to delete.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the result of the operation.</returns>
-        public async Task DeleteRefreshTokenAsync(string refreshToken)
+        public async Task DeleteAsync(string refreshToken)
         {
             var token = await _dbContext.RefreshTokens.FindAsync(refreshToken.ToGuid());
             if (token == null)

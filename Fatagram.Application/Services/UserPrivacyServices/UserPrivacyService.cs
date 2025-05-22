@@ -33,7 +33,7 @@ namespace Fatagram.Application.Services.UserPrivacyServices
         {
             var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
             userPrivacy.UserId = userId.ToGuid();
-            await _userPrivacyRepository.SetPrivacyLevelAsync(userPrivacy);
+            await _userPrivacyRepository.UpdateAsync(userPrivacy);
 
             return Result<string>.Success();
         }

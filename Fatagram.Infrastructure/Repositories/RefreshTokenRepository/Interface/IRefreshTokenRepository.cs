@@ -1,5 +1,4 @@
 ﻿using Fatagram.Domain.Models;
-using Fatagram.Shared.Utils;
 
 namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface
 {
@@ -16,7 +15,7 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface
         /// <param name="expiredTime"></param>
         /// <param name="createdTime"></param>
         /// <returns></returns>
-        Task CreateNewRefreshTokenAsync(RefreshToken refreshToken);
+        Task AddAsync(RefreshToken refreshToken);
 
         /// <summary>
         /// Get the expiry time of a refresh token
@@ -37,6 +36,6 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface
         /// </summary>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
-        Task DeleteRefreshTokenAsync(string refreshToken);
+        Task DeleteAsync(string refreshToken);
     }
 }

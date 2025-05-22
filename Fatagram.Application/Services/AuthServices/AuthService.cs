@@ -7,6 +7,7 @@ using Fatagram.Application.Dtos.Auth;
 using Fatagram.Shared.Utils;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 
 namespace Fatagram.Application.Services.AuthService
 {
@@ -39,13 +40,13 @@ namespace Fatagram.Application.Services.AuthService
         /// <returns></returns>
         public async Task<Result<LoginResponseDto>> Login(LoginDto request)
         {
-            var getAccountResult = await _accountRepository.GetAccountByUsernameAsync(request.Username);
+            var getAccountResult = await _accountRepository.GetByUsernameAsync(request.Username);
             if (getAccountResult is null) throw new AccountNotFoundException();
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, getAccountResult.PasswordHash))
-                throw new AppException(ErrorCodes.WRONG_PASSWORD);
+                throw new UnauthorizedException(ErrorCodes.WRONG_PASSWORD, "Password is not correct.");
 
-            var user = await _userRepository.GetUserByUsernameAsync(request.Username);
+            var user = await _userRepository.GetByUsernameAsync(request.Username);
             if (user is null)
                 throw new UserNotFoundException();
 

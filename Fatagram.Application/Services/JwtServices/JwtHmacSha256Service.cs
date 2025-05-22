@@ -108,7 +108,7 @@ namespace Fatagram.Application.Services.JwtServices
             catch (Exception)
             {
                 // If the token is invalid, return an empty ClaimsPrincipal
-                return Result<ClaimsPrincipal>.Failure(ErrorCodes.ACCESS_TOKEN_INVALID);
+                return Result<ClaimsPrincipal>.Unauthorized(ErrorCodes.ACCESS_TOKEN_INVALID);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace Fatagram.API.Extensions.WebApplicationBuilderExtensions
 {
@@ -12,8 +13,8 @@ namespace Fatagram.API.Extensions.WebApplicationBuilderExtensions
             // Add authorization
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(5000);
-                options.ListenAnyIP(5001, listenOptions =>
+                options.ListenLocalhost(5000);
+                options.ListenLocalhost(5001, listenOptions =>
                 {
                     listenOptions.UseHttps(certPath, certPassword);
                 });

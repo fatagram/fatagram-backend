@@ -7,6 +7,8 @@ using Fatagram.Application.Services.AccountServices.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Account;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 
 namespace Fatagram.API.Controllers
 {
@@ -31,13 +33,10 @@ namespace Fatagram.API.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                throw new ValidateException(errors: errors);
+                throw new ValidateException("UNVALID", errors, "Unvalid data");
             }
             var result = await _accountService.Register(request);
-            return Ok(ApiResponse<string>.Success(
-                   data: result.Data,
-                   message: "Register successfully"
-               ));
+            return result.ToActionResult();
         }
 
         /// <summary>
@@ -46,16 +45,16 @@ namespace Fatagram.API.Controllers
         /// <param name="request">The change password details.</param>
         /// <returns>An IActionResult indicating the result of the password change.</returns>
         [Authorize]
-        [HttpPut("change-password")]
+        [HttpPut("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) throw new UnauthorizedException();
-
+            if (userId == null)
+            {
+                throw new UnauthorizedException();
+            }
             var result = await _accountService.ChangePasswordAsync(userId, request);
-            return Ok(ApiResponse<string>.Success(
-                    data: result.Data
-                ));
+            return result.ToActionResult();
         }
     }
 }

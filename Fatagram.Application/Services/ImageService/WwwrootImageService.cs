@@ -11,7 +11,6 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Shared.Extensions;
 
-
 namespace Fatagram.Application.Services.ImageService
 {
     public class WwwrootImageService : IImageService
@@ -87,9 +86,9 @@ namespace Fatagram.Application.Services.ImageService
 
             var request = _httpContextAccessor.HttpContext?.Request;
             if (request == null)
-                return Result<string>.Failure("Request context is not available.");
+                return Result<string>.BadRequest("Request context is not available.");
 
-            var baseUrl = $"http://192.168.137.1:5000";
+            var baseUrl = $"http://192.168.137.1:5002";
             return Result<string>.Success($"{baseUrl}/{folder}/{fileName}");
         }
     }

@@ -9,7 +9,7 @@ namespace Fatagram.Application.Utils
     /// <summary>
     /// Provides regular expression patterns for validating various fields.
     /// </summary>
-    public static class RegexPatterrns
+    public static class RegexPatterns
     {
         /// <summary>
         /// Regular expression pattern for validating usernames.

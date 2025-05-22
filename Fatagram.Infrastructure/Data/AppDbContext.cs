@@ -16,6 +16,7 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<UserPrivacy> UserPrivacies { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,8 +27,8 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddAccount();
             modelBuilder.AddUserPrivacy();
             modelBuilder.AddRefreshToken();
-
             modelBuilder.AddFriend();
+            modelBuilder.AddNotification();
         }
     }
 }

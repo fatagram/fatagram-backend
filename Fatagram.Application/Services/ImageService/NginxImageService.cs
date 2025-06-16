@@ -13,15 +13,17 @@ using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.ImageService
 {
-    public class WwwRootImageService : IImageService
+    public class NginxImageService : IImageService
     {
-        private readonly string _webRootPath;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string _nginxRootPath;
+        private readonly string _nginxUrl;
 
-        public WwwRootImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        public NginxImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
-            _webRootPath = config["WwwRootPath"] ?? throw new ArgumentNullException(nameof(config));
             _httpContextAccessor = httpContextAccessor;
+            _nginxRootPath = config["nginx:NginxRootPath"] ?? throw new ArgumentNullException(nameof(config));
+            _nginxUrl = config["nginx:NginxUrl"] ?? throw new ArgumentNullException(nameof(config));
         }
 
         public async Task<Result<string>> SaveImageAsync(
@@ -31,7 +33,7 @@ namespace Fatagram.Application.Services.ImageService
             string folder,
             bool isAvatar = false)
         {
-            var folderPath = Path.Combine(_webRootPath, folder);
+            var folderPath = Path.Combine(_nginxRootPath, folder);
             Directory.CreateDirectory(folderPath);
 
             var fileName = $"{Guid.NewGuid()}.jpg"; // Lưu luôn thành .jpg để đồng bộ format
@@ -88,8 +90,8 @@ namespace Fatagram.Application.Services.ImageService
             if (request == null)
                 return Result<string>.BadRequest("Request context is not available.");
 
-            var baseUrl = $"http://192.168.137.1:5002";
-            return Result<string>.Success($"{baseUrl}/{folder}/{fileName}");
+            var baseUrl = $"{request.Scheme}://{_nginxUrl}";
+            return Result<string>.Success($"{baseUrl}/images/fatagram/{folder}/{fileName}");
         }
     }
 }

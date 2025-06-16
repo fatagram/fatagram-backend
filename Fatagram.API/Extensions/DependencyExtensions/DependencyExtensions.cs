@@ -29,7 +29,7 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            services.AddScoped<IImageService, WwwrootImageService>();
+            services.AddScoped<IImageService, NginxImageService>();
 
             services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
             services.AddScoped<IUserRepository, UserRepository>();

@@ -7,7 +7,7 @@ using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
 using Fatagram.Shared.Enums;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -97,7 +97,6 @@ namespace Fatagram.API.Controllers
                     data: new TokenDto() { RefreshToken = request.RefreshToken }
                 ));
         }
-
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)

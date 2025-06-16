@@ -6,6 +6,14 @@ using Fatagram.Infrastructure.Repositories.FriendshipRepository;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
 using AutoMapper;
+using Fatagram.API.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Fatagram.Application.Services.NotificationServices.Interfaces;
+using Fatagram.API.Hubs.Notifications;
+using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
+using Fatagram.Infrastructure.Repositories.NotificationRepository;
+using Fatagram.Application.Services.NotificationServices;
 
 namespace Fatagram.API.Extensions.Dependencies
 {
@@ -20,7 +28,6 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IUserPrivacyService, UserPrivacyService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
-
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, WwwrootImageService>();
 
@@ -30,12 +37,18 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IFriendshipRepository, FriendshipRepository>();
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+
+            services.AddScoped<INotificationSender, NotificationSender>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<NotificationInfoService>();
 
             services.AddAutoMapper(typeof(Mapping));
 
             // Singleton
             services.AddSingleton<JwtHmacSha256Service>();
             services.AddSingleton(TimeProvider.System);
+            // services.AddSingleton<IUserIdProvider, UserIdProvider>();
         }
     }
 }

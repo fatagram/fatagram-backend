@@ -14,12 +14,16 @@ namespace Fatagram.Application.Common.Mapper.Profiles
         public NotificationProfile()
         {
             CreateMap<Notification, NotificationDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToString()))
+                .ForMember(dest => dest.ActorId, opt => opt.MapFrom(src => src.ActorId.ToString()))
                 .ForMember(dest => dest.TimeDistance, opt => opt.MapFrom(src => src.CreatedAt.ToTimeDistance(DateTime.UtcNow)));
 
             CreateMap<NotificationDto, Notification>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => Guid.Parse(src.UserId)))
-                .ForMember(dest => dest.Data, opt => opt.MapFrom(src => src.Data ?? new Dictionary<string, string>()));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToGuid()))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToGuid()))
+                .ForMember(dest => dest.ActorId, opt => opt.MapFrom(src => src.ActorId.ToGuid()))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.TimeDistance.ToDateTime()));
         }
     }
 }

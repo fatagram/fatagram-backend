@@ -44,9 +44,6 @@ namespace Fatagram.API
             // Cors 
             app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
 
-            // SignalR Hubs
-            app.MapHub<NotificationHub>("/hubs/notification");
-
             // Exception handling
             app.ConfigureExceptionHandler();
 
@@ -62,9 +59,10 @@ namespace Fatagram.API
             app.UseAuthorization();
 
             // Routing
-            app.MapControllers();
+            app.MapControllers().RequireCors(CorsPolicySettings.MyAllowSpecificOrigins);
+            app.MapHub<NotificationHub>("/hubs/notification");
 
-            var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
+            // var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
 
             // Start the application
             app.Run();

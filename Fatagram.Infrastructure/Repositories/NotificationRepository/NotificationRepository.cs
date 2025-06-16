@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
@@ -41,7 +42,7 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
             }
         }
 
-        public async Task<IEnumerable<Notification>> GetNotificationsAsync(Guid userId, int page, int pageSize)
+        public async Task<(IEnumerable<Notification> notifications, int unreadCount)> GetNotificationsAsync(Guid userId, int page, int pageSize)
         {
             var notifications = await _context.Notifications
                 .Where(n => n.UserId == userId)
@@ -50,10 +51,12 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                 .Take(pageSize)
                 .ToListAsync();
 
-            return notifications;
+            var unreadCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+
+            return (notifications, unreadCount);
         }
 
-        public async Task<IEnumerable<Notification>> GetUnreadNotificationsAsync(Guid userId, int page, int pageSize)
+        public async Task<(IEnumerable<Notification> notifications, int unreadCount)> GetUnreadNotificationsAsync(Guid userId, int page, int pageSize)
         {
             var notifications = await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
@@ -62,7 +65,9 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                 .Take(pageSize)
                 .ToListAsync();
 
-            return notifications;
+            var unreadCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+
+            return (notifications, unreadCount);
         }
 
         public async Task MarkAllNotificationsAsReadAsync(Guid userId)
@@ -83,6 +88,24 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                 notification.IsRead = true;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<IEnumerable<Notification>> FindNotifications(
+            Guid userId,
+            Guid actorId,
+            NotificationType type,
+            Dictionary<string, string> data)
+        {
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == userId && n.Type == type && n.ActorId == actorId)
+                .ToListAsync();
+
+            if (data != null && data.Count > 0)
+            {
+                return notifications.Where(n =>
+                    data.All(d => n.Data.ContainsKey(d.Key) && n.Data[d.Key] == d.Value)).ToList();
+            }
+            return notifications;
         }
     }
 }

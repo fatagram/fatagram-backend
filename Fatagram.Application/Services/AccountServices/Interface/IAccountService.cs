@@ -1,6 +1,6 @@
 ﻿using Fatagram.Application.Dtos.Account;
 using Fatagram.Application.Dtos.Auth;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Services.AccountServices.Interface
 {

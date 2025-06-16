@@ -8,7 +8,6 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Shared.Utils;
 using System.Runtime.CompilerServices;
 
 namespace Fatagram.Application.Services.TokenServices

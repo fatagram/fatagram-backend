@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interface
 {

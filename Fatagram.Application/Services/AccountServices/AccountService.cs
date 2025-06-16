@@ -8,7 +8,6 @@ using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Account;
-using Fatagram.Shared.Utils;
 using System.Runtime.Serialization;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;

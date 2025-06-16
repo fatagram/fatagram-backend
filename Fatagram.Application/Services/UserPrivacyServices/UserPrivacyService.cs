@@ -4,7 +4,7 @@ using Fatagram.Application.Services.UserPrivacyServices.Interface;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

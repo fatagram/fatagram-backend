@@ -12,7 +12,7 @@ using Fatagram.Domain.Enums;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
 {

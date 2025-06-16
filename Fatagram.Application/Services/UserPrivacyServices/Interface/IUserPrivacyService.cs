@@ -1,6 +1,6 @@
 ﻿using Fatagram.Application.Dtos.User;
 using Fatagram.Domain.Enums;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

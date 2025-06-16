@@ -1,5 +1,5 @@
 ﻿using Fatagram.Application.Services.ImageService.Interface;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;

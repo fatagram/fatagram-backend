@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Fatagram.Shared.Enums;
 
-namespace Fatagram.Shared.Utils
+namespace Fatagram.Application.Utils
 {
 
     /// <summary>

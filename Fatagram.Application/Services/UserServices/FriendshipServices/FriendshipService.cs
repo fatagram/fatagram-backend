@@ -6,7 +6,9 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
+using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Application.Services.NotificationServices;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {
@@ -16,33 +18,46 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         private readonly IFriendRequestRepository _friendRequestRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
         public FriendshipService(
             IFriendshipRepository friendshipRepository,
             IFriendRequestRepository friendRequestRepository,
             IUserRepository userRepository,
-            IMapper mapper
+            IMapper mapper,
+            INotificationService notificationService
         )
         {
             _friendshipRepository = friendshipRepository;
             _friendRequestRepository = friendRequestRepository;
             _userRepository = userRepository;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId)
         {
+            // Check if two users are friends
             if ((await _friendshipRepository.GetAsync(senderId, receiverId)) != null)
             {
                 return Result<object>.BadRequest("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.");
             }
 
+            // Check if a request already exists
             if ((await _friendRequestRepository.GetAsync(senderId, receiverId)) != null
                     || (await _friendRequestRepository.GetAsync(receiverId, senderId)) != null)
             {
                 return Result<object>.BadRequest("REQUEST_ALREADY_EXIST", "Friend request already exists.");
             }
 
+            // Check if the sender exists
+            var sender = await _userRepository.GetAsync(senderId.ToString());
+            if (sender == null)
+            {
+                throw new UserNotFoundException();
+            }
+
+            // Create a new friend request
             var newFriendRequest = new FriendRequest
             {
                 SenderId = senderId,
@@ -50,22 +65,39 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
                 CreatedAt = DateTime.UtcNow,
             };
 
+            // Create notification for the receiver
+            var notificationDto = NotificationFactory.CreateNewFriendRequestNotification(
+                receiverId.ToString(),
+                senderId.ToString(),
+                $"/{senderId}"
+            );
+
+            await _notificationService.CreateNotificationAsync(notificationDto);
             await _friendRequestRepository.AddAsync(newFriendRequest);
             return Result<object>.Success();
         }
 
         public async Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId)
         {
+            // Check if the two users are already friends
             var friendshipExist = await _friendshipRepository.GetAsync(acceptorId, requesterId);
             if (friendshipExist != null)
             {
                 return Result<object>.BadRequest("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.");
             }
 
+            // Check if the friend request exists
             var friendRequest = await _friendRequestRepository.GetAsync(requesterId, acceptorId);
             if (friendRequest == null)
             {
                 return Result<object>.BadRequest("REQUEST_NOT_EXIST", "Friend request does not exist.");
+            }
+
+            // Check if the acceptor exists
+            var acceptor = await _userRepository.GetAsync(acceptorId.ToString());
+            if (acceptor == null)
+            {
+                throw new UserNotFoundException();
             }
 
             var newFrienship = new Friendship
@@ -77,6 +109,23 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
             await _friendshipRepository.AddAsync(newFrienship);
             await _friendRequestRepository.DeleteAsync(friendRequest);
+
+            // Notification handler
+            await _notificationService.DeleteNotificationsAsync(
+                acceptorId.ToString(),
+                requesterId.ToString(),
+                NotificationType.NewFriendRequest,
+                isSendCancel: false
+            );
+
+            // Send notification to the requester
+            var requesterNotification = NotificationFactory.CreateFriendRequestAcceptedNotification(
+                requesterId.ToString(),
+                acceptorId.ToString(),
+                $"/{acceptorId}"
+            );
+            await _notificationService.CreateNotificationAsync(requesterNotification);
+
             return Result<object>.Success();
         }
 
@@ -87,8 +136,11 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             {
                 return Result<object>.BadRequest("REQUEST_NOT_EXIST", "Friend request does not exist.");
             }
-
             await _friendRequestRepository.DeleteAsync(friendRequest);
+
+            await _notificationService.DeleteNotificationsAsync(receiverId.ToString(), senderId.ToString(),
+                NotificationType.NewFriendRequest);
+  
             return Result<object>.Success();
         }
 
@@ -101,6 +153,9 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             }
 
             await _friendRequestRepository.DeleteAsync(friendRequest);
+            await _notificationService.DeleteNotificationsAsync(declinerId.ToString(), requesterId.ToString(),
+                NotificationType.NewFriendRequest);
+            
             return Result<object>.Success();
         }
 

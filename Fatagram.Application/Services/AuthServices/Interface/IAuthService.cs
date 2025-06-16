@@ -1,7 +1,7 @@
 ﻿using Fatagram.Domain.Enums;
 using System.Security.Claims;
 using Fatagram.Application.Dtos.Auth;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using Fatagram.Application.Dtos.Token;
 
 namespace Fatagram.Application.Services.AuthServices.Interface

@@ -1,5 +1,5 @@
 ﻿using Fatagram.Application.Services.ImageService.Enum;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

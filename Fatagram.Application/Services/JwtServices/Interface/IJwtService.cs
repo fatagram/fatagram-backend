@@ -1,4 +1,4 @@
-﻿using Fatagram.Shared.Utils;
+﻿using Fatagram.Application.Utils;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using System.Security.Claims;
 

@@ -4,7 +4,6 @@ using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Application.Dtos.Auth;
-using Fatagram.Shared.Utils;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;

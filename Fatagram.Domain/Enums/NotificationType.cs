@@ -9,6 +9,8 @@ namespace Fatagram.Application.Services.NotificationServices
     {
         NewFriendRequest,
         FriendRequestAccepted,
-        System
+        FriendRequestCanceled,
+        System,
+        CancelNotification,
     }
 }

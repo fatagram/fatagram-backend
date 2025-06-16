@@ -176,9 +176,8 @@ namespace Fatagram.API.Controllers.UserControllers
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 throw new ValidateException("UNVALID", errors, "Unvalid data.");
             }
-
             var res = await _userProfileService.UpdateNameAsync(userId, updateNameDto);
-
+            
             return res.ToActionResult();
         }
 

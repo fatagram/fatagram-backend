@@ -5,7 +5,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Fatagram.Application.Services.JwtServices.Interface;
-using Fatagram.Shared.Utils;
 
 namespace Fatagram.Application.Services.JwtServices
 {

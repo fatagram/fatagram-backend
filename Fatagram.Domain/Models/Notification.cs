@@ -12,13 +12,16 @@ namespace Fatagram.Domain.Models
     {
         [Key]
         [Column("id", TypeName = "uuid")]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Column("user_id", TypeName = "uuid")]
         public Guid UserId { get; set; }
 
         [Column("data", TypeName = "jsonb")]
         public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
+
+        [Column("type", TypeName = "smallint")]
+        public NotificationType Type { get; set; }
 
         [Column("link", TypeName = "text")]
         public string Link { get; set; } = string.Empty;
@@ -28,5 +31,8 @@ namespace Fatagram.Domain.Models
 
         [Column("created_at", TypeName = "timestamptz")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("actor_id", TypeName = "uuid")]
+        public Guid? ActorId { get; set; }
     }
 }

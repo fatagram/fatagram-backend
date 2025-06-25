@@ -223,5 +223,21 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             };
             return Result<GetFriendRequestsDto>.Success(ret);
         }
+
+
+        public async Task<Result<GetFriendsDto>> GetFriendsAsync(Guid userId, string? keyword, int page, int pageSize)
+        {
+            var data = await _friendshipRepository.GetFriendsOfUserAsync(userId, keyword, page, pageSize);
+            var total = data.total;
+
+            var friends = _mapper.Map<IEnumerable<FriendDto>>(data.users);
+            var ret = new GetFriendsDto()
+            {
+                Friends = friends,
+                Total = total
+            };
+            return Result<GetFriendsDto>.Success(ret);
+        }
+
     }
 }

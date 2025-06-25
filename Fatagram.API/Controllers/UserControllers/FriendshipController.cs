@@ -122,5 +122,23 @@ namespace Fatagram.API.Controllers.UserControllers
             var res = await _friendshipService.GetFriendRequestsAsync(userId.ToGuid(), page, pageSize);
             return res.ToActionResult();
         }
+
+
+        [HttpGet("friends/{userId}")]
+        public async Task<IActionResult> GetFriends(string userId, string keyword, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            if (HttpContext.User.Identity?.IsAuthenticated ?? false)
+            {
+                var _userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (_userId == null) _userId = Guid.Empty.ToString();
+                var res = await _friendshipService.GetFriendsAsync(userId.ToGuid(), keyword, page, pageSize);
+                return res.ToActionResult();
+            }
+            else
+            {
+                var res = await _friendshipService.GetFriendsAsync(userId.ToGuid(), keyword, page, pageSize);
+                return res.ToActionResult();
+            }
+        }
     }
 }

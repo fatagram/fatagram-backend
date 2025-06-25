@@ -24,5 +24,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices.Interfac
         Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId);
 
         Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
+
+        Task<Result<GetFriendsDto>> GetFriendsAsync(Guid userId, string keyword, int page, int pageSize);
     }
 }

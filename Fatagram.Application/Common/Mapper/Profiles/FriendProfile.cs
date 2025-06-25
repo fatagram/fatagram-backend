@@ -18,6 +18,9 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                 .ForMember(dest => dest.SenderUrlName, opt => opt.MapFrom(src => src.Sender.UrlName))
                 .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.FullName))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToTimeDistance(DateTime.UtcNow)));
+
+            CreateMap<User, FriendDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FullName));
         }
     }
 }

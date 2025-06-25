@@ -50,6 +50,35 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
                 .CountAsync();
         }
 
-        
+        public async Task<(IEnumerable<User> users, int total)> GetFriendsOfUserAsync(Guid userId, string? keyword, int page = 1, int pageSize = 10)
+        {
+            // Lấy friendships có liên quan đến user
+            var friendships = await _dbContext.Friendships
+                .Where(f => f.User1Id == userId || f.User2Id == userId)
+                .Include(f => f.User1)
+                .Include(f => f.User2)
+                .ToListAsync();
+
+            // Chuyển sang danh sách bạn bè (User còn lại)
+            var friends = friendships
+                .Select(f => f.User1Id == userId ? f.User2 : f.User1)
+                .AsQueryable();
+
+            // Nếu có keyword, lọc theo FullName (lọc sau khi đã lấy từ DB -> client-side filter)
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var lowerKeyword = keyword.Trim().ToLower();
+                friends = friends.Where(u => u.FullName.ToLower().Contains(lowerKeyword));
+            }
+
+            var total = friends.Count();
+
+            var users = friends
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return (users, total);
+        }
     }
 }

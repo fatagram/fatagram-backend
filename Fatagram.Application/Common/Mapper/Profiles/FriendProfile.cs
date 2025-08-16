@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Projections;
 using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
@@ -19,8 +20,15 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                 .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.FullName))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToTimeDistance(DateTime.UtcNow)));
 
-            CreateMap<User, FriendDto>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FullName));
+            CreateMap<FriendProjection, FriendDto>()
+                .ConstructUsing(src => new FriendDto
+                {
+                    Id = src.User.Id,
+                    Avatar = src.User.Avatar,
+                    Name = src.User.FullName,
+                    UrlName = src.User.UrlName,
+                    IsFriend = src.IsFriend
+                });
         }
     }
 }

@@ -225,12 +225,12 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         }
 
 
-        public async Task<Result<GetFriendsDto>> GetFriendsAsync(Guid userId, string? keyword, int page, int pageSize)
+        public async Task<Result<GetFriendsDto>> GetFriendsAsync(Guid userId, Guid targetId, string? keyword, int page, int pageSize)
         {
-            var data = await _friendshipRepository.GetFriendsOfUserAsync(userId, keyword, page, pageSize);
+            var data = await _friendshipRepository.GetFriendsOfUserAsync(userId, targetId, keyword, page, pageSize);
             var total = data.total;
 
-            var friends = _mapper.Map<IEnumerable<FriendDto>>(data.users);
+            var friends = _mapper.Map<IEnumerable<FriendDto>>(data.friends);
             var ret = new GetFriendsDto()
             {
                 Friends = friends,

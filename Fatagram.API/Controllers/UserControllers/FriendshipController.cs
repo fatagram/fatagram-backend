@@ -131,12 +131,12 @@ namespace Fatagram.API.Controllers.UserControllers
             {
                 var _userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (_userId == null) _userId = Guid.Empty.ToString();
-                var res = await _friendshipService.GetFriendsAsync(userId.ToGuid(), keyword, page, pageSize);
+                var res = await _friendshipService.GetFriendsAsync(_userId.ToGuid(), userId.ToGuid(), keyword, page, pageSize);
                 return res.ToActionResult();
             }
             else
             {
-                var res = await _friendshipService.GetFriendsAsync(userId.ToGuid(), keyword, page, pageSize);
+                var res = await _friendshipService.GetFriendsAsync(Guid.Empty, userId.ToGuid(), keyword, page, pageSize);
                 return res.ToActionResult();
             }
         }

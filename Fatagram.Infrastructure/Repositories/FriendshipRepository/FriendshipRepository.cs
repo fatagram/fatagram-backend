@@ -1,5 +1,6 @@
 ﻿using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -50,35 +51,37 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
                 .CountAsync();
         }
 
-        public async Task<(IEnumerable<User> users, int total)> GetFriendsOfUserAsync(Guid userId, string? keyword, int page = 1, int pageSize = 10)
+        public async Task<(IEnumerable<FriendProjection> friends, int total)> GetFriendsOfUserAsync(Guid userId, Guid targetId, string? keyword, int page = 1, int pageSize = 10)
         {
-            // Lấy friendships có liên quan đến user
-            var friendships = await _dbContext.Friendships
-                .Where(f => f.User1Id == userId || f.User2Id == userId)
-                .Include(f => f.User1)
-                .Include(f => f.User2)
-                .ToListAsync();
+            var query = from f in _dbContext.Friendships
+                        where f.User1Id == targetId || f.User2Id == targetId
+                        let friend = f.User1Id == targetId ? f.User2 : f.User1
+                        let friendId = f.User1Id == targetId ? f.User2Id : f.User1Id
+                        let isFriendWithUser = _dbContext.Friendships.Any(ff =>
+                            (ff.User1Id == userId && ff.User2Id == friendId) || (ff.User2Id == userId && ff.User1Id == friendId))
+                        select new FriendProjection
+                        {
+                            User = friend,
+                            IsFriend = isFriendWithUser
+                        };
 
-            // Chuyển sang danh sách bạn bè (User còn lại)
-            var friends = friendships
-                .Select(f => f.User1Id == userId ? f.User2 : f.User1)
-                .AsQueryable();
-
-            // Nếu có keyword, lọc theo FullName (lọc sau khi đã lấy từ DB -> client-side filter)
-            if (!string.IsNullOrWhiteSpace(keyword))
+            // If params has keyword, filter the users by keyword
+            if (!string.IsNullOrEmpty(keyword))
             {
-                var lowerKeyword = keyword.Trim().ToLower();
-                friends = friends.Where(u => u.FullName.ToLower().Contains(lowerKeyword));
+                var lowerKeyword = keyword.ToLower();
+                query = query.Where(u => u.User.FullName.ToLower().Contains(lowerKeyword));
             }
 
-            var total = friends.Count();
+            // Get total count of friends
+            var total = await query.CountAsync();
 
-            var users = friends
+            // Get paginated friends
+            var friends = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
-            return (users, total);
+            return (friends, total);
         }
     }
 }

@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\**" />
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Remove="wwwroot\**" />
+    <None Remove="wwwroot\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
@@ -22,10 +29,6 @@
     <ProjectReference Include="..\Fatagram.Domain\Fatagram.Domain.csproj" />
     <ProjectReference Include="..\Fatagram.Infrastructure\Fatagram.Infrastructure.csproj" />
     <ProjectReference Include="..\Fatagram.Shared\Fatagram.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

@@ -90,6 +90,9 @@ namespace Fatagram.Domain.Models
         [Column("gender", TypeName = "varchar(10)")]
         public Gender? Gender { get; set; }
 
+        [Column("lang_code", TypeName = "varchar(2)")]
+        public string LanguageCode { get; set; } = "en";
+
         /// <summary>
         /// Gets or sets the account associated with the user.
         /// </summary>
@@ -98,9 +101,9 @@ namespace Fatagram.Domain.Models
         [Column("xmin")]
         public uint Version { get; set; }
 
+        public Language? Language { get; set; }
         
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
-
 
         /// <summary>
         /// Gets or sets the posts created by the user.

@@ -9,26 +9,34 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Extensions;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Domain.Enums.NotificationServices;
 
 namespace Fatagram.Application.Services.NotificationServices.Interface
 {
     public class NotificationService : INotificationService
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly INotificationContentRepository _notificationContentRepository;
         private readonly INotificationSender _notificationSender;
+        private readonly IUserRepository _userRepository;
         private readonly NotificationInfoService _notificationInfoService;
         private readonly IMapper _mapper;
 
         public NotificationService(
             INotificationRepository notificationRepository,
+            INotificationContentRepository notificationContentRepository,
             NotificationInfoService notificationInfoService,
+            IUserRepository userRepository,
             IMapper mapper,
             INotificationSender notificationSender)
         {
             _mapper = mapper;
             _notificationRepository = notificationRepository;
+            _notificationContentRepository = notificationContentRepository;
             _notificationSender = notificationSender;
             _notificationInfoService = notificationInfoService;
+            _userRepository = userRepository;
         }
 
         public async Task CreateNotificationAsync(NotificationDto notificationDto, bool isSave = true)
@@ -41,6 +49,9 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
                 attachedNotification.Id = notification.Id.ToString();
             }    
             // Send notification to the user here
+            var userLang = await _userRepository.GetLanguageAsync(attachedNotification.UserId.ToGuid());
+            var notificationContent = await _notificationContentRepository.GetContentAsync(attachedNotification.Type, userLang);
+            attachedNotification.Content = notificationContent;
             await _notificationSender.SendNotificationAsync(attachedNotification);
         }
 
@@ -61,8 +72,8 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
 
         public async Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, int page, int pageSize)
         {
-            var userIdGuid = userId.ToGuid();
-            var data = await _notificationRepository.GetNotificationsAsync(userIdGuid, page, pageSize);
+            var language = await _userRepository.GetLanguageAsync(userId.ToGuid());
+            var data = await _notificationRepository.GetNotificationsAsync(userId.ToGuid(), language, page, pageSize);
 
             var result = new List<NotificationDto>();
             foreach (var n in data.notifications)
@@ -80,8 +91,8 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
 
         public async Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, int page, int pageSize)
         {
-            var userIdGuid = userId.ToGuid();
-            var data = await _notificationRepository.GetUnreadNotificationsAsync(userIdGuid, page, pageSize);
+            var language = await _userRepository.GetLanguageAsync(userId.ToGuid());
+            var data = await _notificationRepository.GetUnreadNotificationsAsync(userId.ToGuid(), language, page, pageSize);
 
             var notificationsWithInfo = await Task.WhenAll(
                 data.notifications.Select(async n => 

@@ -53,35 +53,31 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
 
         public async Task<(IEnumerable<FriendProjection> friends, int total)> GetFriendsOfUserAsync(Guid userId, Guid targetId, string? keyword, int page = 1, int pageSize = 10)
         {
-            var query = from f in _dbContext.Friendships
-                        where f.User1Id == targetId || f.User2Id == targetId
-                        let friend = f.User1Id == targetId ? f.User2 : f.User1
-                        let friendId = f.User1Id == targetId ? f.User2Id : f.User1Id
-                        let isFriendWithUser = _dbContext.Friendships.Any(ff =>
-                            (ff.User1Id == userId && ff.User2Id == friendId) || (ff.User2Id == userId && ff.User1Id == friendId))
-                        select new FriendProjection
-                        {
-                            User = friend,
-                            IsFriend = isFriendWithUser
-                        };
+            var friendIdsQuery = _dbContext.Friendships
+                .Where(f => f.User1Id == targetId || f.User2Id == targetId)
+                .Select(f => f.User1Id == targetId ? f.User2Id : f.User1Id);
 
-            // If params has keyword, filter the users by keyword
-            if (!string.IsNullOrEmpty(keyword))
-            {
-                var lowerKeyword = keyword.ToLower();
-                query = query.Where(u => u.User.FullName.ToLower().Contains(lowerKeyword));
-            }
+            var query = _dbContext.Users
+                .Where(u => friendIdsQuery.Any(f => f == u.Id) && 
+                (string.IsNullOrEmpty(keyword) || u.FullName.ToLower().Contains(keyword.ToLower())));
 
-            // Get total count of friends
             var total = await query.CountAsync();
 
-            // Get paginated friends
-            var friends = await query
+            // paging and attach isfriend tag
+
+            var result = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(u => new FriendProjection
+                {
+                    User = u,
+                    IsFriend = _dbContext.Friendships
+                        .Any(f => (f.User1Id == userId && f.User2Id == u.Id) ||
+                        (f.User1Id == u.Id && f.User2Id == userId))
+                })
                 .ToListAsync();
 
-            return (friends, total);
+            return (result, total);
         }
     }
 }

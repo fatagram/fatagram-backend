@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.Notification;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Projections;
 using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
@@ -13,7 +14,7 @@ namespace Fatagram.Application.Common.Mapper.Profiles
     {
         public NotificationProfile()
         {
-            CreateMap<Notification, NotificationDto>()
+            CreateMap<NotificationProjection, NotificationDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToString()))
                 .ForMember(dest => dest.ActorId, opt => opt.MapFrom(src => src.ActorId.ToString()))

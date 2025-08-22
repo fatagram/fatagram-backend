@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.Application.Services.NotificationServices;
+using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,27 +43,60 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
             }
         }
 
-        public async Task<(IEnumerable<Notification> notifications, int unreadCount)> GetNotificationsAsync(Guid userId, int page, int pageSize)
+        public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetNotificationsAsync(
+            Guid userId, string langCode, int page, int pageSize)
         {
             var notifications = await _context.Notifications
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(n => new NotificationProjection
+                {
+                    Id = n.Id,
+                    UserId = n.UserId,
+                    Data = n.Data,
+                    Type = n.Type,
+                    ActorId = n.ActorId,
+                    Link = n.Link,
+                    IsRead = n.IsRead,
+                    CreatedAt = n.CreatedAt,
+                    Content = _context.NotificationContents
+                        .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                        .Select(c => c.Content)
+                        .FirstOrDefault() ?? string.Empty
+                })
                 .ToListAsync();
 
-            var unreadCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+            var unreadCount = await _context.Notifications
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
 
             return (notifications, unreadCount);
         }
 
-        public async Task<(IEnumerable<Notification> notifications, int unreadCount)> GetUnreadNotificationsAsync(Guid userId, int page, int pageSize)
+        public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetUnreadNotificationsAsync(
+            Guid userId, string langCode, int page, int pageSize)
         {
             var notifications = await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(n => new NotificationProjection
+                {
+                    Id = n.Id,
+                    UserId = n.UserId,
+                    Data = n.Data,
+                    Type = n.Type,
+                    ActorId = n.ActorId,
+                    Link = n.Link,
+                    IsRead = n.IsRead,
+                    CreatedAt = n.CreatedAt,
+                    Content = _context.NotificationContents
+                        .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                        .Select(c => c.Content)
+                        .FirstOrDefault() ?? string.Empty
+                })
                 .ToListAsync();
 
             var unreadCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);

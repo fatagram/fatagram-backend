@@ -14,6 +14,8 @@ using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
 using Fatagram.Infrastructure.Repositories.NotificationRepository;
 using Fatagram.Application.Services.NotificationServices;
+using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
+using Fatagram.Application.Services.UserServices.UserConfigServices;
 
 namespace Fatagram.API.Extensions.Dependencies
 {
@@ -30,7 +32,9 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, NginxImageService>();
+            services.AddScoped<IUserConfigService, UserConfigService>();
 
+            // Scoped for repositories
             services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();
@@ -38,11 +42,14 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IFriendshipRepository, FriendshipRepository>();
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<INotificationContentRepository, NotificationContentRepository>();
 
+            // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
 
+            // Scoped for AutoMapper
             services.AddAutoMapper(typeof(Mapping));
 
             // Singleton

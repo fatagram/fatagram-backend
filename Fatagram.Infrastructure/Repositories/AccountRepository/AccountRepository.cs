@@ -95,6 +95,13 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
             await _dbContext.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Gets a list of accounts with pagination and optional filtering by username asynchronously.
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
         public async Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(int page, int pageSize, string? username = null)
         {
             if (page < 1) page = 1;

@@ -9,6 +9,7 @@ using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Application.Services.NotificationServices;
+using Fatagram.Domain.Enums.NotificationServices;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {

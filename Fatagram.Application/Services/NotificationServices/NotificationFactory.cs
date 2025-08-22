@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Notification;
+using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;

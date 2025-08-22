@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Notification;
 using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Application.Services.NotificationServices.Interfaces;
+using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 

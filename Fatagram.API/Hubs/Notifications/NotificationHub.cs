@@ -9,6 +9,7 @@ namespace Fatagram.API.Hubs
     [Authorize]
     public class NotificationHub : Hub
     {
+        // ConnectedAsync is called when a user connects to the hub
         public override Task OnConnectedAsync()
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -20,6 +21,7 @@ namespace Fatagram.API.Hubs
             return base.OnConnectedAsync();
         }
 
+        // DisconnectedAsync is called when a user disconnects from the hub
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;

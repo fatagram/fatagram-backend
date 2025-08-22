@@ -40,6 +40,7 @@ namespace Fatagram.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
+            // Validate the request model
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -55,6 +56,8 @@ namespace Fatagram.API.Controllers
             {
                 throw new DataNullException("TOKEN_CANNOT_CREATE", "Token cannot be created");
             }
+            
+            // Create new cookie with access token
             Response.Cookies.Append("accessToken", generateResult.Data.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
@@ -98,6 +101,11 @@ namespace Fatagram.API.Controllers
                 ));
         }
 
+        /// <summary>
+        /// Logout a user
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
         {

@@ -84,5 +84,14 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
             _dbContext.Users.Update(updateUser);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<string> GetLanguageAsync(Guid userId)
+        {
+            return await _dbContext.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.LanguageCode ?? "en")
+                .FirstOrDefaultAsync() ?? "en";
+                
+        }
     }
 }

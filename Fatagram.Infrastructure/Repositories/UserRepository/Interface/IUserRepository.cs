@@ -49,5 +49,12 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         /// <returns></returns>
         Task UpdateAsync(User updateUser);
 
+        /// <summary>
+        /// Get language of user
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task<string> GetLanguageAsync(Guid userId);
+
     }
 }

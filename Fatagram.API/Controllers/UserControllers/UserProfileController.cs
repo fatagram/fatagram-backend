@@ -82,7 +82,12 @@ namespace Fatagram.API.Controllers.UserControllers
                 ));
         }
 
-
+        /// <summary>
+        /// Update user privacy settings
+        /// </summary>
+        /// <param name="updateUserPrivacyDto"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPut("privacy")]
         public async Task<IActionResult> UpdateUserPrivacyAsync([FromBody] UpdateUserPrivacyDto updateUserPrivacyDto)
@@ -99,6 +104,12 @@ namespace Fatagram.API.Controllers.UserControllers
                 ));
         }
 
+        /// <summary>
+        /// Upload user avatar image
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPatch("avatar")]
         public async Task<IActionResult> UploadAvatarAsync(IFormFile file)
@@ -124,7 +135,12 @@ namespace Fatagram.API.Controllers.UserControllers
             ));
         }
 
-
+        /// <summary>
+        /// Upload user background image
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPatch("background")]
         public async Task<IActionResult> UploadBackgroundAsync(IFormFile file)
@@ -145,7 +161,12 @@ namespace Fatagram.API.Controllers.UserControllers
             ));
         }
 
-
+        /// <summary>
+        /// Update user's URL name
+        /// </summary>
+        /// <param name="changeUrlNameDto"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPatch("urlName")]
         public async Task<IActionResult> UpdateUrlNameAsync([FromBody] ChangeUrlNameDto changeUrlNameDto)
@@ -162,6 +183,13 @@ namespace Fatagram.API.Controllers.UserControllers
                 ));
         }
 
+        /// <summary>
+        /// Update user's name
+        /// </summary>
+        /// <param name="updateNameDto"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
+        /// <exception cref="ValidateException"></exception>
         [Authorize]
         [HttpPatch("name")]
         public async Task<IActionResult> UpdateNameAsync([FromBody] ChangeNameDto updateNameDto)
@@ -181,6 +209,11 @@ namespace Fatagram.API.Controllers.UserControllers
             return res.ToActionResult();
         }
 
+        /// <summary>
+        /// Check if a user exists by their username or email
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         [HttpGet("exist")]
         public async Task<IActionResult> CheckUserExist(string key)
         {
@@ -188,6 +221,11 @@ namespace Fatagram.API.Controllers.UserControllers
             return res.ToActionResult();
         }
 
+        /// <summary>
+        /// Get the authenticated user's profile information
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
@@ -195,7 +233,7 @@ namespace Fatagram.API.Controllers.UserControllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) throw new UnauthorizedException();
 
-            var res = await _userProfileService.GetUserInfoAuthenticatedAsync(userId, userId, "id,urlName");
+            var res = await _userProfileService.GetUserInfoAuthenticatedAsync(userId, userId, "id,urlName,languageCode");
             return res.ToActionResult();
         }
     }

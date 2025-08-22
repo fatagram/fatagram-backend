@@ -21,6 +21,13 @@ namespace Fatagram.API.Controllers
             _notificationService = notificationService;
         }
 
+        /// <summary>
+        /// Get notifications for the authenticated user with pagination support.
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getNotifications")]
         public async Task<IActionResult> GetNotifications(int page, int pageSize)
@@ -34,6 +41,13 @@ namespace Fatagram.API.Controllers
             return result.ToActionResult();
         }
 
+        /// <summary>
+        /// Get unread notifications for the authenticated user with pagination support.
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getUnreadNotifications")]
         public async Task<IActionResult> GetUnreadNotifications(int page, int pageSize)
@@ -47,6 +61,12 @@ namespace Fatagram.API.Controllers
             return result.ToActionResult();
         }
 
+        /// <summary>
+        /// Mark a specific notification as read for the authenticated user.
+        /// </summary>
+        /// <param name="notificationId"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPost("markNotificationAsRead/{notificationId}")]
         public async Task<IActionResult> MarkNotificationAsRead(string notificationId)
@@ -60,6 +80,11 @@ namespace Fatagram.API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Mark all notifications as read for the authenticated user.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPost("markAllNotificationsAsRead")]
         public async Task<IActionResult> MarkAllNotificationsAsRead()
@@ -73,6 +98,12 @@ namespace Fatagram.API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Delete a specific notification for the authenticated user.
+        /// </summary>
+        /// <param name="notificationId"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpDelete("deleteNotification")]
         public async Task<IActionResult> DeleteNotification(string notificationId)
@@ -86,6 +117,11 @@ namespace Fatagram.API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Delete all notifications for the authenticated user.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpDelete("deleteAllNotifications")]
         public async Task<IActionResult> DeleteAllNotifications()

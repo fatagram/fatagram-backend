@@ -1,5 +1,5 @@
 ﻿using Fatagram.Application.Services.ImageService.Interface;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -11,15 +11,14 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Shared.Extensions;
 
-
 namespace Fatagram.Application.Services.ImageService
 {
-    public class WwwrootImageService : IImageService
+    public class WwwRootImageService : IImageService
     {
         private readonly string _webRootPath;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public WwwrootImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        public WwwRootImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
             _webRootPath = config["WwwRootPath"] ?? throw new ArgumentNullException(nameof(config));
             _httpContextAccessor = httpContextAccessor;
@@ -87,9 +86,9 @@ namespace Fatagram.Application.Services.ImageService
 
             var request = _httpContextAccessor.HttpContext?.Request;
             if (request == null)
-                return Result<string>.Failure("Request context is not available.");
+                return Result<string>.BadRequest("Request context is not available.");
 
-            var baseUrl = $"http://192.168.137.1:5000";
+            var baseUrl = $"http://192.168.137.1:5002";
             return Result<string>.Success($"{baseUrl}/{folder}/{fileName}");
         }
     }

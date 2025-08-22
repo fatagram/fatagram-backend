@@ -15,6 +15,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
             modelBuilder.Entity<User>()
                 .Property(u => u.Version)
                 .IsRowVersion();
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Language)
+                .WithMany(l => l.Users)
+                .HasForeignKey(u => u.LanguageCode)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

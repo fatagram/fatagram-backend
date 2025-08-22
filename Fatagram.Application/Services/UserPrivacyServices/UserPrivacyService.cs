@@ -4,7 +4,7 @@ using Fatagram.Application.Services.UserPrivacyServices.Interface;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +33,7 @@ namespace Fatagram.Application.Services.UserPrivacyServices
         {
             var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
             userPrivacy.UserId = userId.ToGuid();
-            await _userPrivacyRepository.SetPrivacyLevelAsync(userPrivacy);
+            await _userPrivacyRepository.UpdateAsync(userPrivacy);
 
             return Result<string>.Success();
         }

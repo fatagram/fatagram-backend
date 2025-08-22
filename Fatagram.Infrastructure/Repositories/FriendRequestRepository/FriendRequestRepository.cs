@@ -19,35 +19,60 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
             _dbContext = dbContext;
         }
 
+        /// <summary>
+        /// Adds a new friend request to the database.
+        /// </summary>
+        /// <param name="friendRequest"></param>
+        /// <returns></returns>
         public async Task AddAsync(FriendRequest friendRequest)
         {
             await _dbContext.FriendRequests.AddAsync(friendRequest);
             await _dbContext.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Deletes a friend request from the database.
+        /// </summary>
+        /// <param name="friendRequest"></param>
+        /// <returns></returns>
         public Task DeleteAsync(FriendRequest friendRequest)
         {
             _dbContext.FriendRequests.Remove(friendRequest);
             return _dbContext.SaveChangesAsync();
         }
-
+        
+        /// <summary>
+        /// Gets a friend request by sender and receiver IDs.
+        /// </summary>
+        /// <param name="senderId"></param>
+        /// <param name="receiverId"></param>
+        /// <returns></returns>
         public async Task<FriendRequest?> GetAsync(Guid senderId, Guid receiverId)
         {
             return await _dbContext.FriendRequests
                 .FirstOrDefaultAsync(fr => fr.SenderId == senderId && fr.ReceiverId == receiverId);
         }
 
-        public async Task<List<FriendRequest>> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
+        /// <summary>
+        /// Gets all friend requests for a user, with pagination support.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        public async Task<(List<FriendRequest> requests, int total)> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
         {
+            var total = await _dbContext.FriendRequests
+                .CountAsync(fr => fr.ReceiverId == userId);
+
             var friendRequests = await _dbContext.FriendRequests
                 .Where(fr => fr.ReceiverId == userId)
                 .Include(fr => fr.Sender)
-                .OrderByDescending(fr => fr.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return friendRequests;
+            return (friendRequests, total);
         }
     }
 }

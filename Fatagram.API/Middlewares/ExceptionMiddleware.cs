@@ -1,6 +1,8 @@
 ﻿
 using Fatagram.API.Utils;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
@@ -36,35 +38,25 @@ namespace Fatagram.API.Middlewares
         private async Task HanldeExceptionAsync(HttpContext context, Exception ex)
         {
             context.Response.ContentType = "application/json";
-
             ApiResponse<object> response = ApiResponse<object>.Failure();
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
             if (ex is AppException appException)
             {
                 response.Error = new ApiError()
                 {
-                    Code = appException.Code,
+                    Code = appException.ErrorCode,
                     Message = appException.Message,
+                    Codes = appException.ErrorCodes
                 };
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
-                if (appException is UnauthorizedException unauthorized)
+                context.Response.StatusCode = ex switch
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                }
-                else if (appException is ValidateException validateException)
-                {
-                    response.Error.Codes = validateException.Errors;
-                }
-                else if (appException is UserNotFoundException || appException is AccountNotFoundException)
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                }
-                else if (appException is DuplicateException)
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-                }
+                    ValidateException => (int)HttpStatusCode.BadRequest,
+                    BadRequestException => (int)HttpStatusCode.BadRequest,
+                    NotFoundException => (int)HttpStatusCode.NotFound,
+                    UnauthorizedException => (int)HttpStatusCode.Unauthorized,
+                    _ => (int)HttpStatusCode.InternalServerError
+                };
             }
             else
             {
@@ -75,7 +67,6 @@ namespace Fatagram.API.Middlewares
                     Message = "An error occured while processing your request. Please try again later.",
                 };
             }
-            
             await context.Response.WriteAsync(response.ToString());
         }
     }

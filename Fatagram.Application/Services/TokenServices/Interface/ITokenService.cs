@@ -1,7 +1,7 @@
 ﻿using Fatagram.Infrastructure.Repositories;
 using System.Globalization;
 using Fatagram.Application.Dtos.Token;
-using Fatagram.Shared.Utils;
+using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Services.TokenServices.Interface
 {

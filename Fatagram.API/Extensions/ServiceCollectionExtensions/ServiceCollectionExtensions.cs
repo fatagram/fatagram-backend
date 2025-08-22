@@ -1,7 +1,7 @@
 ﻿using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Extensions.Dependencies;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics;
+using Fatagram.API.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System.Text.Json.Serialization;
 
 namespace Fatagram.API.Extensions.ServiceCollectionExtensions

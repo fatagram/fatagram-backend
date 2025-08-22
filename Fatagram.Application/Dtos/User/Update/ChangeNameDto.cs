@@ -10,11 +10,11 @@ namespace Fatagram.Application.Dtos.User.Update
 {
     public class ChangeNameDto
     {
-        [RegularExpression(RegexPatterrns.FirstName, ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterns.FirstName, ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
         public string FirstName { get; set; } = null!;
 
-        [RegularExpression(RegexPatterrns.LastName, ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
+        [RegularExpression(RegexPatterns.LastName, ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
         public string LastName { get; set; } = null!;
     }

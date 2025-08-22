@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\RefreshTokenServices\**" />
+    <EmbeddedResource Remove="Services\RefreshTokenServices\**" />
+    <None Remove="Services\RefreshTokenServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
@@ -19,10 +25,6 @@
     <ProjectReference Include="..\Fatagram.Domain\Fatagram.Domain.csproj" />
     <ProjectReference Include="..\Fatagram.Infrastructure\Fatagram.Infrastructure.csproj" />
     <ProjectReference Include="..\Fatagram.Shared\Fatagram.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\RefreshTokenServices\Interface\" />
   </ItemGroup>
 
 </Project>

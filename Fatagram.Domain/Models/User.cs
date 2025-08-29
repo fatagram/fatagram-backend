@@ -1,4 +1,5 @@
 ﻿using Fatagram.Domain.Enums;
+using Fatagram.Domain.Models.UserInformations;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -90,8 +91,25 @@ namespace Fatagram.Domain.Models
         [Column("gender", TypeName = "varchar(10)")]
         public Gender? Gender { get; set; }
 
+        /// <summary>
+        /// Gets or sets the language code of the user
+        /// </summary>
         [Column("lang_code", TypeName = "varchar(2)")]
         public string LanguageCode { get; set; } = "en";
+        
+        /// <summary>
+        /// Gets or sets the description of the user.
+        /// </summary>
+        [Column("description", TypeName = "text")]
+        public string? Description { get; set; }
+
+
+        /// <summary>
+        /// Gets or sets the nickname of the user.
+        /// </summary>
+        [Column("nickname", TypeName = "varchar(50)")]
+        public string? Nickname { get; set; }
+
 
         /// <summary>
         /// Gets or sets the account associated with the user.
@@ -119,5 +137,9 @@ namespace Fatagram.Domain.Models
         // Friendships
         public ICollection<Friendship> FriendshipAsUser1 { get; set; } = new List<Friendship>();
         public ICollection<Friendship> FriendshipAsUser2 { get; set; } = new List<Friendship>();
+        public ICollection<Hobby> Hobbies { get; set; } = new List<Hobby>();
+        public ICollection<Skill> Skills { get; set; } = new List<Skill>();
+        public ICollection<UserJob> Jobs { get; set; } = new List<UserJob>();
+        public ICollection<UserSchool> Schools { get; set; } = new List<UserSchool>();
     }
 }

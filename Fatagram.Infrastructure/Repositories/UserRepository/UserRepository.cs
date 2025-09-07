@@ -4,6 +4,10 @@ using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Metrics;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Fatagram.Infrastructure.Repositories.UserRepository
 {
@@ -43,6 +47,34 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == key.ToGuid() || u.UrlName == key);
             return user;
+        }
+
+        public async Task<Dictionary<string, object?>> GetAsync(string key, List<string> fields)
+        {
+            if (fields == null || fields.Count == 0)
+                return new Dictionary<string, object?>();
+
+            // Build Dynamic LINQ select string: "new(Name, Age, UrlName)"
+            var selectString = "new(" + string.Join(", ", fields.Select(f => $"{f} as {f}")) + ")";
+
+            // Query database (dynamic select)
+            var user = _dbContext.Users
+                .Where(u => u.Id == key.ToGuid() || u.UrlName == key)
+                .Select(selectString)
+                .FirstOrDefault(); // Dynamic LINQ với 1 record -> dùng sync là ok
+
+            if (user == null)
+                return new Dictionary<string, object?>();
+
+            // Convert dynamic/anonymous object sang Dictionary<string, object>
+            var dictionary = new Dictionary<string, object?>();
+            foreach (var field in fields)
+            {
+                var value = user.GetType().GetProperty(field)?.GetValue(user);
+                dictionary[field] = value;
+            }
+
+            return dictionary;
         }
 
         public Task<User?> GetByUrlNameAsync(string username)

@@ -1,11 +1,11 @@
-﻿using Fatagram.Application.Dtos.User;
-using Fatagram.Domain.Enums;
+﻿using Fatagram.Domain.Enums;
 using Fatagram.Application.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Application.Dtos.User.Update;
 
 namespace Fatagram.Application.Services.UserPrivacyServices.Interface
 {

@@ -25,5 +25,11 @@ namespace Fatagram.Application.Validation
             if (urlName.Contains(" "))
                 throw new ValidateException("URL_NAME_CONTAINS_SPACE", null, "UrlName cannot contain spaces.");
         }
+
+        public static void EnsureValidNickname(string nickname)
+        {
+            if (nickname.Length > 20)
+                throw new ValidateException("NICKNAME_TOO_LONG", null, "Nickname must be between 3 and 30 characters.");
+        }
     }
 }

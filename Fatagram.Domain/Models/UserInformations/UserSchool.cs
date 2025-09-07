@@ -29,7 +29,7 @@ namespace Fatagram.Domain.Models.UserInformations
         [Column("end", TypeName = "timestamptz")]
         public DateTime End { get; set; }
 
-        [Column("school_state", TypeName = "user_school_state")]
+        [Column("school_state", TypeName = "varchar(20)")]
         public SchoolState SchoolState { get; set; }
     }
 }

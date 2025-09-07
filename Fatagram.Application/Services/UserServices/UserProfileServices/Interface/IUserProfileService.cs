@@ -53,38 +53,15 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto);
 
 
-        /// <summary>
-        /// Get a user by username
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(string senderId, string targetId, string fields);
-
-
+        
         /// <summary>
         /// Get a user by id
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="fields"></param>
         /// <returns></returns>
-        Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(Guid userId, Guid targetId, string fields);
+        Task<Result<GetUserProfileDto>> GetUserProfileAsync(Guid userId, string target, string fields);
 
-        /// <summary>
-        /// Get a user by username
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(string targetId, string fields);
-
-        /// <summary>
-        /// Get a user by id
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(Guid targetId, string fields);
 
         /// <summary>
         /// Check if a user exists

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250826104323_Update_User_Information_v1")]
-    partial class Update_User_Information_v1
+    [Migration("20250829111537_InitCreate")]
+    partial class InitCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -689,8 +689,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("job_id");
 
-                    b.Property<int>("JobState")
-                        .HasColumnType("user_job_state")
+                    b.Property<string>("JobState")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("job_state");
 
                     b.Property<DateTime>("Start")
@@ -725,8 +726,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("school_id");
 
-                    b.Property<int>("SchoolState")
-                        .HasColumnType("user_school_state")
+                    b.Property<string>("SchoolState")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("school_state");
 
                     b.Property<DateTime>("Start")

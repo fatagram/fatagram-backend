@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Fatagram.Application.Dtos.User
+namespace Fatagram.Application.Dtos.User.Update
 {
     public class UpdateUserPrivacyDto
     {

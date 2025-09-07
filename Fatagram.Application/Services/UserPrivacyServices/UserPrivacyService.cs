@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Services.UserPrivacyServices.Interface;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
@@ -10,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Application.Dtos.User.Update;
 
 namespace Fatagram.Application.Services.UserPrivacyServices
 {

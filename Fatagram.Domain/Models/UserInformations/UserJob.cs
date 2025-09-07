@@ -28,7 +28,7 @@ namespace Fatagram.Domain.Models.UserInformations
         [Column("end", TypeName = "timestamptz")]
         public DateTime End { get; set; }
 
-        [Column("job_state", TypeName = "user_job_state")]
+        [Column("job_state", TypeName = "varchar(20)")]
         public JobState JobState { get; set; }
 
         // Navigation Properties

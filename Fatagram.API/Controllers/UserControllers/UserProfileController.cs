@@ -11,6 +11,7 @@ using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
+using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
@@ -43,21 +44,14 @@ namespace Fatagram.API.Controllers.UserControllers
         /// <param name="id"></param>
         /// <param name="fields"></param>
         /// <returns></returns> 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserProfile(string id, [FromQuery] string fields)
+        [HttpGet("{target}")]
+        public async Task<IActionResult> GetUserProfile(string target, [FromQuery] string fields)
         {
-            if (HttpContext.User.Identity?.IsAuthenticated ?? false)
-            {
-                var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) userId = Guid.Empty.ToString();
-                var _res = await _userProfileService.GetUserInfoAuthenticatedAsync(userId, id, fields);
-                return Ok(ApiResponse<GetUserProfileDto>.Success(
-                        data: _res.Data
-                    ));
-            }
-            var res = await _userProfileService.GetUserInfoPublicAsync(id, fields);
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) userId = Guid.Empty.ToString();
+            var _res = await _userProfileService.GetUserProfileAsync(userId.ToGuid(), target, fields);
             return Ok(ApiResponse<GetUserProfileDto>.Success(
-                    data: res.Data
+                    data: _res.Data
                 ));
         }
 
@@ -233,7 +227,7 @@ namespace Fatagram.API.Controllers.UserControllers
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) throw new UnauthorizedException();
 
-            var res = await _userProfileService.GetUserInfoAuthenticatedAsync(userId, userId, "id,urlName,languageCode");
+            var res = await _userProfileService.GetUserProfileAsync(userId.ToGuid(), userId, "id,urlName,languageCode");
             return res.ToActionResult();
         }
     }

@@ -2,7 +2,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using System.ComponentModel.DataAnnotations;
 
-namespace Fatagram.Application.Dtos.User
+namespace Fatagram.Application.Dtos.User.Update
 {
     /// <summary>
     /// Data transfer object for updating user

@@ -24,16 +24,16 @@ namespace Fatagram.Application.Dtos.User
 
         public string? FullName { get; set; }
 
-        public string? Email { get; set; }
+        //public string? Email { get; set; }
 
-        public string? Phone { get; set; }
+        //public string? Phone { get; set; }
 
-        public string? Bio { get; set; }
+        public string? Nickname { get; set; }
 
         public string? Avatar { get; set; }
 
         public string? Background { get; set; }
 
-        public DateTime? BirthDay { get; set; }
+        // public DateTime? BirthDay { get; set; }
     }
 }

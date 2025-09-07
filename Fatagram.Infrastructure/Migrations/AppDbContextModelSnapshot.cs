@@ -686,8 +686,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("job_id");
 
-                    b.Property<int>("JobState")
-                        .HasColumnType("user_job_state")
+                    b.Property<string>("JobState")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("job_state");
 
                     b.Property<DateTime>("Start")
@@ -722,8 +723,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("school_id");
 
-                    b.Property<int>("SchoolState")
-                        .HasColumnType("user_school_state")
+                    b.Property<string>("SchoolState")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("school_state");
 
                     b.Property<DateTime>("Start")

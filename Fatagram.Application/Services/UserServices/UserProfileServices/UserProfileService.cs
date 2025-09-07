@@ -13,6 +13,7 @@ using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Fatagram.Application.Utils;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
 {
@@ -46,113 +47,34 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
         public Task<Result<string>> CheckUserExistAsync(Guid userId)
             => CheckUserExistAsync(userId.ToString());
 
-        /// <summary>
-        /// Get user info by fields
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        public async Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(string senderId, string target, string fields)
-        {
-            var res = await _userRepository.GetAsync(target);
-            if (res is null) throw new UserNotFoundException();
-
-            var privacyDict = new Dictionary<string, string?>();
-            var listField = fields.Split(',').ToList();
-            foreach (var field in listField)
-            {
-                var value = res.GetPropertyValue(field);
-                privacyDict.Add(field, value?.ToString());
-            }
-            var targetId = res.Id.ToString();
-            if (senderId == targetId)
-            {
-                return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-                {
-                    Infos = privacyDict,
-                    IsOwner = true
-                });
-            }
-            var privacyLevels = await _userPrivacyRepository.GetAsync(targetId, listField);
-
-            foreach (var field in listField)
-            {
-                privacyDict[field] = privacyLevels[field] switch
-                {
-                    PrivacyLevel.Public => privacyDict[field],
-                    PrivacyLevel.Private => null,
-                    _ => null
-                };
-            }
-
-            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-            {
-                Infos = privacyDict,
-                IsOwner = false
-            });
-        }
-
-        /// <summary>
-        /// Get user info by fields
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        public async Task<Result<GetUserProfileDto>> GetUserInfoAuthenticatedAsync(Guid senderId, Guid targetId, string fields)
-            => await GetUserInfoAuthenticatedAsync(senderId.ToString(), targetId.ToString(), fields);
-
+        
         /// <summary>
         /// Get user info by fields
         /// </summary>
         /// <param name="targetId"></param>
         /// <param name="fields"></param>
         /// <returns></returns>
-        public async Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(string target, string fields)
+        public async Task<Result<GetUserProfileDto>> GetUserProfileAsync(Guid userId, string target, string fields)
         {
             if (string.IsNullOrEmpty(fields))
             {
                 return Result<GetUserProfileDto>.BadRequest("FIELDS_REQUIRED", "Fields are required");
             }
-            var res = await _userRepository.GetAsync(target);
-            if (res is null) throw new UserNotFoundException();
-
-            var privacyDict = new Dictionary<string, string?>();
             var listField = fields.Split(',').ToList();
-            foreach (var field in listField)
-            {
-                var value = res.GetPropertyValue(field);
-                privacyDict.Add(field, value?.ToString());
-            }
+            listField.Add("id");
 
-            var targetId = res.Id.ToString();
-            var privacyLevels = await _userPrivacyRepository.GetAsync(targetId, listField);
+            var res = await _userRepository.GetAsync(target, listField);
+            var isOwner = userId.ToString() == res["id"]?.ToString();
+            listField.RemoveAt(listField.Count - 1);
 
-            foreach (var field in listField)
-            {
-                privacyDict[field] = privacyLevels[field] switch
-                {
-                    PrivacyLevel.Public => privacyDict[field],
-                    PrivacyLevel.Private => null,
-                    _ => null
-                };
-            }
+            var privacyDict = res.ToDictionary(k => k.Key, v => v.Value?.ToString());
 
             return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
             {
                 Infos = privacyDict,
-                IsOwner = false
+                IsOwner = isOwner
             });
         }
-
-        /// <summary>
-        /// Get user info by fields
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fields"></param>
-        /// <returns></returns>
-        public async Task<Result<GetUserProfileDto>> GetUserInfoPublicAsync(Guid targetId, string fields)
-            => await GetUserInfoPublicAsync(targetId.ToString(), fields);
-
 
         /// <summary>
         /// Update a user info

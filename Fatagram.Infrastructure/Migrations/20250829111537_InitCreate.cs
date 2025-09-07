@@ -14,6 +14,34 @@ namespace Fatagram.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "hobby",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    localization_key = table.Column<string>(type: "varchar(100)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_hobby", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "job",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    localization_key = table.Column<string>(type: "varchar(100)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_job", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Languages",
                 columns: table => new
                 {
@@ -23,6 +51,54 @@ namespace Fatagram.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Languages", x => x.code);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "school",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    localization_key = table.Column<string>(type: "varchar(100)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_school", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "skill",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    localization_key = table.Column<string>(type: "varchar(100)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamptz", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_skill", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "localized",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    localization_key = table.Column<string>(type: "varchar(100)", nullable: false),
+                    language_code = table.Column<string>(type: "varchar(2)", nullable: false),
+                    value = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_localized", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_localized_Languages_language_code",
+                        column: x => x.language_code,
+                        principalTable: "Languages",
+                        principalColumn: "code",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -62,6 +138,8 @@ namespace Fatagram.Infrastructure.Migrations
                     birth_day = table.Column<DateTime>(type: "timestamptz", nullable: true),
                     gender = table.Column<string>(type: "varchar(10)", nullable: true),
                     lang_code = table.Column<string>(type: "varchar(2)", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    nickname = table.Column<string>(type: "varchar(50)", nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
@@ -152,6 +230,30 @@ namespace Fatagram.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HobbyUser",
+                columns: table => new
+                {
+                    HobbiesId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UsersId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HobbyUser", x => new { x.HobbiesId, x.UsersId });
+                    table.ForeignKey(
+                        name: "FK_HobbyUser_hobby_HobbiesId",
+                        column: x => x.HobbiesId,
+                        principalTable: "hobby",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HobbyUser_users_UsersId",
+                        column: x => x.UsersId,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Notifications",
                 columns: table => new
                 {
@@ -176,6 +278,58 @@ namespace Fatagram.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SkillUser",
+                columns: table => new
+                {
+                    SkillsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UsersId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SkillUser", x => new { x.SkillsId, x.UsersId });
+                    table.ForeignKey(
+                        name: "FK_SkillUser_skill_SkillsId",
+                        column: x => x.SkillsId,
+                        principalTable: "skill",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SkillUser_users_UsersId",
+                        column: x => x.UsersId,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "user_job",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    job_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    start = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    end = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    job_state = table.Column<string>(type: "varchar(20)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_job", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_user_job_job_job_id",
+                        column: x => x.job_id,
+                        principalTable: "job",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_user_job_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user_privacies",
                 columns: table => new
                 {
@@ -189,6 +343,34 @@ namespace Fatagram.Infrastructure.Migrations
                     table.PrimaryKey("PK_user_privacies", x => x.id);
                     table.ForeignKey(
                         name: "FK_user_privacies_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "user_school",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    school_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    start = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    end = table.Column<DateTime>(type: "timestamptz", nullable: false),
+                    school_state = table.Column<string>(type: "varchar(20)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_school", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_user_school_school_school_id",
+                        column: x => x.school_id,
+                        principalTable: "school",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_user_school_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
                         principalColumn: "id",
@@ -225,6 +407,28 @@ namespace Fatagram.Infrastructure.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "hobby",
+                columns: new[] { "id", "created_at", "localization_key", "updated_at" },
+                values: new object[,]
+                {
+                    { new Guid("11111111-1111-1111-1111-111111111111"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "HOBBY_MUSIC", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "HOBBY_SPORT", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "HOBBY_TRAVEL", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("44444444-4444-4444-4444-444444444444"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "HOBBY_READING", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                });
+
+            migrationBuilder.InsertData(
+                table: "skill",
+                columns: new[] { "id", "created_at", "localization_key", "updated_at" },
+                values: new object[,]
+                {
+                    { new Guid("55555555-5555-5555-5555-555555555555"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "SKILL_PROGRAMMING", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("66666666-6666-6666-6666-666666666666"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "SKILL_DESIGN", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("77777777-7777-7777-7777-777777777777"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "SKILL_MANAGEMENT", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("88888888-8888-8888-8888-888888888888"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "SKILL_MARKETING", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                });
+
+            migrationBuilder.InsertData(
                 table: "NotificationContents",
                 columns: new[] { "Id", "content", "lang_code", "Type" },
                 values: new object[,]
@@ -233,6 +437,29 @@ namespace Fatagram.Infrastructure.Migrations
                     { new Guid("22222222-2222-2222-2222-222222222222"), "{actorName} accepted your friend request.", "en", 1 },
                     { new Guid("33333333-3333-3333-3333-333333333333"), "{actorName} đã gửi cho bạn một lời mời kết bạn.", "vi", 0 },
                     { new Guid("44444444-4444-4444-4444-444444444444"), "{actorName} đã chấp nhận lời mời kết bạn của bạn.", "vi", 1 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "localized",
+                columns: new[] { "id", "language_code", "localization_key", "value" },
+                values: new object[,]
+                {
+                    { new Guid("00000000-0000-0000-0000-000000000001"), "vi", "SKILL_MANAGEMENT", "Quản lý" },
+                    { new Guid("00000000-0000-0000-0000-000000000002"), "vi", "SKILL_MARKETING", "Tiếp thị" },
+                    { new Guid("11111111-1111-1111-1111-111111111111"), "en", "HOBBY_MUSIC", "Music" },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), "en", "HOBBY_SPORTS", "Sports" },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), "en", "HOBBY_TRAVEL", "Travel" },
+                    { new Guid("44444444-4444-4444-4444-444444444444"), "en", "HOBBY_READING", "Reading" },
+                    { new Guid("55555555-5555-5555-5555-555555555555"), "vi", "HOBBY_MUSIC", "Âm nhạc" },
+                    { new Guid("66666666-6666-6666-6666-666666666666"), "vi", "HOBBY_SPORTS", "Thể thao" },
+                    { new Guid("77777777-7777-7777-7777-777777777777"), "vi", "HOBBY_TRAVEL", "Du lịch" },
+                    { new Guid("88888888-8888-8888-8888-888888888888"), "vi", "HOBBY_READING", "Đọc sách" },
+                    { new Guid("99999999-9999-9999-9999-999999999999"), "en", "SKILL_PROGRAMMING", "Programming" },
+                    { new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "en", "SKILL_DESIGN", "Design" },
+                    { new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "en", "SKILL_MANAGEMENT", "Management" },
+                    { new Guid("cccccccc-cccc-cccc-cccc-cccccccccccc"), "en", "SKILL_MARKETING", "Marketing" },
+                    { new Guid("dddddddd-dddd-dddd-dddd-dddddddddddd"), "vi", "SKILL_PROGRAMMING", "Lập trình" },
+                    { new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"), "vi", "SKILL_DESIGN", "Thiết kế" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -267,6 +494,16 @@ namespace Fatagram.Infrastructure.Migrations
                 column: "user_2_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HobbyUser_UsersId",
+                table: "HobbyUser",
+                column: "UsersId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_localized_language_code",
+                table: "localized",
+                column: "language_code");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_NotificationContents_lang_code",
                 table: "NotificationContents",
                 column: "lang_code");
@@ -282,8 +519,33 @@ namespace Fatagram.Infrastructure.Migrations
                 column: "account_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SkillUser_UsersId",
+                table: "SkillUser",
+                column: "UsersId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_job_job_id",
+                table: "user_job",
+                column: "job_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_job_user_id",
+                table: "user_job",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_user_privacies_user_id",
                 table: "user_privacies",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_school_school_id",
+                table: "user_school",
+                column: "school_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_school_user_id",
+                table: "user_school",
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
@@ -314,6 +576,12 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "friendship");
 
             migrationBuilder.DropTable(
+                name: "HobbyUser");
+
+            migrationBuilder.DropTable(
+                name: "localized");
+
+            migrationBuilder.DropTable(
                 name: "NotificationContents");
 
             migrationBuilder.DropTable(
@@ -323,10 +591,31 @@ namespace Fatagram.Infrastructure.Migrations
                 name: "refresh_tokens");
 
             migrationBuilder.DropTable(
+                name: "SkillUser");
+
+            migrationBuilder.DropTable(
+                name: "user_job");
+
+            migrationBuilder.DropTable(
                 name: "user_privacies");
 
             migrationBuilder.DropTable(
+                name: "user_school");
+
+            migrationBuilder.DropTable(
+                name: "hobby");
+
+            migrationBuilder.DropTable(
                 name: "accounts");
+
+            migrationBuilder.DropTable(
+                name: "skill");
+
+            migrationBuilder.DropTable(
+                name: "job");
+
+            migrationBuilder.DropTable(
+                name: "school");
 
             migrationBuilder.DropTable(
                 name: "users");

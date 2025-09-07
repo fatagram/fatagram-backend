@@ -36,6 +36,14 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         Task<User?> GetAsync(string key);
 
         /// <summary>
+        /// Get a user by user id with specific fields
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        Task<Dictionary<string, object?>> GetAsync(string key, List<string> fields);
+
+        /// <summary>
         /// Create a new user
         /// </summary>
         /// <param name="newUser"></param>

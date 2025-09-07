@@ -33,6 +33,7 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, NginxImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
+            services.AddScoped<IUserInfoService, UserInfoService>();
 
             // Scoped for repositories
             services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
@@ -43,6 +44,7 @@ namespace Fatagram.API.Extensions.Dependencies
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationContentRepository, NotificationContentRepository>();
+            services.AddScoped<IUserInformationRepository, UserInformationRepository>();
 
             // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();

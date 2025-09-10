@@ -19,8 +19,7 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                     (!(srcMember is DateTime) || !((DateTime)srcMember).Equals(default(DateTime))) &&
                     (!(srcMember is int) || !((int)srcMember).Equals(default(int))) &&
                     (!(srcMember is bool) || !((bool)srcMember).Equals(default(bool))) &&
-                    (!(srcMember is Guid) || !((Guid)srcMember).Equals(default(Guid))) &&
-                    (!(srcMember is string) || !string.IsNullOrEmpty((string)srcMember))
+                    (!(srcMember is Guid) || !((Guid)srcMember).Equals(default(Guid)))
                 ));
 
             CreateMap<User, UserDto>();

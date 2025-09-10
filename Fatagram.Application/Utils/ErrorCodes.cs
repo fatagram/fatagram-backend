@@ -87,6 +87,16 @@ namespace Fatagram.Application.Utils
         /// </summary>
         public const string UPDATE_USER_FAILED = "UPDATE_USER_FAILED";
 
+        /// <summary>
+        /// Bio too long
+        /// </summary>
+        public const string BIO_TOO_LONG = "BIO_TOO_LONG";
+
+        /// <summary>
+        /// Description too long
+        /// </summary>
+        public const string DESCRIPTION_TOO_LONG = "DESCRIPTION_TOO_LONG";
+
         #endregion
 
         #region General error codes

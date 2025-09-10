@@ -45,5 +45,16 @@ namespace Fatagram.Application.Utils
         /// Allows only alphabetic characters, including Vietnamese characters.
         /// </summary>
         public const string FirstName = @"^[\p{L}]+$";
+
+        /// <summary>
+        /// Regular expression pattern for validating user bios.
+        /// </summary>
+        public const string Bio = @"^.{0,160}$";
+
+        /// <summary>
+        /// Regular expression pattern for validating user descriptions.
+        /// </summary>
+
+        public const string Description = @"^.{0,300}$";
     }
 }

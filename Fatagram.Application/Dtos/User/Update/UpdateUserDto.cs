@@ -39,7 +39,15 @@ namespace Fatagram.Application.Dtos.User.Update
         /// <summary>
         /// User's bio
         /// </summary>
+        [RegularExpression(RegexPatterns.Bio, ErrorMessage = ErrorCodes.BIO_TOO_LONG)]
+        // [Required(ErrorMessage = ErrorCodes.BIO_TOO_LONG)]
         public string? Bio { get; set; }
+
+        /// <summary>
+        /// User's description
+        /// </summary>
+        [RegularExpression(RegexPatterns.Description, ErrorMessage = ErrorCodes.DESCRIPTION_TOO_LONG)]
+        public string? Description { get; set; }
 
         /// <summary>
         /// User's avatar

@@ -98,7 +98,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             if (existingUser is null) throw new UserNotFoundException();
 
             _mapper.Map(updateUserDto, existingUser);
-            await _userRepository.UpdateAsync(existingUser);
+            await _userRepository.UpdateAsync(existingUser.NormalizeEmptyStringToNull());
             return Result<UpdateUserDto>.Success(updateUserDto);
         }
 

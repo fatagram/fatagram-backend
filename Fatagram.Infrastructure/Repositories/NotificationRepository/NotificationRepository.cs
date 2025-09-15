@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,12 +44,25 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
         }
 
         public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetNotificationsAsync(
-            Guid userId, string langCode, int page, int pageSize)
+            Guid userId, string langCode, Guid? cursorId, int pageSize)
         {
-            var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId)
+            var query = _context.Notifications
+                .Where(n => n.UserId == userId)  // chỉ lấy noti của user
                 .OrderByDescending(n => n.CreatedAt)
-                .Skip((page - 1) * pageSize)
+                .ThenByDescending(n => n.Id)
+                .AsQueryable();
+
+            if (cursorId.HasValue)
+            {
+                var cursor = await _context.Notifications.FindAsync(cursorId.Value);
+                if (cursor != null)
+                {
+                    query = query.Where(n => n.CreatedAt < cursor.CreatedAt ||
+                        (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0));
+                }
+            }
+
+            var notifications = await query
                 .Take(pageSize)
                 .Select(n => new NotificationProjection
                 {
@@ -62,9 +75,9 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                     IsRead = n.IsRead,
                     CreatedAt = n.CreatedAt,
                     Content = _context.NotificationContents
-                        .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
-                        .Select(c => c.Content)
-                        .FirstOrDefault() ?? string.Empty
+                            .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                            .Select(c => c.Content)
+                            .FirstOrDefault() ?? string.Empty
                 })
                 .ToListAsync();
 
@@ -74,13 +87,27 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
             return (notifications, unreadCount);
         }
 
+
         public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetUnreadNotificationsAsync(
-            Guid userId, string langCode, int page, int pageSize)
+            Guid userId, string langCode, Guid? cursorId, int pageSize)
         {
-            var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
+            var query = _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)  // chỉ lấy noti của user
                 .OrderByDescending(n => n.CreatedAt)
-                .Skip((page - 1) * pageSize)
+                .ThenByDescending(n => n.Id)
+                .AsQueryable();
+
+            if (cursorId.HasValue)
+            {
+                var cursor = await _context.Notifications.FindAsync(cursorId.Value);
+                if (cursor != null)
+                {
+                    query = query.Where(n => n.CreatedAt < cursor.CreatedAt ||
+                        (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0));
+                }
+            }
+
+            var notifications = await query
                 .Take(pageSize)
                 .Select(n => new NotificationProjection
                 {
@@ -93,13 +120,14 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                     IsRead = n.IsRead,
                     CreatedAt = n.CreatedAt,
                     Content = _context.NotificationContents
-                        .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
-                        .Select(c => c.Content)
-                        .FirstOrDefault() ?? string.Empty
+                            .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                            .Select(c => c.Content)
+                            .FirstOrDefault() ?? string.Empty
                 })
                 .ToListAsync();
 
-            var unreadCount = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+            var unreadCount = await _context.Notifications
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
 
             return (notifications, unreadCount);
         }

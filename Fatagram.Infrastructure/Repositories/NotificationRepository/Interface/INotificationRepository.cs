@@ -12,9 +12,9 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository.Interface
     {
         Task AddAsync(Notification notification);
         Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetNotificationsAsync(
-            Guid userId, string langCode, int page, int pageSize);
+            Guid userId, string langCode, Guid? cursorId, int pageSize);
         Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetUnreadNotificationsAsync(
-            Guid userId, string langCode, int page, int pageSize);
+            Guid userId, string langCode, Guid? cursorId, int pageSize);
         Task MarkNotificationAsReadAsync(Guid notificationId);
         Task MarkAllNotificationsAsReadAsync(Guid userId);
         Task DeleteNotificationAsync(Guid notificationId);

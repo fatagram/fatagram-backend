@@ -26,7 +26,7 @@ namespace Fatagram.API
 
             // Max request body size
             builder.WebHost.UseKestrel(option => {
-                option.Limits.MaxRequestBodySize = 2 * 1024 * 1024; // 2MB
+                option.Limits.MaxRequestBodySize = 20 * 1024 * 1024; // 2MB
             });
             
             // Create app 

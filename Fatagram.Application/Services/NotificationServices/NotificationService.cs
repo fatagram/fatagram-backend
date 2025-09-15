@@ -70,10 +70,10 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             // var cancelNotification = NotificationFactory.CreateCancelNotification()
         }
 
-        public async Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, int page, int pageSize)
+        public async Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, Guid? cursorId, int pageSize)
         {
             var language = await _userRepository.GetLanguageAsync(userId.ToGuid());
-            var data = await _notificationRepository.GetNotificationsAsync(userId.ToGuid(), language, page, pageSize);
+            var data = await _notificationRepository.GetNotificationsAsync(userId.ToGuid(), language, cursorId, pageSize);
 
             var result = new List<NotificationDto>();
             foreach (var n in data.notifications)
@@ -89,10 +89,10 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             });
         }
 
-        public async Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, int page, int pageSize)
+        public async Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, Guid? cursorId, int pageSize)
         {
             var language = await _userRepository.GetLanguageAsync(userId.ToGuid());
-            var data = await _notificationRepository.GetUnreadNotificationsAsync(userId.ToGuid(), language, page, pageSize);
+            var data = await _notificationRepository.GetUnreadNotificationsAsync(userId.ToGuid(), language, cursorId, pageSize);
 
             var notificationsWithInfo = await Task.WhenAll(
                 data.notifications.Select(async n => 

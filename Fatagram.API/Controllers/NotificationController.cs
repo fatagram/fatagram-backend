@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Fatagram.API.Controllers
@@ -30,14 +31,14 @@ namespace Fatagram.API.Controllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getNotifications")]
-        public async Task<IActionResult> GetNotifications(int page, int pageSize)
+        public async Task<IActionResult> GetNotifications(string cursorId, int pageSize)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
                 throw new UnauthorizedException();
             }
-            var result = await _notificationService.GetNotificationsAsync(userId ?? "", page, pageSize);
+            var result = await _notificationService.GetNotificationsAsync(userId ?? "", cursorId.ToGuid(), pageSize);
             return result.ToActionResult();
         }
 
@@ -50,14 +51,14 @@ namespace Fatagram.API.Controllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getUnreadNotifications")]
-        public async Task<IActionResult> GetUnreadNotifications(int page, int pageSize)
+        public async Task<IActionResult> GetUnreadNotifications(string? cursorId, int pageSize)
         {
             var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
                 throw new UnauthorizedException();
             }
-            var result = await _notificationService.GetUnreadNotificationsAsync(userId ?? "", page, pageSize);
+            var result = await _notificationService.GetUnreadNotificationsAsync(userId ?? "", cursorId.ToGuid(), pageSize);
             return result.ToActionResult();
         }
 

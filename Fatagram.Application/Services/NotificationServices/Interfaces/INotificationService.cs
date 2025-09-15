@@ -12,8 +12,8 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
     public interface INotificationService
     {
         Task CreateNotificationAsync(NotificationDto notificationDto, bool isSave = true);
-        Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, int page, int pageSize);
-        Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, int page, int pageSize);
+        Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, Guid? cursorId, int pageSize);
+        Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, Guid? cursorId, int pageSize);
         Task MarkNotificationAsReadAsync(string notificationId);
         Task MarkAllNotificationsAsReadAsync(string userId);
         Task DeleteNotificationAsync(string notificationId);

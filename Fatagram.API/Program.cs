@@ -57,6 +57,7 @@ namespace Fatagram.API
 
             // Routing
             app.MapControllers().RequireCors(CorsPolicySettings.MyAllowSpecificOrigins);
+            app.MapGet("/hi", () => "Hello World!");
             app.MapHub<NotificationHub>("/hubs/notification");
 
             // var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();

@@ -19,9 +19,6 @@ namespace Fatagram.API.Extensions
                 //    listenOptions.UseHttps(certPath, certPassword);
                 //});
             });
-
-
-            builder.WebHost.UseUrls("http://0.0.0.0:5000");
         }
     }
 }

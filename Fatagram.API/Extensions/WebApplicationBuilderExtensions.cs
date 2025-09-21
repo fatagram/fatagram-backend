@@ -13,7 +13,7 @@ namespace Fatagram.API.Extensions
             // Add authorization
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(5000);
+                options.ListenLocalhost(5000);
                 //options.ListenLocalhost(5001, listenOptions =>
                 //{
                 //    listenOptions.UseHttps(certPath, certPassword);

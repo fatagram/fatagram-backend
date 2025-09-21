@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Runtime.CompilerServices;
 
-namespace Fatagram.API.Extensions.WebApplicationBuilderExtensions
+namespace Fatagram.API.Extensions
 {
     public static class WebApplicationBuilderExtensions
     {

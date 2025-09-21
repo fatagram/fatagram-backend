@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
@@ -9,11 +10,10 @@ using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Fatagram.API.Controllers
+namespace Fatagram.API.Controllers.V1
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class NotificationController : ControllerBase
+    public class NotificationController : BaseApiController
     {
         private readonly INotificationService _notificationService;
 
@@ -33,12 +33,8 @@ namespace Fatagram.API.Controllers
         [HttpGet("getNotifications")]
         public async Task<IActionResult> GetNotifications(string cursorId, int pageSize)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var result = await _notificationService.GetNotificationsAsync(userId ?? "", cursorId.ToGuid(), pageSize);
+            var userId = GetCurrentUserId();
+            var result = await _notificationService.GetNotificationsAsync(userId.ToString(), cursorId.ToGuid(), pageSize);
             return result.ToActionResult();
         }
 
@@ -53,12 +49,8 @@ namespace Fatagram.API.Controllers
         [HttpGet("getUnreadNotifications")]
         public async Task<IActionResult> GetUnreadNotifications(string? cursorId, int pageSize)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var result = await _notificationService.GetUnreadNotificationsAsync(userId ?? "", cursorId.ToGuid(), pageSize);
+            var userId = GetCurrentUserId();
+            var result = await _notificationService.GetUnreadNotificationsAsync(userId.ToString(), cursorId.ToGuid(), pageSize);
             return result.ToActionResult();
         }
 
@@ -72,11 +64,6 @@ namespace Fatagram.API.Controllers
         [HttpPost("markNotificationAsRead/{notificationId}")]
         public async Task<IActionResult> MarkNotificationAsRead(string notificationId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
             await _notificationService.MarkNotificationAsReadAsync(notificationId);
             return Ok();
         }
@@ -90,12 +77,8 @@ namespace Fatagram.API.Controllers
         [HttpPost("markAllNotificationsAsRead")]
         public async Task<IActionResult> MarkAllNotificationsAsRead()
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            await _notificationService.MarkAllNotificationsAsReadAsync(userId);
+            var userId = GetCurrentUserId();
+            await _notificationService.MarkAllNotificationsAsReadAsync(userId.ToString());
             return Ok();
         }
 
@@ -109,11 +92,6 @@ namespace Fatagram.API.Controllers
         [HttpDelete("deleteNotification")]
         public async Task<IActionResult> DeleteNotification(string notificationId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
             await _notificationService.DeleteNotificationAsync(notificationId);
             return Ok();
         }
@@ -127,12 +105,8 @@ namespace Fatagram.API.Controllers
         [HttpDelete("deleteAllNotifications")]
         public async Task<IActionResult> DeleteAllNotifications()
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            await _notificationService.DeleteAllNotificationsAsync(userId);
+            var userId = GetCurrentUserId();
+            await _notificationService.DeleteAllNotificationsAsync(userId.ToString());
             return Ok();
         }
     }

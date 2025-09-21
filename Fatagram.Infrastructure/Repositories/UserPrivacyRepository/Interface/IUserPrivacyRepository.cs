@@ -21,20 +21,6 @@ namespace Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface
         /// <returns>A task that represents the asynchronous operation. The task result contains the privacy level of the specified field.</returns>
         Task<Dictionary<string, PrivacyLevel>> GetAsync(Guid userId, IEnumerable<string> field);
 
-        /// <summary>
-        /// Gets the privacy level of a specified field for a user identified by a string ID.
-        /// </summary>
-        /// <param name="userId">The string identifier of the user.</param>
-        /// <param name="field">The field for which the privacy level is requested.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the privacy level of the specified field.</returns>
-        Task<Dictionary<string, PrivacyLevel>> GetAsync(string userId, IEnumerable<string> field);
-
-        /// <summary>
-        /// Sets the privacy level of all fields for a user identified by a GUID to private.
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns>A task that represents a asynchronous operation</returns>
-        Task InitialAsync(string userId);
 
         /// <summary>
         /// Sets the privacy level of all fields for a user identified by a GUID to private.

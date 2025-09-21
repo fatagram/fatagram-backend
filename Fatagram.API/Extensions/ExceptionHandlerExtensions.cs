@@ -1,6 +1,6 @@
 ﻿using Fatagram.API.Middlewares;
 
-namespace Fatagram.API.Extensions.ExceptionHandlerExtensions
+namespace Fatagram.API.Extensions
 {
     public static class ExceptionHandlerExtensions
     {

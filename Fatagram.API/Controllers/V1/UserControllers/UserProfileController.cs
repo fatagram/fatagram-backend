@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
@@ -15,12 +16,10 @@ using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
-namespace Fatagram.API.Controllers.UserControllers
+namespace Fatagram.API.Controllers.V1.UserControllers
 {
-
-    [ApiController]
     [Route("api/[controller]")]
-    public class UserProfileController : ControllerBase
+    public class UserProfileController : BaseApiController
     {
 
         private readonly IUserProfileService _userProfileService;
@@ -47,9 +46,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpGet("{target}")]
         public async Task<IActionResult> GetUserProfile(string target, [FromQuery] string fields)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) userId = Guid.Empty.ToString();
-            var _res = await _userProfileService.GetUserProfileAsync(userId.ToGuid(), target, fields);
+            var userId = GetCurrentUserIdOrNull() ?? Guid.Empty;
+            var _res = await _userProfileService.GetUserProfileAsync(userId, target, fields);
             return Ok(ApiResponse<GetUserProfileDto>.Success(
                     data: _res.Data
                 ));
@@ -62,18 +60,13 @@ namespace Fatagram.API.Controllers.UserControllers
         /// <param name="request"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpPut()]
+        [HttpPut]
         public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDto request)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();   
-            }
+            ValidateModelState();
+            var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUserAsync(userId, request);
-            return Ok(ApiResponse<UpdateUserDto>.Success(
-                    data: res.Data
-                ));
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -86,16 +79,10 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPut("privacy")]
         public async Task<IActionResult> UpdateUserPrivacyAsync([FromBody] UpdateUserPrivacyDto updateUserPrivacyDto)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
+            var userId = GetCurrentUserId();
             var res = await _userPrivacyService.UpdateUserPrivacyAsync(userId, updateUserPrivacyDto);
 
-            return Ok(ApiResponse<string>.Success(
-                    data: res.Data
-                ));
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -108,11 +95,7 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPatch("avatar")]
         public async Task<IActionResult> UploadAvatarAsync(IFormFile file)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
+            var userId = GetCurrentUserId();
             var res = await _imageService.SaveImageAsync(
                 ImageSize.Small,
                 file.OpenReadStream(),
@@ -124,9 +107,7 @@ namespace Fatagram.API.Controllers.UserControllers
                 Avatar = res.Data
             });
 
-            return Ok(ApiResponse<string>.Success(
-                    data: res.Data
-            ));
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -139,20 +120,14 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPatch("background")]
         public async Task<IActionResult> UploadBackgroundAsync(IFormFile file)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
+            var userId = GetCurrentUserId();
             var res = await _imageService.SaveImageAsync(ImageSize.Large, file.OpenReadStream(), Path.GetExtension(file.FileName), "backgrounds");
             await _userProfileService.UpdateUserAsync(userId, new UpdateUserDto()
             {
                 Background = res.Data
             });
 
-            return Ok(ApiResponse<string>.Success(
-                   data: res.Data
-            ));
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -165,16 +140,10 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPatch("urlName")]
         public async Task<IActionResult> UpdateUrlNameAsync([FromBody] ChangeUrlNameDto changeUrlNameDto)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
+            var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUrlNameAsync(userId, changeUrlNameDto);
 
-            return Ok(ApiResponse<ChangeUrlNameDto>.Success(
-                    data: res.Data
-                ));
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -188,18 +157,10 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPatch("name")]
         public async Task<IActionResult> UpdateNameAsync([FromBody] ChangeNameDto updateNameDto)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                throw new ValidateException("UNVALID", errors, "Unvalid data.");
-            }
+            var userId = GetCurrentUserId();
+            ValidateModelState();
             var res = await _userProfileService.UpdateNameAsync(userId, updateNameDto);
-            
+
             return res.ToActionResult();
         }
 
@@ -209,9 +170,9 @@ namespace Fatagram.API.Controllers.UserControllers
         /// <param name="key"></param>
         /// <returns></returns>
         [HttpGet("exist")]
-        public async Task<IActionResult> CheckUserExist(string key)
+        public async Task<IActionResult> CheckUserExist(string userId)
         {
-            var res = await _userProfileService.CheckUserExistAsync(key);
+            var res = await _userProfileService.CheckUserExistAsync(userId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -224,10 +185,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) throw new UnauthorizedException();
-
-            var res = await _userProfileService.GetUserProfileAsync(userId.ToGuid(), userId, "id,urlName,languageCode");
+            var userId = GetCurrentUserId();
+            var res = await _userProfileService.GetUserProfileAsync(userId, userId.ToString(), "id,urlName,languageCode");
             return res.ToActionResult();
         }
     }

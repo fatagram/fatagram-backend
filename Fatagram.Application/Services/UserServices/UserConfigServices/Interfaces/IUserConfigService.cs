@@ -9,6 +9,6 @@ namespace Fatagram.Application.Services.UserServices.UserConfigServices.Interfac
 {
     public interface IUserConfigService
     {
-        Task<Result<string>> ChangeLanguage(string userId, string langCode);
+        Task<Result<string>> ChangeLanguage(Guid userId, string langCode);
     }
 }

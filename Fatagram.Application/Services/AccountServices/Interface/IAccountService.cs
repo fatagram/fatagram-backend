@@ -26,6 +26,6 @@ namespace Fatagram.Application.Services.AccountServices.Interface
         /// <param name="oldPassword"></param>
         /// <param name="newPassword"></param>
         /// <returns></returns>
-        Task<Result<string>> ChangePasswordAsync(string userId, ChangePasswordDto changePasswordRequest);
+        Task<Result<string>> ChangePasswordAsync(Guid userId, ChangePasswordDto changePasswordRequest);
     }
 }

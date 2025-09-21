@@ -68,7 +68,7 @@ namespace Fatagram.Application.Services.AccountServices
         /// <param name="userId"></param>
         /// <param name="changePasswordRequest"></param>
         /// <returns></returns>
-        public async Task<Result<string>> ChangePasswordAsync(string userId, ChangePasswordDto changePasswordRequest)
+        public async Task<Result<string>> ChangePasswordAsync(Guid userId, ChangePasswordDto changePasswordRequest)
         {
             var res = await _accountRepository.GetByUserIdAsync(userId);
             if (res is null)

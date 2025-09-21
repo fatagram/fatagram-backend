@@ -29,10 +29,10 @@ namespace Fatagram.Application.Services.UserPrivacyServices
         /// <param name="userId"></param>
         /// <param name="updateUserPrivacyDto"></param>
         /// <returns></returns>
-        public async Task<Result<string>> UpdateUserPrivacyAsync(string userId, UpdateUserPrivacyDto updateUserPrivacyDto)
+        public async Task<Result<string>> UpdateUserPrivacyAsync(Guid userId, UpdateUserPrivacyDto updateUserPrivacyDto)
         {
             var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
-            userPrivacy.UserId = userId.ToGuid();
+            userPrivacy.UserId = userId;
             await _userPrivacyRepository.UpdateAsync(userPrivacy);
 
             return Result<string>.Success();

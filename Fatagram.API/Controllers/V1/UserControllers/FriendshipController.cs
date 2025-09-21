@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Exceptions;
@@ -12,11 +13,10 @@ using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Fatagram.API.Controllers.UserControllers
+namespace Fatagram.API.Controllers.V1.UserControllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class FriendshipController : ControllerBase
+    public class FriendshipController : BaseApiController
     {
         private readonly IFriendshipService _friendshipService;
         public FriendshipController(
@@ -35,8 +35,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPost("add/{receiverId}")]
         public async Task<IActionResult> AddFriend([FromRoute] string receiverId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = await _friendshipService.SendAddFriendAsync(userId.ToGuid(), receiverId.ToGuid());
+            var userId = GetCurrentUserId();
+            var result = await _friendshipService.SendAddFriendAsync(userId, receiverId.ToGuid());
             return result.ToActionResult();
         }
 
@@ -49,8 +49,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpPost("accept/{senderId}")]
         public async Task<IActionResult> AcceptFriend([FromRoute] string senderId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = await _friendshipService.AcceptAddFriendAsync(userId.ToGuid(), senderId.ToGuid());
+            var userId = GetCurrentUserId();
+            var result = await _friendshipService.AcceptAddFriendAsync(userId, senderId.ToGuid());
             return result.ToActionResult();
         }
 
@@ -64,12 +64,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpGet("status/{targetId}")]
         public async Task<IActionResult> GetFriendshipStatus([FromRoute] string targetId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var res = await _friendshipService.GetFriendshipStatusAsync(userId.ToGuid(), targetId.ToGuid());
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.GetFriendshipStatusAsync(userId, targetId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -83,12 +79,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpDelete("cancel/{senderId}")]
         public async Task<IActionResult> CancelAddFriendRequest([FromRoute] string senderId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var res = await _friendshipService.CancelAddFriendAsync(userId.ToGuid(), senderId.ToGuid());
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.CancelAddFriendAsync(userId, senderId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -102,12 +94,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpDelete("decline/{requesterId}")]
         public async Task<IActionResult> DeclineAddFriendRequest([FromRoute] string requesterId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var res = await _friendshipService.DeclineAddFriendRequestAsync(userId.ToGuid(), requesterId.ToGuid());
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.DeclineAddFriendRequestAsync(userId, requesterId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -121,12 +109,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpDelete("unfriend/{friendId}")]
         public async Task<IActionResult> Unfriend([FromRoute] string friendId)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var res = await _friendshipService.UnfriendAsync(userId.ToGuid(), friendId.ToGuid());
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.UnfriendAsync(userId, friendId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -138,13 +122,7 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpGet("count/{targetId}")]
         public async Task<IActionResult> GetNumberOfFriends(string targetId)
         {
-            if (HttpContext.User.Identity?.IsAuthenticated ?? false)
-            {
-                // var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                // if (userId == null) userId = Guid.Empty.ToString();
-                var _res = await _friendshipService.GetNumberOfFriendsAsync(targetId.ToGuid());
-                return _res.ToActionResult();
-            }
+            ValidateModelState();
             var res = await _friendshipService.GetNumberOfFriendsAsync(targetId.ToGuid());
             return res.ToActionResult();
         }
@@ -160,12 +138,8 @@ namespace Fatagram.API.Controllers.UserControllers
         [HttpGet("requests")]
         public async Task<IActionResult> GetFriendRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            var res = await _friendshipService.GetFriendRequestsAsync(userId.ToGuid(), page, pageSize);
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.GetFriendRequestsAsync(userId, page, pageSize);
             return res.ToActionResult();
         }
 

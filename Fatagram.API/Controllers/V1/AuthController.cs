@@ -14,17 +14,15 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 
-namespace Fatagram.API.Controllers
+namespace Fatagram.API.Controllers.V1
 {
     [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseApiController
     {
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
         // private readonly IUserService _userService;
 
-        private bool _isSecureCookies = !Setups.IsForLAN;
 
         public AuthController(IAuthService authService, ITokenService tokenService)
         {
@@ -40,12 +38,7 @@ namespace Fatagram.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
-            // Validate the request model
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                throw new ValidateException("UNVALID", errors, "Unvalid data");
-            }
+            ValidateModelState();
             var loginResult = await _authService.Login(request);
             if (!loginResult.IsSuccess)
             {
@@ -56,7 +49,7 @@ namespace Fatagram.API.Controllers
             {
                 throw new DataNullException("TOKEN_CANNOT_CREATE", "Token cannot be created");
             }
-            
+
             // Create new cookie with access token
             Response.Cookies.Append("accessToken", generateResult.Data.AccessToken, new CookieOptions
             {
@@ -113,7 +106,7 @@ namespace Fatagram.API.Controllers
             {
                 if (request.RefreshToken != null) await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
             }
-            catch(Exception) { }
+            catch (Exception) { }
             Response.Cookies.Append("accessToken", "", new CookieOptions
             {
                 HttpOnly = true,

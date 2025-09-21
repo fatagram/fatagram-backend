@@ -16,17 +16,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<Result<UpdateUserDto>> UpdateUserAsync(string userId, UpdateUserDto request);
-
-
-        /// <summary>
-        /// Update a user info
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
         Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto request);
-
 
         /// <summary>
         /// Update a url name
@@ -36,13 +26,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <returns></returns>
         Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto);
 
-        /// <summary>
-        /// Update a url name
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="changeUrlNameDto"></param>
-        /// <returns></returns>
-        Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(string userId, ChangeUrlNameDto changeUrlNameDto);
 
         /// <summary>
         /// Update a name
@@ -50,7 +33,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <param name="userId"></param>
         /// <param name="changeNameDto"></param>
         /// <returns></returns>
-        Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto);
+        Task<Result<ChangeNameDto>> UpdateNameAsync(Guid userId, ChangeNameDto changeNameDto);
 
 
         
@@ -68,7 +51,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        Task<Result<string>> CheckUserExistAsync(string userId);
         Task<Result<string>> CheckUserExistAsync(Guid userId);
     }
 }

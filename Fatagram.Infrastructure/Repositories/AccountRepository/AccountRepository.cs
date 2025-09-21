@@ -47,14 +47,6 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
         }
 
         /// <summary>
-        /// Gets an account by its unique identifier asynchronously.
-        /// </summary>
-        /// <param name="accountId">The unique identifier of the account as a string.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the account if found, otherwise null.</returns>
-        public async Task<Account?> GetAsync(string accountId)
-            => await GetAsync(accountId.ToGuid());
-
-        /// <summary>
         /// Gets an account by the user's unique identifier asynchronously.
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
@@ -64,14 +56,6 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
             var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
             return account;
         }
-
-        /// <summary>
-        /// Gets an account by the user's unique identifier asynchronously.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user as a string.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the account if found, otherwise null.</returns>
-        public async Task<Account?> GetByUserIdAsync(string userId)
-            => await GetByUserIdAsync(userId.ToGuid()); 
 
         /// <summary>
         /// Gets an account by its username asynchronously.

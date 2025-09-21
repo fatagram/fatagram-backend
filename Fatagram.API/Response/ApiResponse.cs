@@ -21,7 +21,6 @@ namespace Fatagram.API.Utils
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ApiError? Error { get; set; }
 
-
         private ApiResponse(T? data, string? message, ApiError? error)
         {
             Data = data;

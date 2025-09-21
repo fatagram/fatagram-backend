@@ -49,22 +49,6 @@ namespace Fatagram.Infrastructure.Repositories.UserPrivacyRepository
             return userPrivacy;
         }
 
-        /// <summary>
-        /// Gets the privacy levels for the specified fields of a user asynchronously.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user as a string.</param>
-        /// <param name="field">The fields for which to get the privacy levels.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a dictionary of field names and their privacy levels.</returns>
-        public async Task<Dictionary<string, PrivacyLevel>> GetAsync(string userId, IEnumerable<string> field)
-            => await GetAsync(userId.ToGuid(), field);
-
-        /// <summary>
-        /// Sets all privacy levels of a user to public asynchronously.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user as a string.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating the success of the operation.</returns>
-        public async Task InitialAsync(string userId)
-            => await InitialAsync(userId.ToGuid());
 
         /// <summary>
         /// Sets all privacy levels of a user to public asynchronously.

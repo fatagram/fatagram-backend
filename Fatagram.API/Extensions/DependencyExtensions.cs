@@ -17,7 +17,7 @@ using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
 using Fatagram.Application.Services.UserServices.UserConfigServices;
 
-namespace Fatagram.API.Extensions.Dependencies
+namespace Fatagram.API.Extensions
 {
     public static class DependencyExtensions
     {

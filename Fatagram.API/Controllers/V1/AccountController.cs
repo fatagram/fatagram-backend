@@ -10,11 +10,10 @@ using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 
-namespace Fatagram.API.Controllers
+namespace Fatagram.API.Controllers.V1
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    public class AccountController : BaseApiController
     {
         private readonly IAccountService _accountService;
         public AccountController(IAccountService accountService)
@@ -30,11 +29,7 @@ namespace Fatagram.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                throw new ValidateException("UNVALID", errors, "Unvalid data");
-            }
+            ValidateModelState();
             var result = await _accountService.Register(request);
             return result.ToActionResult();
         }
@@ -48,11 +43,7 @@ namespace Fatagram.API.Controllers
         [HttpPut("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
+            var userId = GetCurrentUserId();
             var result = await _accountService.ChangePasswordAsync(userId, request);
             return result.ToActionResult();
         }

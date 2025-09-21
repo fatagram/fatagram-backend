@@ -34,18 +34,15 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             _mapper = mapper;
         }
 
-        public async Task<Result<string>> CheckUserExistAsync(string userId)
+        public async Task<Result<string>> CheckUserExistAsync(Guid userId)
         {
-            var user = await _userRepository.GetAsync(userId);
+            var user = await _userRepository.GetAsync(userId.ToString());
             if (user is null)
             {
                 throw new UserNotFoundException();
             }
             return Result<string>.Success();
         }
-
-        public Task<Result<string>> CheckUserExistAsync(Guid userId)
-            => CheckUserExistAsync(userId.ToString());
 
         
         /// <summary>
@@ -75,15 +72,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 IsOwner = isOwner
             });
         }
-
-        /// <summary>
-        /// Update a user info
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="request"></param>
-        /// <returns> </returns>
-        public async Task<Result<UpdateUserDto>> UpdateUserAsync(string userId, UpdateUserDto updateUserDto)
-            => await UpdateUserAsync(Guid.Parse(userId), updateUserDto);
 
 
         /// <summary>
@@ -119,12 +107,9 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
         }
 
-        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(string userId, ChangeUrlNameDto changeUrlNameDto)
-            => await UpdateUrlNameAsync(userId.ToGuid(), changeUrlNameDto);
-
-        public async Task<Result<ChangeNameDto>> UpdateNameAsync(string userId, ChangeNameDto changeNameDto)
+        public async Task<Result<ChangeNameDto>> UpdateNameAsync(Guid userId, ChangeNameDto changeNameDto)
         {
-            var user = await _userRepository.GetAsync(userId);
+            var user = await _userRepository.GetAsync(userId.ToString());
             if (user == null)
             {
                 throw new UserNotFoundException();

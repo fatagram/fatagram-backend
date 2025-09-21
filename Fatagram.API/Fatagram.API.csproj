@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Fatagram.Shared\Fatagram.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\V2\" />
+  </ItemGroup>
+
 </Project>

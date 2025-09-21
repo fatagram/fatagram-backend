@@ -1,10 +1,9 @@
 ﻿using Fatagram.API.Extensions.Constrains;
-using Fatagram.API.Extensions.Dependencies;
 using Fatagram.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.Json.Serialization;
 
-namespace Fatagram.API.Extensions.ServiceCollectionExtensions
+namespace Fatagram.API.Extensions
 {
     public static class ServiceCollectionExtensions
     {

@@ -20,6 +20,6 @@ namespace Fatagram.Application.Services.UserPrivacyServices.Interface
         /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        Task<Result<string>> UpdateUserPrivacyAsync(string userId, UpdateUserPrivacyDto request);
+        Task<Result<string>> UpdateUserPrivacyAsync(Guid userId, UpdateUserPrivacyDto request);
     }
 }

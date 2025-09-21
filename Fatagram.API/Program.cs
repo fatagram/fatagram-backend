@@ -1,8 +1,5 @@
+using Fatagram.API.Extensions;
 using Fatagram.API.Extensions.Constrains;
-using Fatagram.API.Extensions.Dependencies;
-using Fatagram.API.Extensions.ExceptionHandlerExtensions;
-using Fatagram.API.Extensions.ServiceCollectionExtensions;
-using Fatagram.API.Extensions.WebApplicationBuilderExtensions;
 using Fatagram.API.Hubs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;

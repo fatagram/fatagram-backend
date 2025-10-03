@@ -21,9 +21,14 @@ namespace Fatagram.API
             builder.Services.AddServices(builder.Configuration);
             builder.ConfigureKestrelOptions();
 
+            if (!int.TryParse(builder.Configuration["MaxSize"], out var imageMaxSize))
+            {
+                imageMaxSize = 20; // default 2MB
+            }
+
             // Max request body size
             builder.WebHost.UseKestrel(option => {
-                option.Limits.MaxRequestBodySize = 20 * 1024 * 1024; // 2MB
+                option.Limits.MaxRequestBodySize = imageMaxSize * 1024 * 1024; // 2MB
             });
             
             // Create app 

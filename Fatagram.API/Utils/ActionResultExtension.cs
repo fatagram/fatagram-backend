@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.Shared.Enums;
 using Fatagram.Application.Utils;
+using Fatagram.Shared.Enums;
 
 namespace Fatagram.API.Utils
 {
@@ -12,13 +12,13 @@ namespace Fatagram.API.Utils
         public static IActionResult ToActionResult<T>(this Result<T> result)
         {
             if (result.IsSuccess)
-            {   
+            {
                 var data = ApiResponse<T>.Success(result.Data, result.Message);
                 return result.Code switch
                 {
                     ResponseStatusCode.Success => new OkObjectResult(data),
                     ResponseStatusCode.Created => new CreatedResult(string.Empty, data),
-                    _ => new OkObjectResult(data)
+                    _ => new OkObjectResult(data),
                 };
             }
             else
@@ -26,7 +26,7 @@ namespace Fatagram.API.Utils
                 var error = new ApiError()
                 {
                     Code = result.ErrorCode,
-                    Message = result.ErrorMessage
+                    Message = result.ErrorMessage,
                 };
                 var apiResponse = ApiResponse<T>.Failure(error);
                 return result.Code switch
@@ -35,7 +35,7 @@ namespace Fatagram.API.Utils
                     ResponseStatusCode.Unauthorized => new UnauthorizedObjectResult(apiResponse),
                     ResponseStatusCode.Forbidden => new ForbidResult(),
                     ResponseStatusCode.NotFound => new NotFoundObjectResult(apiResponse),
-                    _ => new ObjectResult(apiResponse) { StatusCode = (int)result.Code }
+                    _ => new ObjectResult(apiResponse) { StatusCode = (int)result.Code },
                 };
             }
         }

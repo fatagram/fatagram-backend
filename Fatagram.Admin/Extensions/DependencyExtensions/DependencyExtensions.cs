@@ -40,7 +40,7 @@ namespace Fatagram.Admin.Extensions.Dependencies
             services.AddScoped<UserChecker>();
 
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            services.AddScoped<IImageService, NginxImageService>();
+            services.AddScoped<IImageService, LocalImageService>();
 
             services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
             services.AddScoped<IUserRepository, UserRepository>();

@@ -1,11 +1,11 @@
-﻿using Fatagram.API.Controllers.V1;
+﻿using System.Security.Claims;
+using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
@@ -34,7 +34,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             {
                 return NoContent();
             }
-            var res = await _userConfigService.ChangeLanguage(userId ?? Guid.Empty, changeLanguageDto.LanguageCode);
+            var res = await _userConfigService.ChangeLanguage(
+                userId ?? Guid.Empty,
+                changeLanguageDto.LanguageCode
+            );
             return res.ToActionResult<string>();
         }
     }

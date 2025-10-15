@@ -19,9 +19,8 @@ namespace Fatagram.API.Controllers.V1.UserControllers
     public class FriendshipController : BaseApiController
     {
         private readonly IFriendshipService _friendshipService;
-        public FriendshipController(
-            IFriendshipService friendshipService
-        )
+
+        public FriendshipController(IFriendshipService friendshipService)
         {
             _friendshipService = friendshipService;
         }
@@ -95,7 +94,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> DeclineAddFriendRequest([FromRoute] string requesterId)
         {
             var userId = GetCurrentUserId();
-            var res = await _friendshipService.DeclineAddFriendRequestAsync(userId, requesterId.ToGuid());
+            var res = await _friendshipService.DeclineAddFriendRequestAsync(
+                userId,
+                requesterId.ToGuid()
+            );
             return res.ToActionResult();
         }
 
@@ -136,7 +138,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("requests")]
-        public async Task<IActionResult> GetFriendRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetFriendRequests(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             var userId = GetCurrentUserId();
             var res = await _friendshipService.GetFriendRequestsAsync(userId, page, pageSize);
@@ -152,18 +157,36 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <param name="pageSize"></param>
         /// <returns></returns>
         [HttpGet("friends/{userId}")]
-        public async Task<IActionResult> GetFriends(string userId, string keyword, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetFriends(
+            string userId,
+            string keyword,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10
+        )
         {
             if (HttpContext.User.Identity?.IsAuthenticated ?? false)
             {
                 var _userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (_userId == null) _userId = Guid.Empty.ToString();
-                var res = await _friendshipService.GetFriendsAsync(_userId.ToGuid(), userId.ToGuid(), keyword, page, pageSize);
+                if (_userId == null)
+                    _userId = Guid.Empty.ToString();
+                var res = await _friendshipService.GetFriendsAsync(
+                    _userId.ToGuid(),
+                    userId.ToGuid(),
+                    keyword,
+                    page,
+                    pageSize
+                );
                 return res.ToActionResult();
             }
             else
             {
-                var res = await _friendshipService.GetFriendsAsync(Guid.Empty, userId.ToGuid(), keyword, page, pageSize);
+                var res = await _friendshipService.GetFriendsAsync(
+                    Guid.Empty,
+                    userId.ToGuid(),
+                    keyword,
+                    page,
+                    pageSize
+                );
                 return res.ToActionResult();
             }
         }

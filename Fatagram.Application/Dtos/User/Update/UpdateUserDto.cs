@@ -10,14 +10,12 @@ namespace Fatagram.Application.Dtos.User.Update
     public class UpdateUserDto
     {
         [RegularExpression(RegexPatterns.Username)]
-        [Required]
         public string? Username { get; set; }
 
         /// <summary>
         /// User's first name
         /// </summary>
         [RegularExpression(RegexPatterns.FirstName, ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
-        [Required(ErrorMessage = ErrorCodes.FIRSTNAME_NOT_CORRECT_FORMAT)]
         public string? FirstName { get; set; }
 
         /// <summary>
@@ -25,7 +23,6 @@ namespace Fatagram.Application.Dtos.User.Update
         /// </summary>
         /// 
         [RegularExpression(RegexPatterns.LastName, ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
-        [Required(ErrorMessage = ErrorCodes.LASTNAME_NOT_CORRECT_FORMAT)]
         public string? LastName { get; set; }
 
         /// <summary>
@@ -33,7 +30,6 @@ namespace Fatagram.Application.Dtos.User.Update
         /// </summary>
         /// 
         [RegularExpression(RegexPatterns.Email, ErrorMessage = ErrorCodes.EMAIL_NOT_CORRECT_FORMAT)]
-        [Required(ErrorMessage = ErrorCodes.EMAIL_NOT_CORRECT_FORMAT)]
         public string? Email { get; set; }
 
         /// <summary>

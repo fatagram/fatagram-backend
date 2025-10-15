@@ -1,20 +1,19 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Net;
 using Fatagram.API.Utils;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Net;
 
 namespace Fatagram.API.Middlewares
 {
-    public class ExceptionMiddleware
+    public class GlobalException
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleware> _logger;
+        private readonly ILogger<GlobalException> _logger;
 
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        public GlobalException(RequestDelegate next, ILogger<GlobalException> logger)
         {
             _next = next;
             _logger = logger;
@@ -46,7 +45,7 @@ namespace Fatagram.API.Middlewares
                 {
                     Code = appException.ErrorCode,
                     Message = appException.Message,
-                    Codes = appException.ErrorCodes
+                    Codes = appException.ErrorCodes,
                 };
 
                 context.Response.StatusCode = ex switch
@@ -55,7 +54,7 @@ namespace Fatagram.API.Middlewares
                     BadRequestException => (int)HttpStatusCode.BadRequest,
                     NotFoundException => (int)HttpStatusCode.NotFound,
                     UnauthorizedException => (int)HttpStatusCode.Unauthorized,
-                    _ => (int)HttpStatusCode.InternalServerError
+                    _ => (int)HttpStatusCode.InternalServerError,
                 };
             }
             else
@@ -64,7 +63,8 @@ namespace Fatagram.API.Middlewares
                 response.Error = new ApiError()
                 {
                     Code = "INTERNAL_SERVER_ERROR",
-                    Message = "An error occured while processing your request. Please try again later.",
+                    Message =
+                        "An error occured while processing your request. Please try again later.",
                 };
             }
             await context.Response.WriteAsync(response.ToString());

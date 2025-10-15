@@ -6,7 +6,7 @@ namespace Fatagram.API.Extensions
     {
         public static void ConfigureExceptionHandler(this WebApplication app)
         {
-            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<GlobalException>();
         }
     }
 }

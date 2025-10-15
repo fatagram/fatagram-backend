@@ -21,7 +21,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
     [Route("api/[controller]")]
     public class UserProfileController : BaseApiController
     {
-
         private readonly IUserProfileService _userProfileService;
         private readonly IUserPrivacyService _userPrivacyService;
         private readonly IImageService _imageService;
@@ -42,15 +41,13 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// </summary>
         /// <param name="id"></param>
         /// <param name="fields"></param>
-        /// <returns></returns> 
+        /// <returns></returns>
         [HttpGet("{target}")]
         public async Task<IActionResult> GetUserProfile(string target, [FromQuery] string fields)
         {
             var userId = GetCurrentUserIdOrNull() ?? Guid.Empty;
             var _res = await _userProfileService.GetUserProfileAsync(userId, target, fields);
-            return Ok(ApiResponse<GetUserProfileDto>.Success(
-                    data: _res.Data
-                ));
+            return Ok(ApiResponse<GetUserProfileDto>.Success(data: _res.Data));
         }
 
         /// <summary>
@@ -77,10 +74,15 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPut("privacy")]
-        public async Task<IActionResult> UpdateUserPrivacyAsync([FromBody] UpdateUserPrivacyDto updateUserPrivacyDto)
+        public async Task<IActionResult> UpdateUserPrivacyAsync(
+            [FromBody] UpdateUserPrivacyDto updateUserPrivacyDto
+        )
         {
             var userId = GetCurrentUserId();
-            var res = await _userPrivacyService.UpdateUserPrivacyAsync(userId, updateUserPrivacyDto);
+            var res = await _userPrivacyService.UpdateUserPrivacyAsync(
+                userId,
+                updateUserPrivacyDto
+            );
 
             return res.ToActionResult();
         }
@@ -101,11 +103,12 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 file.OpenReadStream(),
                 Path.GetExtension(file.FileName),
                 "avatars",
-                true);
-            await _userProfileService.UpdateUserAsync(userId, new UpdateUserDto()
-            {
-                Avatar = res.Data
-            });
+                true
+            );
+            await _userProfileService.UpdateUserAsync(
+                userId,
+                new UpdateUserDto() { Avatar = res.Data }
+            );
 
             return res.ToActionResult();
         }
@@ -121,11 +124,16 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> UploadBackgroundAsync(IFormFile file)
         {
             var userId = GetCurrentUserId();
-            var res = await _imageService.SaveImageAsync(ImageSize.Large, file.OpenReadStream(), Path.GetExtension(file.FileName), "backgrounds");
-            await _userProfileService.UpdateUserAsync(userId, new UpdateUserDto()
-            {
-                Background = res.Data
-            });
+            var res = await _imageService.SaveImageAsync(
+                ImageSize.Large,
+                file.OpenReadStream(),
+                Path.GetExtension(file.FileName),
+                "backgrounds"
+            );
+            await _userProfileService.UpdateUserAsync(
+                userId,
+                new UpdateUserDto() { Background = res.Data }
+            );
 
             return res.ToActionResult();
         }
@@ -138,7 +146,9 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPatch("urlName")]
-        public async Task<IActionResult> UpdateUrlNameAsync([FromBody] ChangeUrlNameDto changeUrlNameDto)
+        public async Task<IActionResult> UpdateUrlNameAsync(
+            [FromBody] ChangeUrlNameDto changeUrlNameDto
+        )
         {
             var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUrlNameAsync(userId, changeUrlNameDto);
@@ -186,7 +196,11 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> GetMe()
         {
             var userId = GetCurrentUserId();
-            var res = await _userProfileService.GetUserProfileAsync(userId, userId.ToString(), "id,urlName,languageCode");
+            var res = await _userProfileService.GetUserProfileAsync(
+                userId,
+                userId.ToString(),
+                "id,urlName,languageCode"
+            );
             return res.ToActionResult();
         }
     }

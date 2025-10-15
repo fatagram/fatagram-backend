@@ -19,7 +19,7 @@ namespace Fatagram.Application.Dtos.Auth
         /// <summary>
         /// Password
         /// </summary>
-        [RegularExpression(@"^\S{9,}$", ErrorMessage = ErrorCodes.PASSWORD_NOT_CORRECT_FORMAT)]
+        [RegularExpression(@"^\S{8,}$", ErrorMessage = ErrorCodes.PASSWORD_NOT_CORRECT_FORMAT)]
         [Required(ErrorMessage = ErrorCodes.PASSWORD_NOT_CORRECT_FORMAT)]
         public string Password { get; set; } = string.Empty;
     }

@@ -34,7 +34,11 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> GetNotifications(string cursorId, int pageSize)
         {
             var userId = GetCurrentUserId();
-            var result = await _notificationService.GetNotificationsAsync(userId.ToString(), cursorId.ToGuid(), pageSize);
+            var result = await _notificationService.GetNotificationsAsync(
+                userId.ToString(),
+                cursorId.ToGuid(),
+                pageSize
+            );
             return result.ToActionResult();
         }
 
@@ -50,7 +54,11 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> GetUnreadNotifications(string? cursorId, int pageSize)
         {
             var userId = GetCurrentUserId();
-            var result = await _notificationService.GetUnreadNotificationsAsync(userId.ToString(), cursorId.ToGuid(), pageSize);
+            var result = await _notificationService.GetUnreadNotificationsAsync(
+                userId.ToString(),
+                cursorId.ToGuid(),
+                pageSize
+            );
             return result.ToActionResult();
         }
 

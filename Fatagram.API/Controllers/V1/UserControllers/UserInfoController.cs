@@ -1,4 +1,5 @@
-﻿using Fatagram.API.Controllers.V1;
+﻿using System.Security.Claims;
+using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
@@ -7,7 +8,6 @@ using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
@@ -23,7 +23,9 @@ namespace Fatagram.API.Controllers.V1.UserControllers
 
         [Authorize]
         [HttpPatch("nickname")]
-        public async Task<IActionResult> ChangeNickname([FromBody] ChangeNicknameDto changeNicknameDto)
+        public async Task<IActionResult> ChangeNickname(
+            [FromBody] ChangeNicknameDto changeNicknameDto
+        )
         {
             var userId = GetCurrentUserId();
             var res = await _userInfoService.UpdateNicknameAsync(userId, changeNicknameDto);

@@ -1,9 +1,9 @@
+using System.Xml;
 using Fatagram.API.Extensions;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Hubs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
-using System.Xml;
 
 namespace Fatagram.API
 {
@@ -12,9 +12,13 @@ namespace Fatagram.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-            builder.Configuration
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+
+            builder
+                .Configuration.AddJsonFile(
+                    "appsettings.json",
+                    optional: false,
+                    reloadOnChange: true
+                )
                 .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
             // Configure services
@@ -27,11 +31,12 @@ namespace Fatagram.API
             }
 
             // Max request body size
-            builder.WebHost.UseKestrel(option => {
+            builder.WebHost.UseKestrel(option =>
+            {
                 option.Limits.MaxRequestBodySize = imageMaxSize * 1024 * 1024; // 2MB
             });
-            
-            // Create app 
+
+            // Create app
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -43,7 +48,7 @@ namespace Fatagram.API
 
             app.UseRouting();
 
-            // Cors 
+            // Cors
             app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
 
             // Exception handling

@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Shared.Extensions;
+﻿using System.Security.Claims;
 using Fatagram.API.Extensions.Constrains;
+using Fatagram.Application.Exceptions.DetailExceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Shared.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1
 {
@@ -14,7 +14,6 @@ namespace Fatagram.API.Controllers.V1
     public abstract class BaseApiController : ControllerBase
     {
         protected bool _isSecureCookies = !Setups.IsForLAN;
-
 
         /// <summary>
         /// Gets the current user ID from JWT claims. Throws UnauthorizedException if not found.
@@ -59,7 +58,9 @@ namespace Fatagram.API.Controllers.V1
         /// <returns>True if user is authenticated, false otherwise</returns>
         protected bool IsUserAuthenticated()
         {
-            return !string.IsNullOrEmpty(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            return !string.IsNullOrEmpty(
+                HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            );
         }
 
         /// <summary>
@@ -142,8 +143,8 @@ namespace Fatagram.API.Controllers.V1
         /// <returns>List of error messages</returns>
         protected List<string> GetModelStateErrors()
         {
-            return ModelState.Values
-                .SelectMany(v => v.Errors)
+            return ModelState
+                .Values.SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .Where(msg => !string.IsNullOrEmpty(msg))
                 .ToList();

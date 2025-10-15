@@ -1,21 +1,21 @@
-﻿using Fatagram.Application.Services.ImageService.Interface;
-using Fatagram.Application.Services.ImageService;
+﻿using AutoMapper;
+using Fatagram.API.Hubs;
+using Fatagram.API.Hubs.Notifications;
 using Fatagram.Application.Common;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository;
+using Fatagram.Application.Services.ImageService;
+using Fatagram.Application.Services.ImageService.Interface;
+using Fatagram.Application.Services.NotificationServices;
+using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Application.Services.NotificationServices.Interfaces;
+using Fatagram.Application.Services.UserServices.UserConfigServices;
+using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using AutoMapper;
-using Fatagram.API.Hubs;
-using Microsoft.AspNetCore.SignalR;
-using Fatagram.Application.Services.NotificationServices.Interfaces;
-using Fatagram.API.Hubs.Notifications;
-using Fatagram.Application.Services.NotificationServices.Interface;
-using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.NotificationRepository;
-using Fatagram.Application.Services.NotificationServices;
-using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
-using Fatagram.Application.Services.UserServices.UserConfigServices;
+using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Fatagram.API.Extensions
 {
@@ -31,7 +31,7 @@ namespace Fatagram.API.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            services.AddScoped<IImageService, NginxImageService>();
+            services.AddScoped<IImageService, LocalImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<IUserInfoService, UserInfoService>();
 

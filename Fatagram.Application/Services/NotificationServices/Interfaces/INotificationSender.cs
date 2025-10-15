@@ -8,7 +8,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interfaces
 {
     public interface INotificationSender
     {
-        Task SendNotificationAsync(NotificationDto notification);
+        Task SendNotificationAsync(string userId, NotificationDto notification);
         Task SendNotificationToAllAsync(NotificationDto notification);
     }
 }

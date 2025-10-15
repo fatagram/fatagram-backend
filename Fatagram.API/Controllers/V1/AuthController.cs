@@ -1,4 +1,7 @@
-﻿using Fatagram.API.Extensions.Constrains;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
+using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
@@ -6,13 +9,10 @@ using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
-using Fatagram.Shared.Enums;
 using Fatagram.Application.Utils;
+using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Security.Claims;
 
 namespace Fatagram.API.Controllers.V1
 {
@@ -21,8 +21,8 @@ namespace Fatagram.API.Controllers.V1
     {
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
-        // private readonly IUserService _userService;
 
+        // private readonly IUserService _userService;
 
         public AuthController(IAuthService authService, ITokenService tokenService)
         {
@@ -51,13 +51,17 @@ namespace Fatagram.API.Controllers.V1
             }
 
             // Create new cookie with access token
-            Response.Cookies.Append("accessToken", generateResult.Data.AccessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = _isSecureCookies,
-                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                MaxAge = TimeSpan.FromMinutes(60)
-            });
+            Response.Cookies.Append(
+                "accessToken",
+                generateResult.Data.AccessToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = _isSecureCookies,
+                    SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
+                    MaxAge = TimeSpan.FromMinutes(60),
+                }
+            );
 
             if (loginResult.Data is not null)
                 loginResult.Data.RefreshToken = generateResult.Data.RefreshToken;
@@ -79,19 +83,22 @@ namespace Fatagram.API.Controllers.V1
             //    await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
 
             //}
-            if (res.Data is null) throw new DataNullException();
+            if (res.Data is null)
+                throw new DataNullException();
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = _isSecureCookies,
                 SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                MaxAge = TimeSpan.FromMinutes(60)
+                MaxAge = TimeSpan.FromMinutes(60),
             };
             Response.Cookies.Append("accessToken", res.Data, cookieOptions);
 
-            return Ok(ApiResponse<TokenDto>.Success(
+            return Ok(
+                ApiResponse<TokenDto>.Success(
                     data: new TokenDto() { RefreshToken = request.RefreshToken }
-                ));
+                )
+            );
         }
 
         /// <summary>
@@ -104,19 +111,23 @@ namespace Fatagram.API.Controllers.V1
         {
             try
             {
-                if (request.RefreshToken != null) await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
+                if (request.RefreshToken != null)
+                    await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
             }
             catch (Exception) { }
-            Response.Cookies.Append("accessToken", "", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = _isSecureCookies,
-                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                Expires = DateTime.Now.AddDays(-1)
-            });
+            Response.Cookies.Append(
+                "accessToken",
+                "",
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = _isSecureCookies,
+                    SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
+                    Expires = DateTime.Now.AddDays(-1),
+                }
+            );
             return Ok(ApiResponse<string>.Success());
         }
-
 
         /// <summary>
         /// Ping access token

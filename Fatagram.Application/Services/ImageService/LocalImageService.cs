@@ -13,17 +13,18 @@ using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.ImageService
 {
-    public class NginxImageService : IImageService
+    public class LocalImageService : IImageService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string _nginxRootPath;
-        private readonly string _nginxUrl;
+        private readonly string _savingPath;
+        private readonly string _storagePath;
 
-        public NginxImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+
+        public LocalImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _nginxRootPath = config["nginx:NginxRootPath"] ?? throw new ArgumentNullException(nameof(config));
-            _nginxUrl = config["nginx:NginxUrl"] ?? throw new ArgumentNullException(nameof(config));
+            _savingPath = config["ImageLocalStorage:Path"] ?? "";
+            _storagePath = config["ImageLocalStorage:StoragePath"] ?? "";
         }
 
         public async Task<Result<string>> SaveImageAsync(
@@ -33,7 +34,7 @@ namespace Fatagram.Application.Services.ImageService
             string folder,
             bool isAvatar = false)
         {
-            var folderPath = Path.Combine(_nginxRootPath, folder);
+            var folderPath = Path.Combine(_storagePath, folder);
             Directory.CreateDirectory(folderPath);
 
             var fileName = $"{Guid.NewGuid()}.jpg"; // Lưu luôn thành .jpg để đồng bộ format
@@ -79,7 +80,6 @@ namespace Fatagram.Application.Services.ImageService
                     }
                 });
 
-
                 // Nén chất lượng ảnh (chọn 70-80 là ổn)
                 var encoder = new JpegEncoder { Quality = 75 };
 
@@ -90,8 +90,7 @@ namespace Fatagram.Application.Services.ImageService
             if (request == null)
                 return Result<string>.BadRequest("Request context is not available.");
 
-            var baseUrl = $"{request.Scheme}://{_nginxUrl}";
-            return Result<string>.Success($"{baseUrl}/images/fatagram/{folder}/{fileName}");
+            return Result<string>.Success($"{_savingPath}/{folder}/{fileName}");
         }
     }
 }

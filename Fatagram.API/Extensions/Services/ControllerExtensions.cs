@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Fatagram.API.Utils;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -10,9 +11,11 @@ namespace Fatagram.API.Extensions.Services
     {
         public static void AddControllerServices(this IServiceCollection services)
         {
-            services.AddControllers();
             services
-                .AddControllers()
+                .AddControllers(options =>
+                {
+                    options.Filters.Add<ValidationFilter>();
+                })
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(null));

@@ -14,7 +14,7 @@
 //    public class MUserPrivacyRepository : IUserPrivacyRepository
 //    {
 //        public List<UserPrivacy> UserPrivacies { get; set; } = new List<UserPrivacy>();
-        
+
 //        public MUserPrivacyRepository()
 //        {
 
@@ -45,7 +45,7 @@
 //            }
 //        }
 
-//        public Task<Result<Dictionary<string, PrivacyLevel>>> GetPrivacyLevelsAsync(string userId, IEnumerable<string> fields) 
+//        public Task<Result<Dictionary<string, PrivacyLevel>>> GetPrivacyLevelsAsync(string userId, IEnumerable<string> fields)
 //            => GetPrivacyLevelsAsync(Guid.Parse(userId), fields);
 
 //        public Task<Result<bool>> SetPrivacyLevelAsync(Guid userId, string field, PrivacyLevel privacyLevel)
@@ -68,7 +68,7 @@
 //            return Task.FromResult(Result<bool>.Success(true));
 //        }
 
-//        public Task<Result<bool>> SetPrivacyLevelAsync(string userId, string field, PrivacyLevel privacyLevel) 
+//        public Task<Result<bool>> SetPrivacyLevelAsync(string userId, string field, PrivacyLevel privacyLevel)
 //            => SetPrivacyLevelAsync(Guid.Parse(userId), field, privacyLevel);
 
 //        public Task<Result<bool>> SetAllPublicAsync(Guid userId)

@@ -9,12 +9,15 @@ namespace Fatagram.Application.Exceptions
     public class AppException : Exception
     {
         public string ErrorCode { get; set; }
-        public List<string>? ErrorCodes { get; set; }
-        public AppException(string errorCode, List<string>? errorCodes, string? message)
+        public List<string>? ErrorMessages { get; set; }
+
+        // public List<string>? ErrorMessages { get; set; }
+
+        public AppException(string errorCode, string? message, List<string>? errorMessages = null)
             : base(message)
         {
             ErrorCode = errorCode;
-            ErrorCodes = errorCodes;
+            ErrorMessages = errorMessages;
         }
     }
 }

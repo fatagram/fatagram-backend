@@ -17,7 +17,8 @@ namespace Fatagram.Shared.Extensions
         /// <typeparam name="T">An enumeration type.</typeparam>
         /// <param name="value">A string containing the name or value to convert.</param>
         /// <returns>An object of type T whose value is represented by value. If the conversion fails, the default value of T is returned.</returns>
-        public static T ToEnum<T>(this string? value) where T : struct, Enum
+        public static T ToEnum<T>(this string? value)
+            where T : struct, Enum
         {
             if (value is null)
             {

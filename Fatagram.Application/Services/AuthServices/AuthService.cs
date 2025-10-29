@@ -1,12 +1,13 @@
-﻿using Fatagram.Application.Utils;
-using Fatagram.Application.Services.AuthServices.Interface;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
-using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
-using Fatagram.Application.Dtos.Auth;
+﻿using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Application.Services.AuthServices.Interface;
+using Fatagram.Application.Utils;
+using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
+using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.AuthService
 {
@@ -21,9 +22,11 @@ namespace Fatagram.Application.Services.AuthService
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
         // Constructor
-        public AuthService(IUserRepository userRepository,
+        public AuthService(
+            IUserRepository userRepository,
             IAccountRepository accountRepository,
-            IRefreshTokenRepository refreshTokenRepository)
+            IRefreshTokenRepository refreshTokenRepository
+        )
         {
             _userRepository = userRepository;
             _accountRepository = accountRepository;
@@ -40,20 +43,20 @@ namespace Fatagram.Application.Services.AuthService
         public async Task<Result<LoginResponseDto>> Login(LoginDto request)
         {
             var getAccountResult = await _accountRepository.GetByUsernameAsync(request.Username);
-            if (getAccountResult is null) throw new AccountNotFoundException();
+            if (getAccountResult is null)
+                throw new AccountNotFoundException();
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, getAccountResult.PasswordHash))
-                throw new UnauthorizedException(ErrorCodes.WRONG_PASSWORD, "Password is not correct.");
+                throw new UnauthorizedException("INVALID_CREDENTIALS", "Password is not correct.");
 
             var user = await _userRepository.GetByUsernameAsync(request.Username);
             if (user is null)
                 throw new UserNotFoundException();
 
-            return Result<LoginResponseDto>.Success(new LoginResponseDto()
-            {
-                UserId = user.Id.ToString(),
-                UrlName = user.UrlName,
-            });
+            return Result<LoginResponseDto>.Create(
+                ResponseStatusCode.Success,
+                new LoginResponseDto() { UserId = user.Id.ToString(), UrlName = user.UrlName }
+            );
         }
     }
 }

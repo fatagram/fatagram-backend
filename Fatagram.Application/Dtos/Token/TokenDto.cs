@@ -16,10 +16,8 @@ namespace Fatagram.Application.Dtos.Token
         /// <summary>
         /// Access token
         /// </summary>
-        /// 
+        ///
         [Required]
         public string AccessToken { get; set; } = string.Empty;
-
-        
     }
 }

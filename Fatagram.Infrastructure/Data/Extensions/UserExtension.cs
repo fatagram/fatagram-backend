@@ -1,10 +1,10 @@
-﻿using Fatagram.Domain.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Data.Extensions
 {
@@ -12,11 +12,10 @@ namespace Fatagram.Infrastructure.Data.Extensions
     {
         public static void AddUser(this ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>()
-                .Property(u => u.Version)
-                .IsRowVersion();
+            modelBuilder.Entity<User>().Property(u => u.Version).IsRowVersion();
 
-            modelBuilder.Entity<User>()
+            modelBuilder
+                .Entity<User>()
                 .HasOne(u => u.Language)
                 .WithMany(l => l.Users)
                 .HasForeignKey(u => u.LanguageCode)

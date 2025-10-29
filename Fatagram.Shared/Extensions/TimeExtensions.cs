@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 using Fatagram.Shared.Enums;
 
-namespace Fatagram.Shared.Extensions 
+namespace Fatagram.Shared.Extensions
 {
-    public class TimeDistance 
+    public class TimeDistance
     {
         public TimeDistance(int value, TimeUnit unit)
         {
@@ -13,7 +13,7 @@ namespace Fatagram.Shared.Extensions
 
         public int Value { get; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))] 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public TimeUnit Unit { get; }
     }
 
@@ -52,8 +52,8 @@ namespace Fatagram.Shared.Extensions
             {
                 return new TimeDistance((int)(timeSpan.TotalDays / 365), TimeUnit.Years);
             }
-        } 
-        
+        }
+
         public static DateTime ToDateTime(this TimeDistance timeDistance)
         {
             return timeDistance.Unit switch
@@ -66,8 +66,11 @@ namespace Fatagram.Shared.Extensions
                 TimeUnit.Weeks => DateTime.UtcNow.AddDays(-timeDistance.Value * 7),
                 TimeUnit.Months => DateTime.UtcNow.AddMonths(-timeDistance.Value),
                 TimeUnit.Years => DateTime.UtcNow.AddYears(-timeDistance.Value),
-                _ => throw new ArgumentOutOfRangeException(nameof(timeDistance.Unit), "Invalid time unit")
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(timeDistance.Unit),
+                    "Invalid time unit"
+                ),
             };
-        }  
+        }
     }
 }

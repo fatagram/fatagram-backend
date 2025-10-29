@@ -13,6 +13,6 @@ namespace Fatagram.Domain.Enums
         Unemployed,
         SelfEmployed,
         Freelancer,
-        Retired
+        Retired,
     }
 }

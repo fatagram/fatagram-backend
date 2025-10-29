@@ -20,7 +20,11 @@ namespace Fatagram.Shared.Extensions
         /// <returns>The value of the property if found; otherwise, null.</returns>
         public static object? GetPropertyValue(this object obj, string propertyName)
         {
-            var prop = obj.GetType().GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            var prop = obj.GetType()
+                .GetProperty(
+                    propertyName,
+                    BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance
+                );
             return prop?.GetValue(obj);
         }
     }

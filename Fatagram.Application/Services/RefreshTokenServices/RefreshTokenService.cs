@@ -2,7 +2,7 @@
 
 namespace Fatagram.Application.Services.RefreshTokenServices
 {
-    public class RefreshTokenService
+    public static class RefreshTokenService
     {
         /// <summary>
         /// Generate a new refresh token
@@ -14,7 +14,7 @@ namespace Fatagram.Application.Services.RefreshTokenServices
             {
                 Token = Guid.NewGuid().ToString(),
                 ExpiryDate = DateTime.UtcNow.AddDays(7),
-                CreateDate = DateTime.UtcNow
+                CreateDate = DateTime.UtcNow,
             };
         }
     }

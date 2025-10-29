@@ -38,14 +38,9 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
-            ValidateModelState();
-            var loginResult = await _authService.Login(request);
-            if (!loginResult.IsSuccess)
-            {
-                return loginResult.ToActionResult();
-            }
-            var generateResult = await _tokenService.GenerateTokensAsync(request.Username);
-            if (generateResult.Data == null)
+            var res = await _authService.Login(request);
+            var generateTokenResult = await _tokenService.GenerateTokensAsync(request.Username);
+            if (generateTokenResult.Data == null)
             {
                 throw new DataNullException("TOKEN_CANNOT_CREATE", "Token cannot be created");
             }
@@ -53,7 +48,7 @@ namespace Fatagram.API.Controllers.V1
             // Create new cookie with access token
             Response.Cookies.Append(
                 "accessToken",
-                generateResult.Data.AccessToken,
+                generateTokenResult.Data.AccessToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -63,10 +58,10 @@ namespace Fatagram.API.Controllers.V1
                 }
             );
 
-            if (loginResult.Data is not null)
-                loginResult.Data.RefreshToken = generateResult.Data.RefreshToken;
+            if (res.Data is not null)
+                res.Data.RefreshToken = generateTokenResult.Data.RefreshToken;
 
-            return loginResult.ToActionResult();
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -94,11 +89,7 @@ namespace Fatagram.API.Controllers.V1
             };
             Response.Cookies.Append("accessToken", res.Data, cookieOptions);
 
-            return Ok(
-                ApiResponse<TokenDto>.Success(
-                    data: new TokenDto() { RefreshToken = request.RefreshToken }
-                )
-            );
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -109,12 +100,8 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
         {
-            try
-            {
-                if (request.RefreshToken != null)
-                    await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
-            }
-            catch (Exception) { }
+            if (request.RefreshToken != null)
+                await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
             Response.Cookies.Append(
                 "accessToken",
                 "",
@@ -126,7 +113,7 @@ namespace Fatagram.API.Controllers.V1
                     Expires = DateTime.Now.AddDays(-1),
                 }
             );
-            return Ok(ApiResponse<string>.Success());
+            return Ok();
         }
 
         /// <summary>

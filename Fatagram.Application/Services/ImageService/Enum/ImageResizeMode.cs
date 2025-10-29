@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Fatagram.Application.Services.ImageService.Enum
 {
-    public enum ImageSize
+    public enum ImageResizeMode
     {
-        Small,
-        Medium,
-        Large
+        Crop,
+        Pad,
+        BoxPad,
+        Max,
+        Min,
+        Stretch,
     }
 }

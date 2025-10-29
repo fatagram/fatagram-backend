@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Fatagram.Application.Services.JwtServices.Interface;
 using Fatagram.Application.Utils;
@@ -45,13 +46,16 @@ namespace Fatagram.API.Authentication
             try
             {
                 var res = _jwtService.ValidateToken(token);
-                if (!res.IsSuccess || res.Data == null)
-                {
-                    return Task.FromResult(
-                        AuthenticateResult.Fail(ErrorCodes.ACCESS_TOKEN_INVALID)
-                    );
-                }
-                var ticket = new AuthenticationTicket(res.Data, "JwtCustomScheme");
+                // if (!res.IsSuccess || res.Data == null)
+                // {
+                //     return Task.FromResult(
+                //         AuthenticateResult.Fail(ErrorCodes.ACCESS_TOKEN_INVALID)
+                //     );
+                // }
+                var ticket = new AuthenticationTicket(
+                    res?.Data ?? new ClaimsPrincipal(),
+                    "JwtCustomScheme"
+                );
 
                 return Task.FromResult(AuthenticateResult.Success(ticket));
             }

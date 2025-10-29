@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.API", "Fatagram.AP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.Shared", "Fatagram.Shared\Fatagram.Shared.csproj", "{C76AAD79-0DEA-4A2B-AD4E-BF5547E9B3A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fatagram.Admin", "Fatagram.Admin\Fatagram.Admin.csproj", "{684C1059-6D9C-4B21-AC37-D818EA452F70}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,10 +39,6 @@ Global
 		{C76AAD79-0DEA-4A2B-AD4E-BF5547E9B3A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C76AAD79-0DEA-4A2B-AD4E-BF5547E9B3A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C76AAD79-0DEA-4A2B-AD4E-BF5547E9B3A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{684C1059-6D9C-4B21-AC37-D818EA452F70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{684C1059-6D9C-4B21-AC37-D818EA452F70}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{684C1059-6D9C-4B21-AC37-D818EA452F70}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{684C1059-6D9C-4B21-AC37-D818EA452F70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

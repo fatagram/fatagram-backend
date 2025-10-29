@@ -14,7 +14,6 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
         /// <returns></returns>
         Task<Account?> GetByUsernameAsync(string username);
 
-
         /// <summary>
         /// Get an account by account id
         /// </summary>
@@ -22,7 +21,11 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
         /// <returns></returns>
         Task<Account?> GetAsync(Guid accountId);
 
-        Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(int page, int pageSize, string? username = null);
+        Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(
+            int page,
+            int pageSize,
+            string? username = null
+        );
 
         /// <summary>
         /// Get an account by user id
@@ -31,7 +34,6 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
         /// <returns></returns>
         Task<Account?> GetByUserIdAsync(Guid userId);
 
-
         /// <summary>
         /// Create a new account
         /// </summary>
@@ -39,13 +41,11 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
         /// <returns></returns>
         Task AddAsync(Account newAccount);
 
-
         /// <summary>
         /// Update an account
         /// </summary>
         /// <param name="account"></param>
         /// <returns></returns>
         Task UpdateAsync(Account account);
-
     }
 }

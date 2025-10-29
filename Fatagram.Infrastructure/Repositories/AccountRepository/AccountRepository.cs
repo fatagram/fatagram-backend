@@ -1,10 +1,10 @@
-﻿using Fatagram.Domain.Models;
+﻿using System.Diagnostics;
+using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System.Diagnostics;
 
 namespace Fatagram.Infrastructure.Repositories.AccountRepository
 {
@@ -64,7 +64,9 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
         /// <returns>A task that represents the asynchronous operation. The task result contains the account if found, otherwise null.</returns>
         public async Task<Account?> GetByUsernameAsync(string username)
         {
-            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Username == username);
+            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a =>
+                a.Username == username
+            );
             return account;
         }
 
@@ -86,10 +88,16 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
         /// <param name="pageSize"></param>
         /// <param name="username"></param>
         /// <returns></returns>
-        public async Task<(List<Account> accounts, int totalPage, int totalAccount)> GetAccountsAsync(int page, int pageSize, string? username = null)
+        public async Task<(
+            List<Account> accounts,
+            int totalPage,
+            int totalAccount
+        )> GetAccountsAsync(int page, int pageSize, string? username = null)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 1;
+            if (page < 1)
+                page = 1;
+            if (pageSize < 1)
+                pageSize = 1;
 
             IQueryable<Account> query = _dbContext.Accounts.Include(a => a.User);
 
@@ -100,10 +108,7 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
 
             var totalAccount = await query.CountAsync();
             var totalPage = (int)Math.Ceiling((double)totalAccount / pageSize);
-            var accounts = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            var accounts = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return (accounts, totalPage, totalAccount);
         }

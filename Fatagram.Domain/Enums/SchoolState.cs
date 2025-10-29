@@ -12,6 +12,6 @@ namespace Fatagram.Domain.Enums
         Studying,
         Graduated,
         DroppedOut,
-        Paused
+        Paused,
     }
 }

@@ -8,7 +8,6 @@ namespace Fatagram.Application.Exceptions.MiddleLevelExceptions
     public class NotFoundException : AppException
     {
         public NotFoundException(string errorCode, string message)
-            : base(errorCode, null, message)
-        { }
+            : base(errorCode, message) { }
     }
 }

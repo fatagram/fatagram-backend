@@ -13,7 +13,7 @@ namespace Fatagram.Application.Dtos.User
         None,
         Friend,
         SentByMe,
-        SentByThem
+        SentByThem,
     }
 
     public class GetFriendShipStatusDto
@@ -21,24 +21,12 @@ namespace Fatagram.Application.Dtos.User
         public FriendShipStatus? Status { get; set; }
     }
 
-    public class GetNumberOfFriendsDto
-    {
-        public int NumberOfFriends { get; set; }
-    }
-
-
-    public class FriendRequestDto 
+    public class FriendRequestDto
     {
         public Guid SenderId { get; set; }
         public string? SenderUrlName { get; set; } = null;
         public string? SenderAvatar { get; set; }
         public string? SenderName { get; set; } = null!;
         public TimeDistance CreatedAt { get; set; } = new(0, TimeUnit.Miliseconds);
-    }
-
-    public class GetFriendRequestsDto 
-    {
-        public List<FriendRequestDto> FriendRequests { get; set; } = new();
-        public int Total { get; set; }
     }
 }

@@ -12,6 +12,7 @@ using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
+using Fatagram.Application.Utils;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -46,8 +47,8 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> GetUserProfile(string target, [FromQuery] string fields)
         {
             var userId = GetCurrentUserIdOrNull() ?? Guid.Empty;
-            var _res = await _userProfileService.GetUserProfileAsync(userId, target, fields);
-            return Ok(ApiResponse<GetUserProfileDto>.Success(data: _res.Data));
+            var res = await _userProfileService.GetUserProfileAsync(userId, target, fields);
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -60,7 +61,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         [HttpPut]
         public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDto request)
         {
-            ValidateModelState();
             var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUserAsync(userId, request);
             return res.ToActionResult();
@@ -99,11 +99,14 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserId();
             var res = await _imageService.SaveImageAsync(
-                ImageSize.Small,
-                file.OpenReadStream(),
-                Path.GetExtension(file.FileName),
-                "avatars",
-                true
+                new ImageRequest()
+                {
+                    ImageStream = file.OpenReadStream(),
+                    Format = ImageFormat.Jpeg,
+                    Quality = ImageQuality.Low,
+                    Folder = $"{userId}/avatars",
+                    FileName = $"avatar_{DateTime.UtcNow.Ticks}",
+                }
             );
             await _userProfileService.UpdateUserAsync(
                 userId,
@@ -125,10 +128,14 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserId();
             var res = await _imageService.SaveImageAsync(
-                ImageSize.Large,
-                file.OpenReadStream(),
-                Path.GetExtension(file.FileName),
-                "backgrounds"
+                new ImageRequest()
+                {
+                    ImageStream = file.OpenReadStream(),
+                    Format = ImageFormat.Jpeg,
+                    Quality = ImageQuality.Low,
+                    Folder = $"{userId}/backgrounds",
+                    FileName = $"background_{DateTime.UtcNow.Ticks}",
+                }
             );
             await _userProfileService.UpdateUserAsync(
                 userId,
@@ -152,7 +159,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUrlNameAsync(userId, changeUrlNameDto);
-
             return res.ToActionResult();
         }
 
@@ -168,9 +174,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> UpdateNameAsync([FromBody] ChangeNameDto updateNameDto)
         {
             var userId = GetCurrentUserId();
-            ValidateModelState();
             var res = await _userProfileService.UpdateNameAsync(userId, updateNameDto);
-
             return res.ToActionResult();
         }
 

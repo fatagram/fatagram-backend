@@ -29,7 +29,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserId();
             var res = await _userInfoService.UpdateNicknameAsync(userId, changeNicknameDto);
-
             return res.ToActionResult();
         }
 

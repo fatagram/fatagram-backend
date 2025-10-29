@@ -7,12 +7,12 @@ using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
-using Fatagram.Application.Validation;
+using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
-using Fatagram.Application.Utils;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
@@ -41,21 +41,24 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             {
                 throw new UserNotFoundException();
             }
-            return Result<string>.Success();
+            return Result<string>.Create();
         }
 
-        
         /// <summary>
         /// Get user info by fields
         /// </summary>
         /// <param name="targetId"></param>
         /// <param name="fields"></param>
         /// <returns></returns>
-        public async Task<Result<GetUserProfileDto>> GetUserProfileAsync(Guid userId, string target, string fields)
+        public async Task<Result<GetUserProfileDto>> GetUserProfileAsync(
+            Guid userId,
+            string target,
+            string fields
+        )
         {
             if (string.IsNullOrEmpty(fields))
             {
-                return Result<GetUserProfileDto>.BadRequest("FIELDS_REQUIRED", "Fields are required");
+                throw new AppException("FIELDS_REQUIRED", "Fields are required");
             }
             var listField = fields.Split(',').ToList();
             listField.Add("id");
@@ -66,13 +69,11 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
 
             var privacyDict = res.ToDictionary(k => k.Key, v => v.Value?.ToString());
 
-            return Result<GetUserProfileDto>.Success(new GetUserProfileDto()
-            {
-                Infos = privacyDict,
-                IsOwner = isOwner
-            });
+            return Result<GetUserProfileDto>.Create(
+                ResponseStatusCode.Success,
+                new GetUserProfileDto() { Infos = privacyDict, IsOwner = isOwner }
+            );
         }
-
 
         /// <summary>
         /// Update a user info
@@ -80,19 +81,25 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
         /// <param name="userId"></param>
         /// <param name="updateUserDto"></param>
         /// <returns></returns>
-        public async Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto updateUserDto)
+        public async Task<Result<UpdateUserDto>> UpdateUserAsync(
+            Guid userId,
+            UpdateUserDto updateUserDto
+        )
         {
             var existingUser = await _userRepository.GetAsync(userId.ToString());
-            if (existingUser is null) throw new UserNotFoundException();
+            if (existingUser is null)
+                throw new UserNotFoundException();
 
             _mapper.Map(updateUserDto, existingUser);
             await _userRepository.UpdateAsync(existingUser.NormalizeEmptyStringToNull());
-            return Result<UpdateUserDto>.Success(updateUserDto);
+            return Result<UpdateUserDto>.Create(ResponseStatusCode.Success, updateUserDto);
         }
 
-        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto)
+        public async Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(
+            Guid userId,
+            ChangeUrlNameDto changeUrlNameDto
+        )
         {
-            ValidationHelper.EnsureValidUrlName(changeUrlNameDto.UrlName);
             var user = await _userRepository.GetAsync(userId.ToString());
             if (user == null)
                 throw new UserNotFoundException();
@@ -100,14 +107,17 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var existUser = await _userRepository.GetAsync(changeUrlNameDto.UrlName);
             if (existUser != null && existUser.Id != user.Id)
             {
-                return Result<ChangeUrlNameDto>.BadRequest("USERNAME_EXISTED", "Username existed");
+                throw new AppException("URLNAME_ALREADY_EXISTS", "Url name already exists.");
             }
             user.UrlName = changeUrlNameDto.UrlName;
             await _userRepository.UpdateAsync(user);
-            return Result<ChangeUrlNameDto>.Success(changeUrlNameDto);
+            return Result<ChangeUrlNameDto>.Create(ResponseStatusCode.Success, changeUrlNameDto);
         }
 
-        public async Task<Result<ChangeNameDto>> UpdateNameAsync(Guid userId, ChangeNameDto changeNameDto)
+        public async Task<Result<ChangeNameDto>> UpdateNameAsync(
+            Guid userId,
+            ChangeNameDto changeNameDto
+        )
         {
             var user = await _userRepository.GetAsync(userId.ToString());
             if (user == null)
@@ -118,7 +128,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             user.LastName = changeNameDto.LastName;
             user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
             await _userRepository.UpdateAsync(user);
-            return Result<ChangeNameDto>.Success(changeNameDto);
+            return Result<ChangeNameDto>.Create(ResponseStatusCode.Success, changeNameDto);
         }
     }
 }

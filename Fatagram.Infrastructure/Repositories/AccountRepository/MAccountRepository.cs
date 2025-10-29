@@ -35,7 +35,6 @@
 //            };
 //            Debug.WriteLine("User 1: " + newUser1.Id.ToString());
 
-
 //            var newAccount1 = new Account()
 //            {
 //                Id = Guid.NewGuid(),
@@ -89,7 +88,6 @@
 
 //        public Task<Account?> GetAccountByIdAsync(string accountId) => GetAccountByIdAsync(Guid.Parse(accountId));
 
-
 //        public Task<Account?> GetAccountByUserIdAsync(Guid userId)
 //        {
 //            return Task.FromResult(Accounts.FirstOrDefault(account => account.UserId == userId));
@@ -107,7 +105,6 @@
 //        }
 
 //        public Task<Account?> GetAccountByUserIdAsync(string userId) => GetAccountByUserIdAsync(Guid.Parse(userId));
-
 
 //    }
 //}

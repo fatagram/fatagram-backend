@@ -9,15 +9,14 @@ namespace Fatagram.Application.Services.AccountServices.Interface
     /// </summary>
     public interface IAccountService
     {
-
         /// <summary>
         /// Register a new user
         /// </summary>
         /// <param name="request"></param>
-        /// <returns></returns>
+        /// /// <returns></returns>
         Task<Result<string>> Register(RegisterDto request);
 
-        Task<Result<AccountsDto>> GetAccountsAsync(int page, int pageSize, string? username = null);
+        // Task<Result<AccountsDto>> GetAccountsAsync(int page, int pageSize, string? username = null);
 
         /// <summary>
         /// Change the password of a user
@@ -26,6 +25,9 @@ namespace Fatagram.Application.Services.AccountServices.Interface
         /// <param name="oldPassword"></param>
         /// <param name="newPassword"></param>
         /// <returns></returns>
-        Task<Result<string>> ChangePasswordAsync(Guid userId, ChangePasswordDto changePasswordRequest);
+        Task<Result<string>> ChangePasswordAsync(
+            Guid userId,
+            ChangePasswordDto changePasswordRequest
+        );
     }
 }

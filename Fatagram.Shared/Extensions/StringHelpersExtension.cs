@@ -15,7 +15,7 @@ namespace Fatagram.Shared.Extensions
         /// <param name="dto"></param>
         public static T NormalizeEmptyStringToNull<T>(this T dto)
         {
-            foreach(var prop in dto!.GetType().GetProperties())
+            foreach (var prop in dto!.GetType().GetProperties())
             {
                 if (prop.PropertyType == typeof(string))
                 {

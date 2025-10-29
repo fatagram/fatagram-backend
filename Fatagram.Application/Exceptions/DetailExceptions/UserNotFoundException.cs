@@ -9,7 +9,7 @@ namespace Fatagram.Application.Exceptions
 {
     public class UserNotFoundException : NotFoundException
     {
-        public UserNotFoundException() : base("USER_NOT_FOUND", "User not found")
-        { }
+        public UserNotFoundException()
+            : base("USER_NOT_FOUND", "User not found") { }
     }
 }

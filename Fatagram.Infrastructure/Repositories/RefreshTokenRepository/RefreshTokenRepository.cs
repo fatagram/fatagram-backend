@@ -1,9 +1,9 @@
-﻿using Fatagram.Domain.Models;
+﻿using System.Linq.Expressions;
+using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
 {
@@ -37,7 +37,6 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
             await _dbContext.SaveChangesAsync();
         }
 
-
         /// <summary>
         /// Deletes a refresh token asynchronously.
         /// </summary>
@@ -62,7 +61,9 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
         public async Task<Guid?> GetAccountIdAsync(string refreshToken)
         {
             var tokenGuid = refreshToken.ToGuid();
-            var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == tokenGuid);
+            var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.Token == tokenGuid
+            );
             return token?.AccountId;
         }
 
@@ -74,7 +75,9 @@ namespace Fatagram.Infrastructure.Repositories.RefreshTokenRepository
         public async Task<DateTime?> GetExpiryTimeAsync(string refreshToken)
         {
             var tokenGuid = refreshToken.ToGuid();
-            var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == tokenGuid);
+            var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(rt =>
+                rt.Token == tokenGuid
+            );
             return token?.ExpiryDate;
         }
     }

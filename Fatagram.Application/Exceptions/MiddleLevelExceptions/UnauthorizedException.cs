@@ -7,11 +7,7 @@ namespace Fatagram.Application.Exceptions.MiddleLevelExceptions
 {
     public class UnauthorizedException : AppException
     {
-        public UnauthorizedException(
-            string errorCode = "UNAUTHORIZED",
-            string? message = null
-        )
-            : base(errorCode, null, message)
-        { }
+        public UnauthorizedException(string errorCode = "UNAUTHORIZED", string? message = null)
+            : base(errorCode, message) { }
     }
 }

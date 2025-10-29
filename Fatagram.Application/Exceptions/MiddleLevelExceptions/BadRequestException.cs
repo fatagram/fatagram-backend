@@ -7,8 +7,11 @@ namespace Fatagram.Application.Exceptions.DetailExceptions
 {
     public class BadRequestException : AppException
     {
-        public BadRequestException(string errorCode, List<string>? errorCodes, string message) 
-            : base(errorCode, errorCodes, message)
-        { }
+        public BadRequestException(
+            string errorCode,
+            string message,
+            List<string>? errorMessages = null
+        )
+            : base(errorCode, message, errorMessages) { }
     }
 }

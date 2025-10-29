@@ -22,7 +22,7 @@ namespace Fatagram.Application.Dtos.Notification
         public string? Link { get; set; }
         public string? Content { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))] 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public NotificationType Type { get; set; } = NotificationType.System;
         public bool IsRead { get; set; } = false;
         public TimeDistance TimeDistance { get; set; } = new TimeDistance(0, TimeUnit.Miliseconds);

@@ -1,11 +1,11 @@
-﻿using Fatagram.Domain.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
 
 namespace Fatagram.Application.Dtos.User
 {
@@ -24,16 +24,10 @@ namespace Fatagram.Application.Dtos.User
 
         public string? FullName { get; set; }
 
-        //public string? Email { get; set; }
-
-        //public string? Phone { get; set; }
-
         public string? Nickname { get; set; }
 
         public string? Avatar { get; set; }
 
         public string? Background { get; set; }
-
-        // public DateTime? BirthDay { get; set; }
     }
 }

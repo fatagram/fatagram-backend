@@ -30,7 +30,6 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
-            ValidateModelState();
             var result = await _accountService.Register(request);
             return result.ToActionResult();
         }

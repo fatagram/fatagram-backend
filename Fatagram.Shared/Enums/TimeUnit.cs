@@ -1,6 +1,6 @@
 namespace Fatagram.Shared.Enums
 {
-    public enum TimeUnit 
+    public enum TimeUnit
     {
         Miliseconds,
         Seconds,
@@ -9,6 +9,6 @@ namespace Fatagram.Shared.Enums
         Days,
         Weeks,
         Months,
-        Years
+        Years,
     }
 }

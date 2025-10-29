@@ -1,5 +1,8 @@
-﻿using Fatagram.Application.Dtos.Token;
+﻿using System.Linq.Dynamic.Core.Tokenizer;
+using System.Runtime.CompilerServices;
+using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.JwtServices.Interface;
 using Fatagram.Application.Services.RefreshTokenServices;
 using Fatagram.Application.Services.TokenServices.Interface;
@@ -7,8 +10,8 @@ using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
+using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
-using System.Runtime.CompilerServices;
 
 namespace Fatagram.Application.Services.TokenServices
 {
@@ -18,7 +21,11 @@ namespace Fatagram.Application.Services.TokenServices
         private readonly IAccountRepository _accountRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public TokenService(IJwtService jwtService, IAccountRepository accountRepository, IRefreshTokenRepository refreshTokenRepository)
+        public TokenService(
+            IJwtService jwtService,
+            IAccountRepository accountRepository,
+            IRefreshTokenRepository refreshTokenRepository
+        )
         {
             _jwtService = jwtService;
             _accountRepository = accountRepository;
@@ -33,29 +40,31 @@ namespace Fatagram.Application.Services.TokenServices
         public async Task<Result<TokenDto>> GenerateTokensAsync(string username)
         {
             var res = await _accountRepository.GetByUsernameAsync(username);
-            if (res is null) throw new AccountNotFoundException();
+            if (res is null)
+                throw new AccountNotFoundException();
             var account = res;
 
             var refreshToken = RefreshTokenService.GenerateRefreshToken().Token;
-            await _refreshTokenRepository.AddAsync(new RefreshToken()
-            {
-                AccountId = account.Id,
-                Token = refreshToken.ToGuid(),
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
-                CreatedAt = DateTime.UtcNow
-            });
+            await _refreshTokenRepository.AddAsync(
+                new RefreshToken()
+                {
+                    AccountId = account.Id,
+                    Token = refreshToken.ToGuid(),
+                    ExpiryDate = DateTime.UtcNow.AddDays(7),
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
 
             var accessToken = _jwtService.GenerateToken(username, account.UserId).Data;
             if (accessToken is null)
             {
-                return Result<TokenDto>.BadRequest(ErrorCodes.ACCESS_TOKEN_INVALID, "Access token is invalid");
+                throw new GenerateTokenException();
             }
 
-            return Result<TokenDto>.Success(new()
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            });
+            return Result<TokenDto>.Create(
+                ResponseStatusCode.Created,
+                new() { AccessToken = accessToken, RefreshToken = refreshToken }
+            );
         }
 
         /// <summary>
@@ -69,17 +78,17 @@ namespace Fatagram.Application.Services.TokenServices
             var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
             if (res is null)
             {
-                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_INVALID, "Refresh token is invalid");
+                throw new AppException("REFRESH_TOKEN_INVALID", "Refresh token is invalid");
             }
 
             var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
 
             if (rtExpiredTime < DateTime.UtcNow)
             {
-                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_EXPIRED, "Refresh token is expired");
+                throw new RefreshTokenExpiredException();
             }
 
-            return Result<string>.Success();
+            return Result<string>.Create();
         }
 
         /// <summary>
@@ -93,23 +102,24 @@ namespace Fatagram.Application.Services.TokenServices
             var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
             if (res is null)
             {
-                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_INVALID, "Refresh token is invalid");
+                throw new AppException("REFRESH_TOKEN_INVALID", "Refresh token is invalid");
             }
 
             // Find account by account id
-                var getAccountResult = await _accountRepository.GetAsync((Guid)res);
-            if (getAccountResult is null) throw new AccountNotFoundException();
+            var getAccountResult = await _accountRepository.GetAsync((Guid)res);
+            if (getAccountResult is null)
+                throw new AccountNotFoundException();
             var account = getAccountResult;
 
             // Check if refresh token is expired
             var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
             if (rtExpiredTime < DateTime.UtcNow)
             {
-                return Result<string>.BadRequest(ErrorCodes.REFRESH_TOKEN_EXPIRED, "Refresh token is expired");
+                throw new RefreshTokenExpiredException();
             }
 
             var token = _jwtService.GenerateToken(account.Username, account.UserId);
-            return Result<string>.Success(token.Data);
+            return Result<string>.Create(ResponseStatusCode.Created, token.Data);
         }
 
         /// <summary>
@@ -120,7 +130,7 @@ namespace Fatagram.Application.Services.TokenServices
         public async Task<Result<string>> DeleteRefreshTokenAsync(string refreshToken)
         {
             await _refreshTokenRepository.DeleteAsync(refreshToken);
-            return Result<string>.Success();
+            return Result<string>.Create();
         }
     }
 }

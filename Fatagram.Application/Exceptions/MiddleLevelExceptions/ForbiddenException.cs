@@ -7,8 +7,7 @@ namespace Fatagram.Application.Exceptions.DetailExceptions
 {
     public class ForbiddenException : AppException
     {
-        public ForbiddenException(string errorCode, string message) 
-            : base(errorCode, null, message)
-        { }
+        public ForbiddenException(string errorCode, string message)
+            : base(errorCode, message) { }
     }
 }

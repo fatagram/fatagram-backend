@@ -1,12 +1,12 @@
-﻿using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
 {
@@ -40,7 +40,7 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
             _dbContext.FriendRequests.Remove(friendRequest);
             return _dbContext.SaveChangesAsync();
         }
-        
+
         /// <summary>
         /// Gets a friend request by sender and receiver IDs.
         /// </summary>
@@ -49,8 +49,9 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
         /// <returns></returns>
         public async Task<FriendRequest?> GetAsync(Guid senderId, Guid receiverId)
         {
-            return await _dbContext.FriendRequests
-                .FirstOrDefaultAsync(fr => fr.SenderId == senderId && fr.ReceiverId == receiverId);
+            return await _dbContext.FriendRequests.FirstOrDefaultAsync(fr =>
+                fr.SenderId == senderId && fr.ReceiverId == receiverId
+            );
         }
 
         /// <summary>
@@ -60,13 +61,16 @@ namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        public async Task<(List<FriendRequest> requests, int total)> GetFriendRequestsAsync(Guid userId, int page, int pageSize)
+        public async Task<(List<FriendRequest> requests, int total)> GetFriendRequestsAsync(
+            Guid userId,
+            int page,
+            int pageSize
+        )
         {
-            var total = await _dbContext.FriendRequests
-                .CountAsync(fr => fr.ReceiverId == userId);
+            var total = await _dbContext.FriendRequests.CountAsync(fr => fr.ReceiverId == userId);
 
-            var friendRequests = await _dbContext.FriendRequests
-                .Where(fr => fr.ReceiverId == userId)
+            var friendRequests = await _dbContext
+                .FriendRequests.Where(fr => fr.ReceiverId == userId)
                 .Include(fr => fr.Sender)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

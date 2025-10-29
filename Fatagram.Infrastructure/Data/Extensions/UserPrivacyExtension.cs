@@ -1,10 +1,10 @@
-﻿using Fatagram.Domain.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Data.Extensions
 {
@@ -12,7 +12,8 @@ namespace Fatagram.Infrastructure.Data.Extensions
     {
         public static void AddUserPrivacy(this ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserPrivacy>()
+            modelBuilder
+                .Entity<UserPrivacy>()
                 .HasOne(up => up.User)
                 .WithMany(u => u.Privacies)
                 .HasForeignKey(up => up.UserId)

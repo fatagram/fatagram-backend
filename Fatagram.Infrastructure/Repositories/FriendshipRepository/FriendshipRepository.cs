@@ -1,14 +1,14 @@
-﻿using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Projections;
+using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
 {
@@ -39,27 +39,38 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
 
         public Task<Friendship?> GetAsync(Guid user1Id, Guid user2Id)
         {
-            return _dbContext.Friendships.FirstOrDefaultAsync(f => 
+            return _dbContext.Friendships.FirstOrDefaultAsync(f =>
                 (f.User1Id == user1Id && f.User2Id == user2Id)
-                || (f.User1Id == user2Id && f.User2Id == user1Id));
+                || (f.User1Id == user2Id && f.User2Id == user1Id)
+            );
         }
 
         public async Task<int> CountAsync(Guid userId)
         {
-            return await _dbContext.Friendships
-                .Where(f => f.User1Id == userId || f.User2Id == userId)
+            return await _dbContext
+                .Friendships.Where(f => f.User1Id == userId || f.User2Id == userId)
                 .CountAsync();
         }
 
-        public async Task<(IEnumerable<FriendProjection> friends, int total)> GetFriendsOfUserAsync(Guid userId, Guid targetId, string? keyword, int page = 1, int pageSize = 10)
+        public async Task<(IEnumerable<FriendProjection> friends, int total)> GetFriendsOfUserAsync(
+            Guid userId,
+            Guid targetId,
+            string? keyword,
+            int page = 1,
+            int pageSize = 10
+        )
         {
-            var friendIdsQuery = _dbContext.Friendships
-                .Where(f => f.User1Id == targetId || f.User2Id == targetId)
+            var friendIdsQuery = _dbContext
+                .Friendships.Where(f => f.User1Id == targetId || f.User2Id == targetId)
                 .Select(f => f.User1Id == targetId ? f.User2Id : f.User1Id);
 
-            var query = _dbContext.Users
-                .Where(u => friendIdsQuery.Any(f => f == u.Id) && 
-                (string.IsNullOrEmpty(keyword) || u.FullName.ToLower().Contains(keyword.ToLower())));
+            var query = _dbContext.Users.Where(u =>
+                friendIdsQuery.Any(f => f == u.Id)
+                && (
+                    string.IsNullOrEmpty(keyword)
+                    || u.FullName.ToLower().Contains(keyword.ToLower())
+                )
+            );
 
             var total = await query.CountAsync();
 
@@ -71,9 +82,10 @@ namespace Fatagram.Infrastructure.Repositories.FriendshipRepository
                 .Select(u => new FriendProjection
                 {
                     User = u,
-                    IsFriend = _dbContext.Friendships
-                        .Any(f => (f.User1Id == userId && f.User2Id == u.Id) ||
-                        (f.User1Id == u.Id && f.User2Id == userId))
+                    IsFriend = _dbContext.Friendships.Any(f =>
+                        (f.User1Id == userId && f.User2Id == u.Id)
+                        || (f.User1Id == u.Id && f.User2Id == userId)
+                    ),
                 })
                 .ToListAsync();
 

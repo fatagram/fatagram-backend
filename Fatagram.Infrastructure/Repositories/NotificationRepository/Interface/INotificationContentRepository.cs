@@ -1,9 +1,9 @@
-﻿using Fatagram.Domain.Enums.NotificationServices;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Enums.NotificationServices;
 
 namespace Fatagram.Infrastructure.Repositories.NotificationRepository.Interface
 {
@@ -12,4 +12,3 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository.Interface
         Task<string> GetContentAsync(NotificationType type, string langCode);
     }
 }
- 

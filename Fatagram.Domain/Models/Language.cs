@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Domain.Models
 {
-    public class Language
+    public class Language : BaseEntity
     {
         [Key]
-        [Column("code", TypeName="varchar(2)")]
+        [Column("code", TypeName = "varchar(2)")]
         public string Code { get; set; } = string.Empty;
 
         [Column("name", TypeName = "varchar(50)")]

@@ -1,13 +1,13 @@
-﻿using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using Fatagram.Shared.Extensions;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Metrics;
+﻿using System.Diagnostics.Metrics;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.UserRepository
 {
@@ -45,7 +45,9 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
         /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
         public async Task<User?> GetAsync(string key)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == key.ToGuid() || u.UrlName == key);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
+                u.Id == key.ToGuid() || u.UrlName == key
+            );
             return user;
         }
 
@@ -58,8 +60,8 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
             var selectString = "new(" + string.Join(", ", fields.Select(f => $"{f} as {f}")) + ")";
 
             // Query database (dynamic select)
-            var user = _dbContext.Users
-                .Where(u => u.Id == key.ToGuid() || u.UrlName == key)
+            var user = _dbContext
+                .Users.Where(u => u.Id == key.ToGuid() || u.UrlName == key)
                 .Select(selectString)
                 .FirstOrDefault(); // Dynamic LINQ với 1 record -> dùng sync là ok
 
@@ -89,10 +91,10 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
         /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            var userId = await _dbContext.Accounts
-                    .Where(a => a.Username == username)
-                    .Select(a => a.UserId)
-                    .FirstOrDefaultAsync();
+            var userId = await _dbContext
+                .Accounts.Where(a => a.Username == username)
+                .Select(a => a.UserId)
+                .FirstOrDefaultAsync();
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             return user;
@@ -100,9 +102,7 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            var user = await _dbContext.Users
-                    .Where(a => a.Email == email)
-                    .FirstOrDefaultAsync();
+            var user = await _dbContext.Users.Where(a => a.Email == email).FirstOrDefaultAsync();
             return user;
         }
 
@@ -119,11 +119,10 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
 
         public async Task<string> GetLanguageAsync(Guid userId)
         {
-            return await _dbContext.Users
-                .Where(u => u.Id == userId)
-                .Select(u => u.LanguageCode ?? "en")
-                .FirstOrDefaultAsync() ?? "en";
-                
+            return await _dbContext
+                    .Users.Where(u => u.Id == userId)
+                    .Select(u => u.LanguageCode ?? "en")
+                    .FirstOrDefaultAsync() ?? "en";
         }
     }
 }

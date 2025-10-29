@@ -1,30 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Remove="Services\RefreshTokenServices\**" />
-    <EmbeddedResource Remove="Services\RefreshTokenServices\**" />
-    <None Remove="Services\RefreshTokenServices\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference
+      Include="AutoMapper.Extensions.Microsoft.DependencyInjection"
+      Version="12.0.1"
+    />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.8.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Fatagram.Domain\Fatagram.Domain.csproj" />
     <ProjectReference Include="..\Fatagram.Infrastructure\Fatagram.Infrastructure.csproj" />
     <ProjectReference Include="..\Fatagram.Shared\Fatagram.Shared.csproj" />
   </ItemGroup>
-
 </Project>

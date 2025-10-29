@@ -10,6 +10,6 @@ namespace Fatagram.Domain.Enums
     {
         Male,
         Female,
-        Other
+        Other,
     }
 }

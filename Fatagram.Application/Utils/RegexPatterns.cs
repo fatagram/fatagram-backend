@@ -54,7 +54,6 @@ namespace Fatagram.Application.Utils
         /// <summary>
         /// Regular expression pattern for validating user descriptions.
         /// </summary>
-
         public const string Description = @"^.{0,300}$";
     }
 }

@@ -25,12 +25,12 @@ namespace Fatagram.API.Hubs.Notifications
         /// </summary>
         /// <param name="notification"></param>
         /// <returns></returns>
-        public async Task SendNotificationAsync(string userId, NotificationDto notification)
+        public async Task SendNotificationAsync(Guid userId, NotificationDto notification)
         {
-            if (userId != null)
+            if (userId != Guid.Empty)
             {
                 await _hubContext
-                    .Clients.User(userId)
+                    .Clients.User(userId.ToString())
                     .SendAsync("ReceiveNotification", notification);
             }
         }

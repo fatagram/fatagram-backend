@@ -1,17 +1,17 @@
-﻿using AutoMapper;
-using Fatagram.Application.Dtos.User;
-using Fatagram.Application.Dtos.User.Update;
-using Fatagram.Application.Exceptions;
-using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
-using Fatagram.Application.Utils;
-using Fatagram.Application.Validation;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using Fatagram.Application.Dtos.User;
+using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Application.Exceptions;
+using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
+using Fatagram.Application.Utils;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
 {
@@ -22,9 +22,10 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
         private readonly IMapper _mapper;
 
         public UserInfoService(
-            IUserInformationRepository userInfoRepository, 
+            IUserInformationRepository userInfoRepository,
             IUserRepository userRepository,
-            IMapper mapper)
+            IMapper mapper
+        )
         {
             _userInfoRepository = userInfoRepository;
             _userRepository = userRepository;
@@ -45,12 +46,14 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             if (userId == targetId && userId != Guid.Empty)
                 result.IsOwner = true;
 
-            return Result<UserInfoOverview>.Success(result);
+            return Result<UserInfoOverview>.Create(ResponseStatusCode.Success, result);
         }
 
-        public async Task<Result<ChangeNicknameDto>> UpdateNicknameAsync(Guid userId, ChangeNicknameDto changeNicknameDto)
+        public async Task<Result<ChangeNicknameDto>> UpdateNicknameAsync(
+            Guid userId,
+            ChangeNicknameDto changeNicknameDto
+        )
         {
-            ValidationHelper.EnsureValidNickname(changeNicknameDto.Nickname);
             var user = await _userRepository.GetAsync(userId.ToString());
             if (user == null)
                 throw new UserNotFoundException();
@@ -58,7 +61,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var existUser = await _userRepository.GetAsync(changeNicknameDto.Nickname);
             if (existUser != null && existUser.Id != user.Id)
             {
-                return Result<ChangeNicknameDto>.BadRequest("USERNAME_EXISTED", "Username existed");
+                throw new AppException("NICKNAME_ALREADY_EXISTS", "Nickname already exists");
             }
             if (string.IsNullOrEmpty(changeNicknameDto.Nickname))
             {
@@ -69,7 +72,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 user.Nickname = changeNicknameDto.Nickname;
             }
             await _userRepository.UpdateAsync(user);
-            return Result<ChangeNicknameDto>.Success(changeNicknameDto);
+            return Result<ChangeNicknameDto>.Create(ResponseStatusCode.Success, changeNicknameDto);
         }
     }
 }

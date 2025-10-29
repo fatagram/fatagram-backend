@@ -1,9 +1,8 @@
-﻿using Fatagram.Domain.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models.UserInformations;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq.Expressions;
 
 namespace Fatagram.Domain.Models
 {
@@ -96,13 +95,12 @@ namespace Fatagram.Domain.Models
         /// </summary>
         [Column("lang_code", TypeName = "varchar(2)")]
         public string LanguageCode { get; set; } = "en";
-        
+
         /// <summary>
         /// Gets or sets the description of the user.
         /// </summary>
         [Column("description", TypeName = "text")]
         public string? Description { get; set; }
-
 
         /// <summary>
         /// Gets or sets the nickname of the user.
@@ -110,17 +108,15 @@ namespace Fatagram.Domain.Models
         [Column("nickname", TypeName = "varchar(50)")]
         public string? Nickname { get; set; }
 
-
         /// <summary>
         /// Gets or sets the account associated with the user.
         /// </summary>
-
         [Timestamp]
         [Column("xmin")]
         public uint Version { get; set; }
 
         public Language? Language { get; set; }
-        
+
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
 
         /// <summary>
@@ -132,7 +128,8 @@ namespace Fatagram.Domain.Models
         public ICollection<FriendRequest> FriendRequests { get; set; } = new List<FriendRequest>();
 
         // Friend requests received
-        public ICollection<FriendRequest> FriendRequestsReceived { get; set; } = new List<FriendRequest>();
+        public ICollection<FriendRequest> FriendRequestsReceived { get; set; } =
+            new List<FriendRequest>();
 
         // Friendships
         public ICollection<Friendship> FriendshipAsUser1 { get; set; } = new List<Friendship>();

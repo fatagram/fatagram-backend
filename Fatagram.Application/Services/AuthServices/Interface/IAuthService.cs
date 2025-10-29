@@ -1,8 +1,8 @@
-﻿using Fatagram.Domain.Enums;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Fatagram.Application.Dtos.Auth;
-using Fatagram.Application.Utils;
 using Fatagram.Application.Dtos.Token;
+using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 
 namespace Fatagram.Application.Services.AuthServices.Interface
 {
@@ -17,6 +17,5 @@ namespace Fatagram.Application.Services.AuthServices.Interface
         /// <param name="request"></param>
         /// <returns></returns>
         Task<Result<LoginResponseDto>> Login(LoginDto loginDto);
-
     }
 }

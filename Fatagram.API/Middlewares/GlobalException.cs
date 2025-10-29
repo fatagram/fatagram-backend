@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
+using Fatagram.API.Response;
 using Fatagram.API.Utils;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
@@ -32,24 +33,20 @@ namespace Fatagram.API.Middlewares
             {
                 // Color for log
                 _logger.LogError($"An error occurred {ex}");
-
-                await HanldeExceptionAsync(context, ex);
+                await HandleExceptionAsync(context, ex);
             }
         }
 
-        private async Task HanldeExceptionAsync(HttpContext context, Exception ex)
+        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             context.Response.ContentType = "application/json";
-            ApiResponse<object> response = ApiResponse<object>.Failure();
-
             if (ex is AppException appException)
             {
-                response.Error = new ApiError()
-                {
-                    Code = appException.ErrorCode,
-                    Message = appException.Message,
-                    Codes = appException.ErrorCodes,
-                };
+                var response = ErrorResponse.Create(
+                    code: appException.ErrorCode,
+                    message: appException.Message,
+                    errors: appException.ErrorMessages
+                );
 
                 context.Response.StatusCode = ex switch
                 {
@@ -59,18 +56,18 @@ namespace Fatagram.API.Middlewares
                     UnauthorizedException => (int)HttpStatusCode.Unauthorized,
                     _ => (int)HttpStatusCode.InternalServerError,
                 };
+
+                await context.Response.WriteAsync(response.ToString());
             }
             else
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                response.Error = new ApiError()
-                {
-                    Code = "INTERNAL_SERVER_ERROR",
-                    Message =
-                        "An error occured while processing your request. Please try again later.",
-                };
+                var response = ErrorResponse.Create(
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "An unexpected error occurred."
+                );
+                await context.Response.WriteAsync(response.ToString());
             }
-            await context.Response.WriteAsync(response.ToString());
         }
     }
 }

@@ -7,6 +7,7 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
+using Fatagram.Infrastructure.Utils.Query;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.NotificationRepository
@@ -43,27 +44,31 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
             }
         }
 
-        public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetNotificationsAsync(
-            Guid userId, string langCode, Guid? cursorId, int pageSize)
+        public async Task<(
+            IEnumerable<NotificationProjection> notifications,
+            int total
+        )> GetNotificationsAsync(Guid userId, string langCode, CursorQuery<Guid> query)
         {
-            var query = _context.Notifications
-                .Where(n => n.UserId == userId)  // chỉ lấy noti của user
+            var dbQuery = _context
+                .Notifications.Where(n => n.UserId == userId) // chỉ lấy noti của user
                 .OrderByDescending(n => n.CreatedAt)
                 .ThenByDescending(n => n.Id)
                 .AsQueryable();
 
-            if (cursorId.HasValue)
+            if (query?.Cursor != null)
             {
-                var cursor = await _context.Notifications.FindAsync(cursorId.Value);
+                var cursor = await _context.Notifications.FindAsync(query.Cursor);
                 if (cursor != null)
                 {
-                    query = query.Where(n => n.CreatedAt < cursor.CreatedAt ||
-                        (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0));
+                    dbQuery = dbQuery.Where(n =>
+                        n.CreatedAt < cursor.CreatedAt
+                        || (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0)
+                    );
                 }
             }
 
-            var notifications = await query
-                .Take(pageSize)
+            var notifications = await dbQuery
+                .Take(query?.Limit ?? 10)
                 .Select(n => new NotificationProjection
                 {
                     Id = n.Id,
@@ -74,41 +79,49 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                     Link = n.Link,
                     IsRead = n.IsRead,
                     CreatedAt = n.CreatedAt,
-                    Content = _context.NotificationContents
-                            .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                    Content =
+                        _context
+                            .NotificationContents.Where(c =>
+                                c.Type == n.Type && c.LanguageCode == langCode
+                            )
                             .Select(c => c.Content)
-                            .FirstOrDefault() ?? string.Empty
+                            .FirstOrDefault()
+                        ?? string.Empty,
                 })
                 .ToListAsync();
 
-            var unreadCount = await _context.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
+            var unreadCount = await _context.Notifications.CountAsync(n =>
+                n.UserId == userId && !n.IsRead
+            );
 
             return (notifications, unreadCount);
         }
 
-
-        public async Task<(IEnumerable<NotificationProjection> notifications, int unreadCount)> GetUnreadNotificationsAsync(
-            Guid userId, string langCode, Guid? cursorId, int pageSize)
+        public async Task<(
+            IEnumerable<NotificationProjection> notifications,
+            int total
+        )> GetUnreadNotificationsAsync(Guid userId, string langCode, CursorQuery<Guid> query)
         {
-            var query = _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)  // chỉ lấy noti của user
+            var dbQuery = _context
+                .Notifications.Where(n => n.UserId == userId && !n.IsRead)
                 .OrderByDescending(n => n.CreatedAt)
                 .ThenByDescending(n => n.Id)
                 .AsQueryable();
 
-            if (cursorId.HasValue)
+            if (query?.Cursor != null)
             {
-                var cursor = await _context.Notifications.FindAsync(cursorId.Value);
+                var cursor = await _context.Notifications.FindAsync(query.Cursor);
                 if (cursor != null)
                 {
-                    query = query.Where(n => n.CreatedAt < cursor.CreatedAt ||
-                        (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0));
+                    dbQuery = dbQuery.Where(n =>
+                        n.CreatedAt < cursor.CreatedAt
+                        || (n.CreatedAt == cursor.CreatedAt && n.Id.CompareTo(cursor.Id) < 0)
+                    );
                 }
             }
 
-            var notifications = await query
-                .Take(pageSize)
+            var notifications = await dbQuery
+                .Take(query?.Limit ?? 10)
                 .Select(n => new NotificationProjection
                 {
                     Id = n.Id,
@@ -119,15 +132,20 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
                     Link = n.Link,
                     IsRead = n.IsRead,
                     CreatedAt = n.CreatedAt,
-                    Content = _context.NotificationContents
-                            .Where(c => c.Type == n.Type && c.LanguageCode == langCode)
+                    Content =
+                        _context
+                            .NotificationContents.Where(c =>
+                                c.Type == n.Type && c.LanguageCode == langCode
+                            )
                             .Select(c => c.Content)
-                            .FirstOrDefault() ?? string.Empty
+                            .FirstOrDefault()
+                        ?? string.Empty,
                 })
                 .ToListAsync();
 
-            var unreadCount = await _context.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
+            var unreadCount = await _context.Notifications.CountAsync(n =>
+                n.UserId == userId && !n.IsRead
+            );
 
             return (notifications, unreadCount);
         }
@@ -156,16 +174,22 @@ namespace Fatagram.Infrastructure.Repositories.NotificationRepository
             Guid userId,
             Guid actorId,
             NotificationType type,
-            Dictionary<string, string> data)
+            Dictionary<string, string> data
+        )
         {
-            var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId && n.Type == type && n.ActorId == actorId)
+            var notifications = await _context
+                .Notifications.Where(n =>
+                    n.UserId == userId && n.Type == type && n.ActorId == actorId
+                )
                 .ToListAsync();
 
             if (data != null && data.Count > 0)
             {
-                return notifications.Where(n =>
-                    data.All(d => n.Data.ContainsKey(d.Key) && n.Data[d.Key] == d.Value)).ToList();
+                return notifications
+                    .Where(n =>
+                        data.All(d => n.Data.ContainsKey(d.Key) && n.Data[d.Key] == d.Value)
+                    )
+                    .ToList();
             }
             return notifications;
         }

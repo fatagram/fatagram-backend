@@ -1,12 +1,12 @@
-﻿using Fatagram.Application.Exceptions;
-using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
-using Fatagram.Application.Utils;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Application.Exceptions;
+using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
+using Fatagram.Application.Utils;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 
 namespace Fatagram.Application.Services.UserServices.UserConfigServices
 {
@@ -22,12 +22,13 @@ namespace Fatagram.Application.Services.UserServices.UserConfigServices
         public async Task<Result<string>> ChangeLanguage(Guid userId, string langCode)
         {
             var user = await _userRepository.GetAsync(userId.ToString());
-            if (user == null) throw new UserNotFoundException();
+            if (user == null)
+                throw new UserNotFoundException();
 
             user.LanguageCode = langCode;
             await _userRepository.UpdateAsync(user);
 
-            return Result<string>.Success();
+            return Result<string>.Create();
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
+using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Shared.Extensions;
@@ -31,14 +32,10 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getNotifications")]
-        public async Task<IActionResult> GetNotifications(string cursorId, int pageSize)
+        public async Task<IActionResult> GetNotifications(CursorFilter<Guid> filter)
         {
             var userId = GetCurrentUserId();
-            var result = await _notificationService.GetNotificationsAsync(
-                userId.ToString(),
-                cursorId.ToGuid(),
-                pageSize
-            );
+            var result = await _notificationService.GetNotificationsAsync(userId, filter);
             return result.ToActionResult();
         }
 
@@ -51,14 +48,10 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getUnreadNotifications")]
-        public async Task<IActionResult> GetUnreadNotifications(string? cursorId, int pageSize)
+        public async Task<IActionResult> GetUnreadNotifications(CursorFilter<Guid> filter)
         {
             var userId = GetCurrentUserId();
-            var result = await _notificationService.GetUnreadNotificationsAsync(
-                userId.ToString(),
-                cursorId.ToGuid(),
-                pageSize
-            );
+            var result = await _notificationService.GetUnreadNotificationsAsync(userId, filter);
             return result.ToActionResult();
         }
 
@@ -70,7 +63,7 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPost("markNotificationAsRead/{notificationId}")]
-        public async Task<IActionResult> MarkNotificationAsRead(string notificationId)
+        public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
         {
             await _notificationService.MarkNotificationAsReadAsync(notificationId);
             return Ok();
@@ -86,7 +79,7 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> MarkAllNotificationsAsRead()
         {
             var userId = GetCurrentUserId();
-            await _notificationService.MarkAllNotificationsAsReadAsync(userId.ToString());
+            await _notificationService.MarkAllNotificationsAsReadAsync(userId);
             return Ok();
         }
 
@@ -98,7 +91,7 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpDelete("deleteNotification")]
-        public async Task<IActionResult> DeleteNotification(string notificationId)
+        public async Task<IActionResult> DeleteNotification(Guid notificationId)
         {
             await _notificationService.DeleteNotificationAsync(notificationId);
             return Ok();
@@ -114,7 +107,7 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> DeleteAllNotifications()
         {
             var userId = GetCurrentUserId();
-            await _notificationService.DeleteAllNotificationsAsync(userId.ToString());
+            await _notificationService.DeleteAllNotificationsAsync(userId);
             return Ok();
         }
     }

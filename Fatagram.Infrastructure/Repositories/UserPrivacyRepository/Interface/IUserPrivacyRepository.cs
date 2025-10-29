@@ -1,10 +1,10 @@
-﻿using Fatagram.Domain.Enums;
-using Fatagram.Domain.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Enums;
+using Fatagram.Domain.Models;
 
 namespace Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface
 {
@@ -21,7 +21,6 @@ namespace Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface
         /// <returns>A task that represents the asynchronous operation. The task result contains the privacy level of the specified field.</returns>
         Task<Dictionary<string, PrivacyLevel>> GetAsync(Guid userId, IEnumerable<string> field);
 
-
         /// <summary>
         /// Sets the privacy level of all fields for a user identified by a GUID to private.
         /// </summary>
@@ -36,6 +35,5 @@ namespace Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface
         /// <param name="userPrivacy"></param>
         /// <returns></returns>
         Task UpdateAsync(UserPrivacy userPrivacy);
-
     }
 }

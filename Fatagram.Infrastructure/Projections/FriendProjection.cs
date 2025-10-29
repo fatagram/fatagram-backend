@@ -1,9 +1,9 @@
-﻿using Fatagram.Domain.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fatagram.Domain.Models;
 
 namespace Fatagram.Infrastructure.Projections
 {

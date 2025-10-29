@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
+using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
@@ -124,7 +125,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         [HttpGet("count/{targetId}")]
         public async Task<IActionResult> GetNumberOfFriends(string targetId)
         {
-            ValidateModelState();
             var res = await _friendshipService.GetNumberOfFriendsAsync(targetId.ToGuid());
             return res.ToActionResult();
         }
@@ -144,21 +144,24 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         )
         {
             var userId = GetCurrentUserId();
-            var res = await _friendshipService.GetFriendRequestsAsync(userId, page, pageSize);
+            var res = await _friendshipService.GetFriendRequestsAsync(
+                userId,
+                new PagedFilter { Page = page, PageSize = pageSize }
+            );
             return res.ToActionResult();
         }
 
         /// <summary>
         /// Get a list of friends for a specific user, with optional keyword search and pagination.
         /// </summary>
-        /// <param name="userId"></param>
+        /// <param name="targetId"></param>
         /// <param name="keyword"></param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        [HttpGet("friends/{userId}")]
+        [HttpGet("friends/{targetId}")]
         public async Task<IActionResult> GetFriends(
-            string userId,
+            string targetId,
             string keyword,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10
@@ -166,15 +169,16 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             if (HttpContext.User.Identity?.IsAuthenticated ?? false)
             {
-                var _userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (_userId == null)
-                    _userId = Guid.Empty.ToString();
+                var userId = GetCurrentUserId();
                 var res = await _friendshipService.GetFriendsAsync(
-                    _userId.ToGuid(),
-                    userId.ToGuid(),
-                    keyword,
-                    page,
-                    pageSize
+                    targetId.ToGuid(),
+                    userId,
+                    new PagedFilter
+                    {
+                        Keyword = keyword,
+                        Page = page,
+                        PageSize = pageSize,
+                    }
                 );
                 return res.ToActionResult();
             }
@@ -182,10 +186,13 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             {
                 var res = await _friendshipService.GetFriendsAsync(
                     Guid.Empty,
-                    userId.ToGuid(),
-                    keyword,
-                    page,
-                    pageSize
+                    targetId.ToGuid(),
+                    new PagedFilter
+                    {
+                        Keyword = keyword,
+                        Page = page,
+                        PageSize = pageSize,
+                    }
                 );
                 return res.ToActionResult();
             }

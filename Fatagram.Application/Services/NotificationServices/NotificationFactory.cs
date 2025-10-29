@@ -12,75 +12,53 @@ namespace Fatagram.Application.Services.NotificationServices
 {
     public static class NotificationFactory
     {
-        public static NotificationDto CreateNewFriendRequestNotification(
-            string userId,
-            string senderId,
-            string link)
+        public static NotificationDto CreateNewFriendRequestNotification(Guid userId, Guid senderId)
         {
             return new NotificationDto
             {
-                UserId = userId,
-                ActorId = senderId,
-                Link = link,
+                UserId = userId.ToString(),
+                ActorId = senderId.ToString(),
+                Link = $"/{senderId}",
                 Type = NotificationType.NewFriendRequest,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds)
+                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
         public static NotificationDto CreateFriendRequestAcceptedNotification(
-            string userId,
-            string senderId,
-            string link)
+            Guid userId,
+            Guid senderId
+        )
         {
             return new NotificationDto
             {
-                UserId = userId,
-                ActorId = senderId,
-                Link = link,
+                UserId = userId.ToString(),
+                ActorId = senderId.ToString(),
+                Link = $"{userId}",
                 Type = NotificationType.FriendRequestAccepted,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds)
+                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
         public static NotificationDto CreateSystemNotification(
             string userId,
             string message,
-            string link)
+            string link
+        )
         {
             return new NotificationDto
             {
                 UserId = userId,
-                Data = new Dictionary<string, string>
-                {
-                    { "message", message },
-                },
+                Data = new Dictionary<string, string> { { "message", message } },
                 Link = link,
                 Type = NotificationType.System,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds)
+                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
         public static NotificationDto CancelFriendRequestNotification(
-            string userId,
-            string notificationId)
-        {
-            return new NotificationDto
-            {
-                UserId = userId,
-                Type = NotificationType.FriendRequestCanceled,
-                Data = new Dictionary<string, string>
-                {
-                    { "noticationId", notificationId }
-                },
-                IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds)
-            };
-        }
-
-        public static NotificationDto CreateCancelNotification(
             string userId,
             string notificationId
         )
@@ -88,13 +66,25 @@ namespace Fatagram.Application.Services.NotificationServices
             return new NotificationDto
             {
                 UserId = userId,
+                Type = NotificationType.FriendRequestCanceled,
+                Data = new Dictionary<string, string> { { "noticationId", notificationId } },
+                IsRead = false,
+                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
+            };
+        }
+
+        public static NotificationDto CreateCancelNotification(Guid userId, Guid notificationId)
+        {
+            return new NotificationDto
+            {
+                UserId = userId.ToString(),
                 Type = NotificationType.CancelNotification,
                 Data = new Dictionary<string, string>
                 {
-                    { "noticationId", notificationId }
+                    { "noticationId", notificationId.ToString() },
                 },
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds)
+                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
     }

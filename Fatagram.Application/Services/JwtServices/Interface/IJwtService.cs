@@ -1,6 +1,6 @@
-﻿using Fatagram.Application.Utils;
+﻿using System.Security.Claims;
+using Fatagram.Application.Utils;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using System.Security.Claims;
 
 namespace Fatagram.Application.Services.JwtServices.Interface
 {

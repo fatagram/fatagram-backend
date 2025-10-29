@@ -27,7 +27,7 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         /// <param name="email"></param>
         /// <returns></returns>
         Task<User?> GetByEmailAsync(string email);
-            
+
         /// <summary>
         /// Get a user by user id
         /// </summary>
@@ -63,6 +63,5 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository.Interface
         /// <param name="userId"></param>
         /// <returns></returns>
         Task<string> GetLanguageAsync(Guid userId);
-
     }
 }

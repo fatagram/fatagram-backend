@@ -7,8 +7,7 @@ namespace Fatagram.Application.Exceptions.DetailExceptions
 {
     public class ValidateException : BadRequestException
     {
-        public ValidateException(string errorCode, List<string>? errorCodes, string message)
-            : base(errorCode, errorCodes, message)
-        { }
+        public ValidateException(List<string>? errorMessages)
+            : base("VALIDATION_ERROR", "Validation failed", errorMessages) { }
     }
 }

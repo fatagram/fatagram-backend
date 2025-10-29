@@ -28,7 +28,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         [HttpPut("language")]
         public async Task<IActionResult> ChangeLanguage(ChangeLanguageDto changeLanguageDto)
         {
-            ValidateModelState();
             var userId = GetCurrentUserIdOrNull();
             if (userId == null)
             {
@@ -38,7 +37,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 userId ?? Guid.Empty,
                 changeLanguageDto.LanguageCode
             );
-            return res.ToActionResult<string>();
+            return res.ToActionResult();
         }
     }
 }

@@ -46,6 +46,5 @@ namespace Fatagram.Shared.Enums
         /// Internal Server Error
         /// </summary>
         InternalServerError = 500,
-        
     }
 }

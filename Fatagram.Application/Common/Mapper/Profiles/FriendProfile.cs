@@ -16,9 +16,15 @@ namespace Fatagram.Application.Common.Mapper.Profiles
         {
             CreateMap<FriendRequest, FriendRequestDto>()
                 .ForMember(dest => dest.SenderAvatar, opt => opt.MapFrom(src => src.Sender.Avatar))
-                .ForMember(dest => dest.SenderUrlName, opt => opt.MapFrom(src => src.Sender.UrlName))
+                .ForMember(
+                    dest => dest.SenderUrlName,
+                    opt => opt.MapFrom(src => src.Sender.UrlName)
+                )
                 .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.FullName))
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToTimeDistance(DateTime.UtcNow)));
+                .ForMember(
+                    dest => dest.CreatedAt,
+                    opt => opt.MapFrom(src => src.CreatedAt.ToTimeDistance(DateTime.UtcNow))
+                );
 
             CreateMap<FriendProjection, FriendDto>()
                 .ConstructUsing(src => new FriendDto
@@ -27,7 +33,7 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                     Avatar = src.User.Avatar,
                     Name = src.User.FullName,
                     UrlName = src.User.UrlName,
-                    IsFriend = src.IsFriend
+                    IsFriend = src.IsFriend,
                 });
         }
     }

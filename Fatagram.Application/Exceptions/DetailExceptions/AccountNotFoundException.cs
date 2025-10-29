@@ -9,7 +9,7 @@ namespace Fatagram.Application.Exceptions
 {
     public class AccountNotFoundException : NotFoundException
     {
-        public AccountNotFoundException() : base("ACCOUNT_NOT_FOUND", "Account not found")
-        { }
+        public AccountNotFoundException()
+            : base("ACCOUNT_NOT_FOUND", "Account not found") { }
     }
 }

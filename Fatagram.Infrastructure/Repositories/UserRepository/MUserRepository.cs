@@ -44,7 +44,6 @@
 
 //        public Task<User?> GetUserByIdAsync(string id) => GetUserByIdAsync(Guid.Parse(id));
 
-
 //        public Task<User?> GetUserByUsernameAsync(string username)
 //        {
 //            return Task.FromResult(Users.FirstOrDefault(user => user.Email == username));

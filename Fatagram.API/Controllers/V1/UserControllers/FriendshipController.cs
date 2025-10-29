@@ -151,14 +151,14 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <summary>
         /// Get a list of friends for a specific user, with optional keyword search and pagination.
         /// </summary>
-        /// <param name="userId"></param>
+        /// <param name="targetId"></param>
         /// <param name="keyword"></param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        [HttpGet("friends/{userId}")]
+        [HttpGet("friends/{targetId}")]
         public async Task<IActionResult> GetFriends(
-            string userId,
+            string targetId,
             string keyword,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10
@@ -166,12 +166,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             if (HttpContext.User.Identity?.IsAuthenticated ?? false)
             {
-                var _userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (_userId == null)
-                    _userId = Guid.Empty.ToString();
+                var userId = GetCurrentUserId();
                 var res = await _friendshipService.GetFriendsAsync(
-                    _userId.ToGuid(),
-                    userId.ToGuid(),
+                    targetId.ToGuid(),
+                    userId,
                     keyword,
                     page,
                     pageSize
@@ -182,7 +180,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             {
                 var res = await _friendshipService.GetFriendsAsync(
                     Guid.Empty,
-                    userId.ToGuid(),
+                    targetId.ToGuid(),
                     keyword,
                     page,
                     pageSize

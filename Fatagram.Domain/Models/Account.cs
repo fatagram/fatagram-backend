@@ -10,7 +10,7 @@ namespace Fatagram.Domain.Models
     /// </summary>
     [Table("accounts")]
     [Index(nameof(Username), IsUnique = true)]
-    public class Account
+    public class Account : BaseEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the account.
@@ -38,20 +38,6 @@ namespace Fatagram.Domain.Models
         [Column("is_active", TypeName = "boolean")]
         [Required]
         public bool IsActive { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the date and time when the account was created.
-        /// </summary>
-        [Column("created_at", TypeName = "timestamptz")]
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// Gets or sets the date and time when the account was last updated.
-        /// </summary>
-        [Column("updated_at", TypeName = "timestamptz")]
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Gets or sets the unique identifier of the associated user.

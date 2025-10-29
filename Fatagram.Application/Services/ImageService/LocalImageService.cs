@@ -1,96 +1,41 @@
-﻿using Fatagram.Application.Services.ImageService.Interface;
-using Fatagram.Application.Utils;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using Fatagram.Application.Services.ImageService.Enum;
+using Fatagram.Application.Services.ImageService.Interface;
+using Fatagram.Application.Utils;
+using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 
 namespace Fatagram.Application.Services.ImageService
 {
     public class LocalImageService : IImageService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string _savingPath;
         private readonly string _storagePath;
-
 
         public LocalImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _savingPath = config["ImageLocalStorage:Path"] ?? "";
-            _storagePath = config["ImageLocalStorage:StoragePath"] ?? "";
+            _storagePath = config["ImageLocalStorage:Path"] ?? "";
         }
 
-        public async Task<Result<string>> SaveImageAsync(
-            ImageSize size, 
-            Stream imageStream, 
-            string fileExtension, 
-            string folder,
-            bool isAvatar = false)
+        public async Task<Result<string>> SaveImageAsync(ImageRequest request)
         {
-            var folderPath = Path.Combine(_storagePath, folder);
-            Directory.CreateDirectory(folderPath);
-
-            var fileName = $"{Guid.NewGuid()}.jpg"; // Lưu luôn thành .jpg để đồng bộ format
-            var filePath = Path.Combine(folderPath, fileName);
-
-            using (var image = await Image.LoadAsync(imageStream)) // Tự detect format
-            {
-                int minSize = Math.Min(image.Width, image.Height);
-                var cropRectangle = new Rectangle(
-                    (image.Width - minSize) / 2,
-                    (image.Height - minSize) / 2,
-                    minSize,
-                    minSize
-                );
-                
-                image.Mutate(x =>
-                {
-                    if (isAvatar) x.Crop(cropRectangle);
-
-                    if (size == ImageSize.Small)
-                    {
-                        x.Resize(new ResizeOptions
-                        {
-                            Mode = ResizeMode.Max,
-                            Size = new Size(480, 480)
-                        });
-                    }
-                    else if (size == ImageSize.Medium)
-                    {
-                        x.Resize(new ResizeOptions
-                        {
-                            Mode = ResizeMode.Max,
-                            Size = new Size(720, 720)
-                        });
-                    }
-                    else if (size == ImageSize.Large)
-                    {
-                        x.Resize(new ResizeOptions
-                        {
-                            Mode = ResizeMode.Max,
-                            Size = new Size(1024, 1024)
-                        });
-                    }
-                });
-
-                // Nén chất lượng ảnh (chọn 70-80 là ổn)
-                var encoder = new JpegEncoder { Quality = 75 };
-
-                await image.SaveAsJpegAsync(filePath, encoder);
-            }
-
-            var request = _httpContextAccessor.HttpContext?.Request;
-            if (request == null)
-                return Result<string>.BadRequest("Request context is not available.");
-
-            return Result<string>.Success($"{_savingPath}/{folder}/{fileName}");
+            request.Folder = Path.Combine(_storagePath, request.Folder);
+            var res = await ImageProcessor.SaveImageOnLocal(request);
+            var finalUrl = Path.Combine(
+                _httpContextAccessor.HttpContext?.Request.Scheme ?? "http",
+                _httpContextAccessor.HttpContext?.Request.Host.ToString() ?? "localhost",
+                _httpContextAccessor.HttpContext?.Request.PathBase.ToString() ?? "",
+                res.Replace("\\", "/").Replace(_storagePath.Replace("\\", "/"), "").TrimStart('/')
+            );
+            return Result<string>.Success(ResponseStatusCode.Success, finalUrl);
         }
     }
 }

@@ -10,23 +10,19 @@ using System.Threading.Tasks;
 namespace Fatagram.Domain.Models
 {
     [Table("friend_request")]
-    public class FriendRequest
+    public class FriendRequest : BaseEntity
     {
         [Column("id", TypeName = "uuid")]
         [Key]
         public Guid Id { get; set; }
-        
+
         [Column("sender_id", TypeName = "uuid")]
         [Required]
         public Guid SenderId { get; set; }
-        
+
         [Column("receiver_id", TypeName = "uuid")]
         [Required]
         public Guid ReceiverId { get; set; }
-        
-        [Column("created_at", TypeName = "timestamptz")]
-        [Required]
-        public DateTime CreatedAt { get; set; }
 
         #region Navigation Properties
 

@@ -1,10 +1,12 @@
-﻿using Fatagram.Application.Utils;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Fatagram.Application.Services.JwtServices.Interface;
+using Fatagram.Application.Utils;
+using Fatagram.Shared.Enums;
+using Fatagram.Shared.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Fatagram.Application.Services.JwtServices
 {
@@ -13,7 +15,6 @@ namespace Fatagram.Application.Services.JwtServices
     /// </summary>
     public class JwtHmacSha256Service : IJwtService
     {
-
         private readonly IConfiguration _config;
 
         public JwtHmacSha256Service(IConfiguration config)
@@ -30,9 +31,16 @@ namespace Fatagram.Application.Services.JwtServices
         /// <exception cref="ArgumentNullException"></exception>
         public Result<string> GenerateToken(string username, Guid userId)
         {
-            var secretKey = _config["JwtSettings:SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
-            var issuer = _config["JwtSettings:Issuer"] ?? throw new ArgumentNullException("JwtSettings:Issuer is missing"); ;
-            var audience = _config["JwtSettings:Audience"] ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
+            var secretKey =
+                _config["JwtSettings:SecretKey"]
+                ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
+            var issuer =
+                _config["JwtSettings:Issuer"]
+                ?? throw new ArgumentNullException("JwtSettings:Issuer is missing");
+            ;
+            var audience =
+                _config["JwtSettings:Audience"]
+                ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
 
             if (!int.TryParse(_config["JwtSettings:ExpireInMinutes"], out var expirationInMinutes))
             {
@@ -48,7 +56,7 @@ namespace Fatagram.Application.Services.JwtServices
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
             var token = new JwtSecurityToken(
@@ -59,9 +67,11 @@ namespace Fatagram.Application.Services.JwtServices
                 signingCredentials: creds
             );
 
-            return Result<string>.Success(new JwtSecurityTokenHandler().WriteToken(token));
+            return Result<string>.Success(
+                ResponseStatusCode.Success,
+                new JwtSecurityTokenHandler().WriteToken(token)
+            );
         }
-
 
         /// <summary>
         /// Generate a JWT token
@@ -69,8 +79,8 @@ namespace Fatagram.Application.Services.JwtServices
         /// <param name="username"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Result<string> GenerateToken(string username, string userId) => GenerateToken(username, Guid.Parse(userId));
-
+        public Result<string> GenerateToken(string username, string userId) =>
+            GenerateToken(username, userId.ToGuid());
 
         /// <summary>
         /// Validate a JWT token
@@ -81,33 +91,47 @@ namespace Fatagram.Application.Services.JwtServices
         /// <exception cref="ArgumentNullException"></exception>
         public Result<ClaimsPrincipal> ValidateToken(string token)
         {
-            var secretKey = _config["JwtSettings:SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
-            var issuer = _config["JwtSettings:Issuer"] ?? throw new ArgumentNullException("JwtSettings:Issuer is missing"); ;
-            var audience = _config["JwtSettings:Audience"] ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
+            var secretKey =
+                _config["JwtSettings:SecretKey"]
+                ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
+            var issuer =
+                _config["JwtSettings:Issuer"]
+                ?? throw new ArgumentNullException("JwtSettings:Issuer is missing");
+            ;
+            var audience =
+                _config["JwtSettings:Audience"]
+                ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
 
             try
             {
-                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters()
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = issuer,
-                    ValidAudience = audience,
-                    IssuerSigningKey = key,
-                    ClockSkew = TimeSpan.Zero
-                }, out var validatedToken);
+                var principal = tokenHandler.ValidateToken(
+                    token,
+                    new TokenValidationParameters()
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = issuer,
+                        ValidAudience = audience,
+                        IssuerSigningKey = key,
+                        ClockSkew = TimeSpan.Zero,
+                    },
+                    out var validatedToken
+                );
 
-                return Result<ClaimsPrincipal>.Success(principal);
+                return Result<ClaimsPrincipal>.Success(ResponseStatusCode.Success, principal);
             }
             catch (Exception)
             {
                 // If the token is invalid, return an empty ClaimsPrincipal
-                return Result<ClaimsPrincipal>.Unauthorized(ErrorCodes.ACCESS_TOKEN_INVALID);
+                return Result<ClaimsPrincipal>.Failure(
+                    ResponseStatusCode.Unauthorized,
+                    ErrorCodes.ACCESS_TOKEN_INVALID
+                );
             }
         }
     }

@@ -38,7 +38,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 userId ?? Guid.Empty,
                 changeLanguageDto.LanguageCode
             );
-            return res.ToActionResult<string>();
+            return res.ToActionResult();
         }
     }
 }

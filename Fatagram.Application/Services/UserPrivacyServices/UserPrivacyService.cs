@@ -1,15 +1,15 @@
-﻿using AutoMapper;
-using Fatagram.Application.Services.UserPrivacyServices.Interface;
-using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
-using Fatagram.Shared.Extensions;
-using Fatagram.Application.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Fatagram.Application.Dtos.User.Update;
+using Fatagram.Application.Services.UserPrivacyServices.Interface;
+using Fatagram.Application.Utils;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
+using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.UserPrivacyServices
 {
@@ -17,6 +17,7 @@ namespace Fatagram.Application.Services.UserPrivacyServices
     {
         private readonly IUserPrivacyRepository _userPrivacyRepository;
         private readonly IMapper _mapper;
+
         public UserPrivacyService(IUserPrivacyRepository userPrivacyRepository, IMapper mapper)
         {
             _mapper = mapper;
@@ -29,7 +30,10 @@ namespace Fatagram.Application.Services.UserPrivacyServices
         /// <param name="userId"></param>
         /// <param name="updateUserPrivacyDto"></param>
         /// <returns></returns>
-        public async Task<Result<string>> UpdateUserPrivacyAsync(Guid userId, UpdateUserPrivacyDto updateUserPrivacyDto)
+        public async Task<Result<string>> UpdateUserPrivacyAsync(
+            Guid userId,
+            UpdateUserPrivacyDto updateUserPrivacyDto
+        )
         {
             var userPrivacy = _mapper.Map<UserPrivacy>(updateUserPrivacyDto);
             userPrivacy.UserId = userId;

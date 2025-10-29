@@ -13,7 +13,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <summary>
         /// Update a user info
         /// </summary>
-        /// <param name="userId"></param>
         /// <param name="request"></param>
         /// <returns></returns>
         Task<Result<UpdateUserDto>> UpdateUserAsync(Guid userId, UpdateUserDto request);
@@ -24,8 +23,10 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <param name="userId"></param>
         /// <param name="changeUrlNameDto"></param>
         /// <returns></returns>
-        Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(Guid userId, ChangeUrlNameDto changeUrlNameDto);
-
+        Task<Result<ChangeUrlNameDto>> UpdateUrlNameAsync(
+            Guid userId,
+            ChangeUrlNameDto changeUrlNameDto
+        );
 
         /// <summary>
         /// Update a name
@@ -35,16 +36,17 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <returns></returns>
         Task<Result<ChangeNameDto>> UpdateNameAsync(Guid userId, ChangeNameDto changeNameDto);
 
-
-        
         /// <summary>
         /// Get a user by id
         /// </summary>
         /// <param name="userId"></param>
         /// <param name="fields"></param>
         /// <returns></returns>
-        Task<Result<GetUserProfileDto>> GetUserProfileAsync(Guid userId, string target, string fields);
-
+        Task<Result<GetUserProfileDto>> GetUserProfileAsync(
+            Guid userId,
+            string target,
+            string fields
+        );
 
         /// <summary>
         /// Check if a user exists

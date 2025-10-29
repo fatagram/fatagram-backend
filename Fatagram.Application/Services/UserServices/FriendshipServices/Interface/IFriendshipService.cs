@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Application.Dtos.Query;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Utils;
 
@@ -21,10 +22,10 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices.Interfac
 
         Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId);
 
-        Task<Result<GetNumberOfFriendsDto>> GetNumberOfFriendsAsync(Guid userId);
+        Task<Result<int>> GetNumberOfFriendsAsync(Guid userId);
 
-        Task<Result<GetFriendRequestsDto>> GetFriendRequestsAsync(Guid userId, int page, int pageSize);
+        Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(Guid userId, PagedQuery query);
 
-        Task<Result<GetFriendsDto>> GetFriendsAsync(Guid userId, Guid targetId, string keyword, int page, int pageSize);
+        Task<PagedResult<FriendDto>> GetFriendsAsync(Guid userId, Guid targetId, PagedQuery query);
     }
 }

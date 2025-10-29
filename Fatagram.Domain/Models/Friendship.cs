@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Fatagram.Domain.Models
 {
     [Table("friendship")]
-    public class Friendship
+    public class Friendship : BaseEntity
     {
         [Column("id", TypeName = "uuid")]
         [Key]
@@ -22,10 +22,6 @@ namespace Fatagram.Domain.Models
         [Column("user_2_id", TypeName = "uuid")]
         [Required]
         public Guid User2Id { get; set; }
-
-        [Column("created_at", TypeName = "timestamptz")]
-        [Required]
-        public DateTime CreatedAt { get; set; }
 
         // Navigation properties
         public User User1 { get; set; } = null!;

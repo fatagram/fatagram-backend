@@ -1,19 +1,18 @@
-﻿using Fatagram.Domain.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Fatagram.Domain.Enums;
 
 namespace Fatagram.Domain.Models.UserInformations
 {
     [Table("user_job")]
-    public class UserJob
+    public class UserJob : BaseEntity
     {
         [Column("id", TypeName = "uuid")]
-        [Key]     
+        [Key]
         public Guid Id { get; set; }
 
         [Column("user_id", TypeName = "uuid")]

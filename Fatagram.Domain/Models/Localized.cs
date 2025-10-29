@@ -1,15 +1,13 @@
-﻿using Fatagram.Domain.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Fatagram.Domain.Models
 {
     [Table("localized")]
-    public class Localized
+    public class Localized : BaseEntity
     {
         [Column("id", TypeName = "uuid")]
         public Guid Id { get; set; }

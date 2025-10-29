@@ -8,12 +8,12 @@ using Fatagram.Domain.Enums.NotificationServices;
 
 namespace Fatagram.Domain.Models
 {
-    public class Notification
+    public class Notification : BaseEntity
     {
         // ID
         [Key]
         [Column("id", TypeName = "uuid")]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
 
         // User has this notification
         [Column("user_id", TypeName = "uuid")]
@@ -38,9 +38,5 @@ namespace Fatagram.Domain.Models
         // Is read
         [Column("is_read", TypeName = "boolean")]
         public bool IsRead { get; set; } = false;
-
-        // Created at
-        [Column("created_at", TypeName = "timestamptz")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

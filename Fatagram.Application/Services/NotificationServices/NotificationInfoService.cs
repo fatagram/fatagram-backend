@@ -20,9 +20,10 @@ namespace Fatagram.Application.Services.NotificationServices
             _userRepository = userRepository;
         }
 
-        public async Task<NotificationDto> AttachInfosToNotificationAsync(NotificationDto notification)
+        public async Task<NotificationDto> AttachInfosToNotificationAsync(
+            NotificationDto notification
+        )
         {
-            
             switch (notification.Type)
             {
                 case NotificationType.FriendRequestAccepted:

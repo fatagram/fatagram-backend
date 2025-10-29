@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Application.Dtos;
 using Fatagram.Application.Dtos.Notification;
+using Fatagram.Application.Dtos.Query;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
@@ -11,19 +13,28 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
 {
     public interface INotificationService
     {
-        Task CreateNotificationAsync(NotificationDto notificationDto, bool isSave = true);
-        Task<Result<NotificationsDto>> GetNotificationsAsync(string userId, Guid? cursorId, int pageSize);
-        Task<Result<NotificationsDto>> GetUnreadNotificationsAsync(string userId, Guid? cursorId, int pageSize);
-        Task MarkNotificationAsReadAsync(string notificationId);
-        Task MarkAllNotificationsAsReadAsync(string userId);
-        Task DeleteNotificationAsync(string notificationId);
-        Task DeleteAllNotificationsAsync(string userId);
+        Task CreateNotificationAsync(
+            Guid userId,
+            NotificationDto notificationDto,
+            bool isSave = true
+        );
+        Task<CursorPagedResult<Guid?, NotificationDto>> GetNotificationsAsync(
+            Guid userId,
+            CursorQuery<Guid?> query
+        );
+        Task<CursorPagedResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
+            Guid userId,
+            CursorQuery<Guid?> query
+        );
+        Task MarkNotificationAsReadAsync(Guid notificationId);
+        Task MarkAllNotificationsAsReadAsync(Guid userId);
+        Task DeleteNotificationAsync(Guid notificationId);
+        Task DeleteAllNotificationsAsync(Guid userId);
         Task DeleteNotificationsAsync(
-            string userId,
-            string actorId,
+            Guid userId,
+            Guid actorId,
             NotificationType type,
-            Dictionary<string,
-            string>? data = null,
+            Dictionary<string, string>? data = null,
             bool isSendCancel = true
         );
         // Task<IEnumerable<Notification>> FindNotificationAsync(string userId, NotificationType type, Dictionary<string, string> data);

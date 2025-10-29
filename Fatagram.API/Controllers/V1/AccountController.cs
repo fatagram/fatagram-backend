@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using Fatagram.API.Utils;
-using Fatagram.Application.Services.AccountServices.Interface;
-using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Account;
+using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Exceptions;
-using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Application.Services.AccountServices.Interface;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1
 {
@@ -16,6 +16,7 @@ namespace Fatagram.API.Controllers.V1
     public class AccountController : BaseApiController
     {
         private readonly IAccountService _accountService;
+
         public AccountController(IAccountService accountService)
         {
             _accountService = accountService;

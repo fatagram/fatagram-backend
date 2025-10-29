@@ -1,11 +1,13 @@
-﻿using System.Net;
-using System.Runtime.CompilerServices;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Fatagram.API.Extensions
+namespace Fatagram.API.Extensions.Hosting
 {
-    public static class WebApplicationBuilderExtensions
+    public static class HostingExtension
     {
-        public static void ConfigureKestrelOptions(this WebApplicationBuilder builder)
+        public static void ConfigureKestrel(this WebApplicationBuilder builder)
         {
             //var certPath = builder.Configuration["PfxPath"] ?? "";
             //var certPassword = builder.Configuration["PfxPassword"];

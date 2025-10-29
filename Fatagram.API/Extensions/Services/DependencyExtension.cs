@@ -1,27 +1,13 @@
-﻿using AutoMapper;
-using Fatagram.API.Hubs;
-using Fatagram.API.Hubs.Notifications;
-using Fatagram.Application.Common;
-using Fatagram.Application.Services.ImageService;
-using Fatagram.Application.Services.ImageService.Interface;
-using Fatagram.Application.Services.NotificationServices;
-using Fatagram.Application.Services.NotificationServices.Interface;
-using Fatagram.Application.Services.NotificationServices.Interfaces;
-using Fatagram.Application.Services.UserServices.UserConfigServices;
-using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.NotificationRepository;
-using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
-using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Fatagram.API.Extensions
+namespace Fatagram.API.Extensions.Services
 {
-    public static class DependencyExtensions
+    public static class DependencyExtension
     {
-        public static void AddDependencies(this IServiceCollection services)
+        public static void AddDependencyServices(this IServiceCollection services)
         {
             // Scoped for services
             services.AddScoped<IAuthService, AuthService>();

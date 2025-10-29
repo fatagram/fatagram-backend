@@ -8,12 +8,15 @@ using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 
 namespace Fatagram.API.Middlewares
 {
-    public class GlobalException
+    public class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<GlobalException> _logger;
+        private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-        public GlobalException(RequestDelegate next, ILogger<GlobalException> logger)
+        public GlobalExceptionMiddleware(
+            RequestDelegate next,
+            ILogger<GlobalExceptionMiddleware> logger
+        )
         {
             _next = next;
             _logger = logger;

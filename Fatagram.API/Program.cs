@@ -1,6 +1,8 @@
 using System.Xml;
 using Fatagram.API.Extensions;
+using Fatagram.API.Extensions.Configuration;
 using Fatagram.API.Extensions.Constrains;
+using Fatagram.API.Extensions.Middleware;
 using Fatagram.API.Hubs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
@@ -12,31 +14,8 @@ namespace Fatagram.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.ConfigureAppConfiguration();
 
-            builder
-                .Configuration.AddJsonFile(
-                    "appsettings.json",
-                    optional: false,
-                    reloadOnChange: true
-                )
-                .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-
-            // Configure services
-            builder.Services.AddServices(builder.Configuration);
-            builder.ConfigureKestrelOptions();
-
-            if (!int.TryParse(builder.Configuration["MaxSize"], out var imageMaxSize))
-            {
-                imageMaxSize = 20; // default 2MB
-            }
-
-            // Max request body size
-            builder.WebHost.UseKestrel(option =>
-            {
-                option.Limits.MaxRequestBodySize = imageMaxSize * 1024 * 1024; // 2MB
-            });
-
-            // Create app
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -52,7 +31,7 @@ namespace Fatagram.API
             app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
 
             // Exception handling
-            app.ConfigureExceptionHandler();
+            app.UseCustomMiddlewares();
 
             // Static files
             app.UseStaticFiles();
@@ -66,9 +45,6 @@ namespace Fatagram.API
             app.MapGet("/hi", () => "Hello World!");
             app.MapHub<NotificationHub>("/hubs/notification");
 
-            // var hubContext = app.Services.GetRequiredService<IHubContext<NotificationHub>>();
-
-            // Start the application
             app.Run();
         }
     }

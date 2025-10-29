@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Fatagram.Application.Services.UserServices.Interface;
-using Fatagram.Application.Services.AccountServices.Interface;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Account;
+using Fatagram.Application.Services.AccountServices.Interface;
 using Fatagram.Application.Services.UserServices;
+using Fatagram.Application.Services.UserServices.Interface;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
-using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
-using Fatagram.Domain.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.Admin.Controllers
 {
@@ -23,11 +23,13 @@ namespace Fatagram.Admin.Controllers
         private readonly ILogger<UsersController> _logger;
         private int _pageSize = 9;
 
-        public UsersController(IAccountService accountService,
+        public UsersController(
+            IAccountService accountService,
             IUserService userService,
             IAccountRepository accountRepository,
             IUserRepository userRepository,
-         ILogger<UsersController> logger)
+            ILogger<UsersController> logger
+        )
         {
             _accountService = accountService;
             _userService = userService;
@@ -40,12 +42,12 @@ namespace Fatagram.Admin.Controllers
         [Route("{page?}")]
         public async Task<IActionResult> Index(int page = 1)
         {
-            if (page < 1) page = 1;
+            if (page < 1)
+                page = 1;
             var accounts = await _accountService.GetAccountsAsync(page, _pageSize);
             ViewBag.Page = page;
             return View(accounts.Data);
         }
-
 
         [HttpPost]
         [Route("GenerateUsers")]
@@ -54,28 +56,28 @@ namespace Fatagram.Admin.Controllers
             _logger.LogInformation($"\n\nGenerating {userCount} users...\n\n");
             for (int i = 0; i < userCount; i++)
             {
-                try {
-
-                var prefix = GeneratePrefixUsername();
-                var userId = Guid.NewGuid();
-                var newUser = new User()
+                try
                 {
-                    Id = userId,
-                    LastName = "User",
-                    FirstName = "Test " + prefix,
-                    FullName = "User Test " + prefix,
-                    UrlName = "user" + prefix,
-                    Email = "test" + prefix + "@gmail.com",
-                };
-                var account = new Account()
-                {
-                    Username = "test" + prefix,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456789"),
-                    UserId = userId
-                };
+                    var prefix = GeneratePrefixUsername();
+                    var userId = Guid.NewGuid();
+                    var newUser = new User()
+                    {
+                        Id = userId,
+                        LastName = "User",
+                        FirstName = "Test " + prefix,
+                        FullName = "User Test " + prefix,
+                        UrlName = "user" + prefix,
+                        Email = "test" + prefix + "@gmail.com",
+                    };
+                    var account = new Account()
+                    {
+                        Username = "test" + prefix,
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456789"),
+                        UserId = userId,
+                    };
 
-                await _userRepository.CreateUserAsync(newUser);
-                await _accountRepository.CreateAccountAsync(account);
+                    await _userRepository.CreateUserAsync(newUser);
+                    await _accountRepository.CreateAccountAsync(account);
                 }
                 catch (Exception ex)
                 {
@@ -121,14 +123,17 @@ namespace Fatagram.Admin.Controllers
                 {
                     continue;
                 }
-                try {
+                try
+                {
                     await _userService.SendAddFriendAsync(account.UserId, targerUser.Id);
                 }
                 catch (Exception)
                 {
                     continue;
                 }
-                _logger.LogInformation($"Sent friend request from {account.Username} to {targerUser.FullName}");
+                _logger.LogInformation(
+                    $"Sent friend request from {account.Username} to {targerUser.FullName}"
+                );
             }
             return RedirectToAction("Index");
         }

@@ -1,0 +1,36 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Fatagram.API.Extensions.Services.Swagger;
+using Fatagram.API.Extensions.SignalR;
+
+namespace Fatagram.API.Extensions.Services
+{
+    public static class ServiceExtensions
+    {
+        public static void AddApplicationServices(this WebApplicationBuilder builder)
+        {
+            builder.Services.AddHttpContextAccessor();
+
+            // Turn off ModelStateInvalidFilter
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
+
+            // Infrastructure Services
+            builder.Services.AddDatabaseServices(builder.Configuration);
+            builder.Services.AddDependencyServices();
+
+            // Framework Services
+            builder.Services.AddAuthenticationServices();
+            builder.Services.AddCorsServices();
+            builder.Services.AddSignalRServices();
+
+            // Presentation Services
+            builder.Services.AddControllerServices();
+            builder.Services.AddSwaggerServices();
+        }
+    }
+}

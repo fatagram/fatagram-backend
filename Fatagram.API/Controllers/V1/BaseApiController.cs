@@ -120,36 +120,5 @@ namespace Fatagram.API.Controllers.V1
         {
             return roles.All(role => HttpContext.User.IsInRole(role));
         }
-
-        #region Model Validation Methods
-
-        // /// <summary>
-        // /// Validates ModelState and throws ValidateException if invalid.
-        // /// Use this when you want to throw exception for invalid models.
-        // /// </summary>
-        // /// <exception cref="ValidateException">Thrown when ModelState is invalid</exception>
-        // protected void ValidateModelState()
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         var errors = GetModelStateErrors();
-        //         throw new ValidateException("VALIDATION_FAILED", errors, "Model validation failed");
-        //     }
-        // }
-
-        // /// <summary>
-        // /// Gets all ModelState errors as a list of strings
-        // /// </summary>
-        // /// <returns>List of error messages</returns>
-        // protected List<string> GetModelStateErrors()
-        // {
-        //     return ModelState
-        //         .Values.SelectMany(v => v.Errors)
-        //         .Select(e => e.ErrorMessage)
-        //         .Where(msg => !string.IsNullOrEmpty(msg))
-        //         .ToList();
-        // }
-
-        #endregion
     }
 }

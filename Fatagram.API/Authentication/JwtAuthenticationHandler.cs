@@ -52,10 +52,7 @@ namespace Fatagram.API.Authentication
                 //         AuthenticateResult.Fail(ErrorCodes.ACCESS_TOKEN_INVALID)
                 //     );
                 // }
-                var ticket = new AuthenticationTicket(
-                    res?.Data ?? new ClaimsPrincipal(),
-                    "JwtCustomScheme"
-                );
+                var ticket = new AuthenticationTicket(res.Data!, "JwtCustomScheme");
 
                 return Task.FromResult(AuthenticateResult.Success(ticket));
             }

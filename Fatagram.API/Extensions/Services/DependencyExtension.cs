@@ -14,9 +14,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IUserProfileService, UserProfileService>();
             services.AddScoped<IFriendshipService, FriendshipService>();
             services.AddScoped<IUserPrivacyService, UserPrivacyService>();
-            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, LocalImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<IUserInfoService, UserInfoService>();
@@ -25,7 +23,6 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IUserPrivacyRepository, UserPrivacyRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();
-            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IFriendshipRepository, FriendshipRepository>();
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -41,9 +38,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddAutoMapper(typeof(Mapping));
 
             // Singleton
-            services.AddSingleton<JwtHmacSha256Service>();
             services.AddSingleton(TimeProvider.System);
-            // services.AddSingleton<IUserIdProvider, UserIdProvider>();
         }
     }
 }

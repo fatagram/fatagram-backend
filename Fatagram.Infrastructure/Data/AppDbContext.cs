@@ -14,7 +14,6 @@ namespace Fatagram.Infrastructure.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserPrivacy> UserPrivacies { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
@@ -36,7 +35,6 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddUser();
             modelBuilder.AddAccount();
             modelBuilder.AddUserPrivacy();
-            modelBuilder.AddRefreshToken();
             modelBuilder.AddFriend();
             modelBuilder.AddNotification();
             modelBuilder.AddLanguage();

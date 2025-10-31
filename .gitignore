@@ -363,7 +363,10 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # wwwroot folder for ASP.NET Core projects
-wwwroot/
 Fatagram.API/wwwroot/
 appsettings.Local.json
 Fatagram.API/appsettings.Local.json
+
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.prod.yml

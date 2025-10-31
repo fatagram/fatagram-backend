@@ -22,8 +22,6 @@ namespace Fatagram.API.Controllers.V1
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
 
-        // private readonly IUserService _userService;
-
         public AuthController(IAuthService authService, ITokenService tokenService)
         {
             _authService = authService;
@@ -46,20 +44,20 @@ namespace Fatagram.API.Controllers.V1
             }
 
             // Create new cookie with access token
-            Response.Cookies.Append(
-                "accessToken",
-                generateTokenResult.Data.AccessToken,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = _isSecureCookies,
-                    SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                    MaxAge = TimeSpan.FromMinutes(60),
-                }
-            );
+            // Response.Cookies.Append(
+            //     "accessToken",
+            //     generateTokenResult.Data.AccessToken,
+            //     new CookieOptions
+            //     {
+            //         HttpOnly = true,
+            //         Secure = _isSecureCookies,
+            //         SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
+            //         MaxAge = TimeSpan.FromMinutes(60),
+            //     }
+            // );
 
-            if (res.Data is not null)
-                res.Data.RefreshToken = generateTokenResult.Data.RefreshToken;
+            // if (res.Data is not null)
+            //     res.Data.RefreshToken = generateTokenResult.Data.RefreshToken;
 
             return res.ToActionResult();
         }
@@ -80,14 +78,14 @@ namespace Fatagram.API.Controllers.V1
             //}
             if (res.Data is null)
                 throw new DataNullException();
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = _isSecureCookies,
-                SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                MaxAge = TimeSpan.FromMinutes(60),
-            };
-            Response.Cookies.Append("accessToken", res.Data, cookieOptions);
+            // var cookieOptions = new CookieOptions
+            // {
+            //     HttpOnly = true,
+            //     Secure = _isSecureCookies,
+            //     SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
+            //     MaxAge = TimeSpan.FromMinutes(60),
+            // };
+            // Response.Cookies.Append("accessToken", res.Data, cookieOptions);
 
             return res.ToActionResult();
         }
@@ -102,17 +100,17 @@ namespace Fatagram.API.Controllers.V1
         {
             if (request.RefreshToken != null)
                 await _tokenService.DeleteRefreshTokenAsync(request.RefreshToken);
-            Response.Cookies.Append(
-                "accessToken",
-                "",
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = _isSecureCookies,
-                    SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
-                    Expires = DateTime.Now.AddDays(-1),
-                }
-            );
+            // Response.Cookies.Append(
+            //     "accessToken",
+            //     "",
+            //     new CookieOptions
+            //     {
+            //         HttpOnly = true,
+            //         Secure = _isSecureCookies,
+            //         SameSite = Setups.IsForLAN ? SameSiteMode.Lax : SameSiteMode.None,
+            //         Expires = DateTime.Now.AddDays(-1),
+            //     }
+            // );
             return Ok();
         }
 

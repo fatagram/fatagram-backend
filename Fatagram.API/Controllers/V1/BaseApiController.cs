@@ -13,8 +13,6 @@ namespace Fatagram.API.Controllers.V1
     [ApiController]
     public abstract class BaseApiController : ControllerBase
     {
-        protected bool _isSecureCookies = !Setups.IsForLAN;
-
         /// <summary>
         /// Gets the current user ID from JWT claims. Throws UnauthorizedException if not found.
         /// Use this when user authentication is required.

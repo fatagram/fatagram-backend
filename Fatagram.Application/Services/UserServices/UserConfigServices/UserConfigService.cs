@@ -21,7 +21,7 @@ namespace Fatagram.Application.Services.UserServices.UserConfigServices
 
         public async Task<Result<string>> ChangeLanguage(Guid userId, string langCode)
         {
-            var user = await _userRepository.GetAsync(userId.ToString());
+            var user = await _userRepository.GetAsync(userId, u => u);
             if (user == null)
                 throw new UserNotFoundException();
 

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Fatagram.Domain.Enums.NotificationServices;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 
 namespace Fatagram.Infrastructure.Repositories.NotificationRepository.Interface
 {
-    public interface INotificationContentRepository
-    {
-        Task<string> GetContentAsync(NotificationType type, string langCode);
-    }
+    public interface INotificationContentRepository : IBaseRepository<NotificationContent> { }
 }

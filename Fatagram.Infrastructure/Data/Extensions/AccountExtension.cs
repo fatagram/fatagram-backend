@@ -12,14 +12,41 @@ namespace Fatagram.Infrastructure.Data.Extensions
     {
         public static void AddAccount(this ModelBuilder modelBuilder)
         {
-            modelBuilder
-                .Entity<Account>()
-                .HasOne(a => a.User)
-                .WithMany(u => u.Accounts)
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Account>(entity =>
+            {
+                entity.ConfigureBaseEntity();
+                entity.ToTable("accounts");
+                entity
+                    .Property(a => a.Username)
+                    .HasColumnName("username")
+                    .HasColumnType("VARCHAR(30)")
+                    .IsRequired();
+                entity.Property(a => a.PasswordHash).HasColumnName("password_hash").IsRequired();
+                entity
+                    .Property(a => a.UserId)
+                    .HasColumnName("user_id")
+                    .HasColumnType("uuid")
+                    .IsRequired();
+                entity
+                    .Property(a => a.IsActive)
+                    .HasColumnName("is_active")
+                    .IsRequired()
+                    .HasDefaultValue(true);
 
-            modelBuilder.Entity<Account>().Property(a => a.Version).IsRowVersion();
+                entity.HasIndex(a => a.Username).IsUnique();
+
+                // Relationships
+                entity
+                    .HasMany(a => a.RefreshTokens)
+                    .WithOne(rt => rt.Account)
+                    .HasForeignKey(rt => rt.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(a => a.Emails)
+                    .WithOne(e => e.Account)
+                    .HasForeignKey(e => e.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

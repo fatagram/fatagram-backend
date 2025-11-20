@@ -11,7 +11,6 @@ using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
-using Fatagram.Infrastructure.Utils.Query;
 using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.NotificationServices.Interface
@@ -57,28 +56,28 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
                 attachedNotification.Id = notification.Id.ToString();
             }
             // Send notification to the user here
-            var userLang = await _userRepository.GetLanguageAsync(
-                attachedNotification.UserId.ToGuid()
+            var userLang = await _userRepository.GetAsync(
+                attachedNotification.UserId.ToGuid(),
+                u => u.Language
             );
-            var notificationContent = await _notificationContentRepository.GetContentAsync(
-                attachedNotification.Type,
-                userLang
-            );
+            var notificationContent = (
+                await _notificationContentRepository.GetAllAsync(
+                    n => n.Type == attachedNotification.Type && n.Language == userLang,
+                    n => n.Content
+                )
+            ).FirstOrDefault();
             attachedNotification.Content = notificationContent;
             await _notificationSender.SendNotificationAsync(userId, attachedNotification);
         }
 
         public async Task DeleteAllNotificationsAsync(Guid userId)
         {
-            await _notificationRepository.DeleteAllNotificationsAsync(userId);
+            throw new NotImplementedException();
         }
 
         public async Task DeleteNotificationAsync(Guid notificationId)
         {
-            await _notificationRepository.DeleteNotificationAsync(notificationId);
-
-            // Send cancel notification to the user
-            // var cancelNotification = NotificationFactory.CreateCancelNotification()
+            throw new NotImplementedException();
         }
 
         public async Task<CursorResult<Guid?, NotificationDto>> GetNotificationsAsync(
@@ -86,29 +85,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             CursorFilter<Guid> query
         )
         {
-            var language = await _userRepository.GetLanguageAsync(userId);
-            var data = await _notificationRepository.GetNotificationsAsync(
-                userId,
-                language,
-                new CursorQuery<Guid> { Cursor = query.Cursor, Limit = query.Limit }
-            );
-
-            var result = data
-                .notifications.Select(async n =>
-                    await _notificationInfoService.AttachInfosToNotificationAsync(
-                        _mapper.Map<NotificationDto>(n)
-                    )
-                )
-                .Select(t => t.Result)
-                .ToList();
-
-            return CursorResult<Guid?, NotificationDto>.Create(
-                result,
-                result.LastOrDefault()?.Id.ToGuid(),
-                data.total,
-                result.Count < data.total,
-                message: "Get notifications success"
-            );
+            throw new NotImplementedException();
         }
 
         public async Task<CursorResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
@@ -116,41 +93,17 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             CursorFilter<Guid> query
         )
         {
-            var language = await _userRepository.GetLanguageAsync(userId);
-            var data = await _notificationRepository.GetUnreadNotificationsAsync(
-                userId,
-                language,
-                new CursorQuery<Guid> { Cursor = query.Cursor, Limit = query.Limit }
-            );
-
-            var notificationsWithInfo = (
-                await Task.WhenAll(
-                    data.notifications.Select(async n =>
-                        await _notificationInfoService.AttachInfosToNotificationAsync(
-                            _mapper.Map<NotificationDto>(n)
-                        )
-                    )
-                )
-            ).ToList();
-
-            return CursorResult<Guid?, NotificationDto>.Create(
-                notificationsWithInfo ?? new List<NotificationDto>(),
-                notificationsWithInfo?.LastOrDefault()?.Id.ToGuid(),
-                data.total,
-                notificationsWithInfo?.Count < data.total,
-                message: "Get unread notifications success"
-            // new Dictionary<string, object> { { "UnreadCount", data.unreadCount } }
-            );
+            throw new NotImplementedException();
         }
 
         public async Task MarkNotificationAsReadAsync(Guid notificationId)
         {
-            await _notificationRepository.MarkNotificationAsReadAsync(notificationId);
+            throw new NotImplementedException();
         }
 
         public async Task MarkAllNotificationsAsReadAsync(Guid userId)
         {
-            await _notificationRepository.MarkAllNotificationsAsReadAsync(userId);
+            throw new NotImplementedException();
         }
 
         private async Task<IEnumerable<Notification>> FindNotificationAsync(
@@ -160,12 +113,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             Dictionary<string, string>? data
         )
         {
-            return await _notificationRepository.FindNotifications(
-                userId,
-                actorId,
-                type,
-                data ?? new()
-            );
+            throw new NotImplementedException();
         }
 
         public async Task DeleteNotificationsAsync(
@@ -176,19 +124,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             bool isSendCancel = true
         )
         {
-            var notifications = await FindNotificationAsync(userId, actorId, type, data);
-            foreach (var notification in notifications)
-            {
-                await _notificationRepository.DeleteNotificationAsync(notification.Id);
-                if (isSendCancel)
-                {
-                    var cancelNotification = NotificationFactory.CreateCancelNotification(
-                        userId,
-                        notification.Id
-                    );
-                    await _notificationSender.SendNotificationAsync(userId, cancelNotification);
-                }
-            }
+            throw new NotImplementedException();
         }
     }
 }

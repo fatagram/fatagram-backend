@@ -1,128 +1,90 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Fatagram.Domain.Enums;
-using Fatagram.Domain.Models.UserInformations;
-using Microsoft.EntityFrameworkCore;
+﻿using Fatagram.Domain.Enums;
 
 namespace Fatagram.Domain.Models
 {
     /// <summary>
     /// Represents a user in the system.
     /// </summary>
-    [Table("users")]
-    [Index(nameof(Email), IsUnique = true)]
-    [Index(nameof(UrlName), IsUnique = true)]
-    public class User
+    public class User : BaseEntity
     {
-        /// <summary>
-        /// Gets or sets the unique identifier for the user.
-        /// </summary>
-        [Column("id", TypeName = "uuid")]
-        public Guid Id { get; set; }
-
         /// <summary>
         /// Gets or sets the username of the user.
         /// </summary>
-        [Column("urlname", TypeName = "varchar(50)")]
         public string? UrlName { get; set; }
 
         /// <summary>
         /// Gets or sets the last name of the user.
         /// </summary>
-        [Column("last_name", TypeName = "varchar(50)")]
-        [Required]
         public string LastName { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets the middle name of the user.
+        /// </summary>
+        public string? MiddleName { get; set; }
 
         /// <summary>
         /// Gets or sets the first name of the user.
         /// </summary>
-        [Column("first_name", TypeName = "varchar(50)")]
-        [Required]
         public string FirstName { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the full name of the user.
         /// </summary>
-        [Column("full_name", TypeName = "varchar(100)")]
-        [Required]
         public string FullName { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or sets the email address of the user.
-        /// </summary>
-        [Column("email", TypeName = "varchar(100)")]
-        [Required]
-        public string Email { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the phone number of the user.
         /// </summary>
-        [Column("phone", TypeName = "varchar(10)")]
         public string? Phone { get; set; }
 
         /// <summary>
         /// Gets or sets the bio of the user.
         /// </summary>
-        [Column("bio", TypeName = "text")]
         public string? Bio { get; set; }
 
         /// <summary>
         /// Gets or sets the avatar URL of the user.
         /// </summary>
-        [Column("avatar", TypeName = "text")]
         public string? Avatar { get; set; }
 
         /// <summary>
         /// Gets or sets the background image URL of the user.
         /// </summary>
-        [Column("background", TypeName = "text")]
         public string? Background { get; set; }
 
         /// <summary>
         /// Gets or sets the birth date of the user.
         /// </summary>
-        [Column("birth_day", TypeName = "timestamptz")]
         public DateTime? BirthDay { get; set; }
 
         /// <summary>
         /// Gender of the user
         /// </summary>
-        [Column("gender", TypeName = "varchar(10)")]
         public Gender? Gender { get; set; }
 
         /// <summary>
         /// Gets or sets the language code of the user
         /// </summary>
-        [Column("lang_code", TypeName = "varchar(2)")]
         public string LanguageCode { get; set; } = "en";
 
         /// <summary>
         /// Gets or sets the description of the user.
         /// </summary>
-        [Column("description", TypeName = "text")]
         public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets the nickname of the user.
         /// </summary>
-        [Column("nickname", TypeName = "varchar(50)")]
         public string? Nickname { get; set; }
 
         /// <summary>
-        /// Gets or sets the account associated with the user.
+        /// Gets or sets a value indicating whether the user has completed onboarding.
         /// </summary>
-        [Timestamp]
-        [Column("xmin")]
-        public uint Version { get; set; }
+        public bool IsOnBoarding { get; set; }
 
         public Language? Language { get; set; }
 
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
-
-        /// <summary>
-        /// Gets or sets the posts created by the user.
-        /// </summary>
-        public ICollection<UserPrivacy> Privacies { get; set; } = new List<UserPrivacy>();
 
         // Friend requests
         public ICollection<FriendRequest> FriendRequests { get; set; } = new List<FriendRequest>();
@@ -134,9 +96,8 @@ namespace Fatagram.Domain.Models
         // Friendships
         public ICollection<Friendship> FriendshipAsUser1 { get; set; } = new List<Friendship>();
         public ICollection<Friendship> FriendshipAsUser2 { get; set; } = new List<Friendship>();
-        public ICollection<Hobby> Hobbies { get; set; } = new List<Hobby>();
-        public ICollection<Skill> Skills { get; set; } = new List<Skill>();
-        public ICollection<UserJob> Jobs { get; set; } = new List<UserJob>();
-        public ICollection<UserSchool> Schools { get; set; } = new List<UserSchool>();
+
+        public ICollection<UserNotification> UserNotifications { get; set; } =
+            new List<UserNotification>();
     }
 }

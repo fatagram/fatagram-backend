@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -14,115 +15,27 @@ namespace Fatagram.Infrastructure.Repositories.UserRepository
     /// <summary>
     /// User repository
     /// </summary>
-    public class UserRepository : IUserRepository
+    public class UserRepository : BaseRepository<User>, IUserRepository
     {
-        private readonly AppDbContext _dbContext;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository"/> class.
         /// </summary>
         /// <param name="dbContext">The database context.</param>
         public UserRepository(AppDbContext dbContext)
+            : base(dbContext) { }
+
+        public Task<User?> GetByUsernameAsync(string username)
         {
-            _dbContext = dbContext;
-        }
-
-        /// <summary>
-        /// Creates a new user asynchronously.
-        /// </summary>
-        /// <param name="newUser">The new user to create.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the result of the operation.</returns>
-        public async Task AddAsync(User newUser)
-        {
-            await _dbContext.Users.AddAsync(newUser);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        /// <summary>
-        /// Gets a user by their unique identifier asynchronously.
-        /// </summary>
-        /// <param name="id">The unique identifier of the user.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
-        public async Task<User?> GetAsync(string key)
-        {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
-                u.Id == key.ToGuid() || u.UrlName == key
-            );
-            return user;
-        }
-
-        public async Task<Dictionary<string, object?>> GetAsync(string key, List<string> fields)
-        {
-            if (fields == null || fields.Count == 0)
-                return new Dictionary<string, object?>();
-
-            // Build Dynamic LINQ select string: "new(Name, Age, UrlName)"
-            var selectString = "new(" + string.Join(", ", fields.Select(f => $"{f} as {f}")) + ")";
-
-            // Query database (dynamic select)
-            var user = _dbContext
-                .Users.Where(u => u.Id == key.ToGuid() || u.UrlName == key)
-                .Select(selectString)
-                .FirstOrDefault(); // Dynamic LINQ với 1 record -> dùng sync là ok
-
-            if (user == null)
-                return new Dictionary<string, object?>();
-
-            // Convert dynamic/anonymous object sang Dictionary<string, object>
-            var dictionary = new Dictionary<string, object?>();
-            foreach (var field in fields)
-            {
-                var value = user.GetType().GetProperty(field)?.GetValue(user);
-                dictionary[field] = value;
-            }
-
-            return dictionary;
-        }
-
-        public Task<User?> GetByUrlNameAsync(string username)
-        {
-            return _dbContext.Users.FirstOrDefaultAsync(u => u.UrlName == username);
-        }
-
-        /// <summary>
-        /// Gets a user by their username asynchronously.
-        /// </summary>
-        /// <param name="username">The username of the user.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the user if found, otherwise null.</returns>
-        public async Task<User?> GetByUsernameAsync(string username)
-        {
-            var userId = await _dbContext
-                .Accounts.Where(a => a.Username == username)
-                .Select(a => a.UserId)
+            return _dbSet
+                .Join(
+                    this._dbContext.Accounts,
+                    user => user.Id,
+                    account => account.UserId,
+                    (user, account) => new { User = user, Account = account }
+                )
+                .Where(ua => ua.Account.Username == username)
+                .Select(ua => ua.User)
                 .FirstOrDefaultAsync();
-
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            return user;
-        }
-
-        public async Task<User?> GetByEmailAsync(string email)
-        {
-            var user = await _dbContext.Users.Where(a => a.Email == email).FirstOrDefaultAsync();
-            return user;
-        }
-
-        /// <summary>
-        /// Updates a user asynchronously.
-        /// </summary>
-        /// <param name="updateUser">The user to update.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the result of the operation.</returns>
-        public async Task UpdateAsync(User updateUser)
-        {
-            _dbContext.Users.Update(updateUser);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<string> GetLanguageAsync(Guid userId)
-        {
-            return await _dbContext
-                    .Users.Where(u => u.Id == userId)
-                    .Select(u => u.LanguageCode ?? "en")
-                    .FirstOrDefaultAsync() ?? "en";
         }
     }
 }

@@ -15,27 +15,27 @@ namespace Fatagram.Application.Services.TokenServices.Interface
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        Task<Result<TokenDto>> GenerateTokensAsync(string username);
+        Task<string> GenerateAccessTokenAsync(Guid accountId);
 
         /// <summary>
-        /// Validate a refresh token
+        /// Generate a new refresh token
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        Task<string> GenerateRefreshTokenAsync(Guid accountId);
+
+        /// <summary>
+        /// Generate a new access token from a refresh token
         /// </summary>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
-        Task<Result<string>> ValidateRefreshToken(string refreshToken);
-
-        /// <summary>
-        /// Refresh the access token
-        /// </summary>
-        /// <param name="refreshToken"></param>
-        /// <returns></returns>
-        Task<Result<string>> RefreshAccessTokenAsync(string refreshToken);
+        Task<string?> GenerateAccessTokenFromRefreshTokenAsync(string refreshToken);
 
         /// <summary>
         /// Delete a refresh token
         /// </summary>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
-        Task<Result<string>> DeleteRefreshTokenAsync(string refreshToken);
+        Task DeleteRefreshTokenAsync(string refreshToken);
     }
 }

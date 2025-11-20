@@ -18,7 +18,6 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description));
 
             CreateMap<User, UserInfoOverview>()
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
                 .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio));
         }

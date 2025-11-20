@@ -32,7 +32,7 @@ namespace Fatagram.API.Middlewares
             catch (Exception ex)
             {
                 // Color for log
-                _logger.LogError($"An error occurred {ex}");
+                // _logger.LogError($"An error occurred {ex}");
                 await HandleExceptionAsync(context, ex);
             }
         }

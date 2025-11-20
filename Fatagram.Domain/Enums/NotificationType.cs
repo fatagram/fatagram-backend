@@ -13,4 +13,11 @@ namespace Fatagram.Domain.Enums.NotificationServices
         System,
         CancelNotification,
     }
+
+    public enum NotificationTargetType
+    {
+        User,
+        Post,
+        Comment,
+    }
 }

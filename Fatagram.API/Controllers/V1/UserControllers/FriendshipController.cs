@@ -10,7 +10,6 @@ using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
-using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 
@@ -143,12 +142,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             [FromQuery] int pageSize = 10
         )
         {
-            var userId = GetCurrentUserId();
-            var res = await _friendshipService.GetFriendRequestsAsync(
-                userId,
-                new PagedFilter { Page = page, PageSize = pageSize }
-            );
-            return res.ToActionResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -167,35 +161,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             [FromQuery] int pageSize = 10
         )
         {
-            if (HttpContext.User.Identity?.IsAuthenticated ?? false)
-            {
-                var userId = GetCurrentUserId();
-                var res = await _friendshipService.GetFriendsAsync(
-                    targetId.ToGuid(),
-                    userId,
-                    new PagedFilter
-                    {
-                        Keyword = keyword,
-                        Page = page,
-                        PageSize = pageSize,
-                    }
-                );
-                return res.ToActionResult();
-            }
-            else
-            {
-                var res = await _friendshipService.GetFriendsAsync(
-                    Guid.Empty,
-                    targetId.ToGuid(),
-                    new PagedFilter
-                    {
-                        Keyword = keyword,
-                        Page = page,
-                        PageSize = pageSize,
-                    }
-                );
-                return res.ToActionResult();
-            }
+            throw new NotImplementedException();
         }
     }
 }

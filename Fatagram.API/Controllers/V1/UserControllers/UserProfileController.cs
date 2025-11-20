@@ -11,7 +11,6 @@ using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.ImageService.Enum;
-using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -23,17 +22,14 @@ namespace Fatagram.API.Controllers.V1.UserControllers
     public class UserProfileController : BaseApiController
     {
         private readonly IUserProfileService _userProfileService;
-        private readonly IUserPrivacyService _userPrivacyService;
         private readonly IImageService _imageService;
 
         public UserProfileController(
             IUserProfileService userProfileService,
-            IUserPrivacyService userPrivacyService,
             IImageService imageService
         )
         {
             _userProfileService = userProfileService;
-            _userPrivacyService = userPrivacyService;
             _imageService = imageService;
         }
 
@@ -63,27 +59,6 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserId();
             var res = await _userProfileService.UpdateUserAsync(userId, request);
-            return res.ToActionResult();
-        }
-
-        /// <summary>
-        /// Update user privacy settings
-        /// </summary>
-        /// <param name="updateUserPrivacyDto"></param>
-        /// <returns></returns>
-        /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
-        [HttpPut("privacy")]
-        public async Task<IActionResult> UpdateUserPrivacyAsync(
-            [FromBody] UpdateUserPrivacyDto updateUserPrivacyDto
-        )
-        {
-            var userId = GetCurrentUserId();
-            var res = await _userPrivacyService.UpdateUserPrivacyAsync(
-                userId,
-                updateUserPrivacyDto
-            );
-
             return res.ToActionResult();
         }
 

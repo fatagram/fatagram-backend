@@ -1,4 +1,5 @@
-﻿using System.Linq.Dynamic.Core.Tokenizer;
+﻿using System.Drawing;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Runtime.CompilerServices;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
@@ -12,6 +13,8 @@ using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.VisualBasic;
 
 namespace Fatagram.Application.Services.TokenServices
 {
@@ -20,16 +23,19 @@ namespace Fatagram.Application.Services.TokenServices
         private readonly IJwtService _jwtService;
         private readonly IAccountRepository _accountRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IConfiguration _configuration;
 
         public TokenService(
             IJwtService jwtService,
             IAccountRepository accountRepository,
-            IRefreshTokenRepository refreshTokenRepository
+            IRefreshTokenRepository refreshTokenRepository,
+            IConfiguration configuration
         )
         {
             _jwtService = jwtService;
             _accountRepository = accountRepository;
             _refreshTokenRepository = refreshTokenRepository;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -37,89 +43,75 @@ namespace Fatagram.Application.Services.TokenServices
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        public async Task<Result<TokenDto>> GenerateTokensAsync(string username)
+        public async Task<string> GenerateAccessTokenAsync(Guid accountId)
         {
-            var res = await _accountRepository.GetByUsernameAsync(username);
-            if (res is null)
+            var userAccount = await _accountRepository.GetAsync<Account>(accountId);
+            if (userAccount is null)
+            {
                 throw new AccountNotFoundException();
-            var account = res;
-
-            var refreshToken = RefreshTokenService.GenerateRefreshToken().Token;
-            await _refreshTokenRepository.AddAsync(
-                new RefreshToken()
-                {
-                    AccountId = account.Id,
-                    Token = refreshToken.ToGuid(),
-                    ExpiryDate = DateTime.UtcNow.AddDays(7),
-                    CreatedAt = DateTime.UtcNow,
-                }
-            );
-
-            var accessToken = _jwtService.GenerateToken(username, account.UserId).Data;
-            if (accessToken is null)
+            }
+            var token = _jwtService.GenerateToken(userAccount.Username, userAccount.UserId);
+            if (token is null)
             {
                 throw new GenerateTokenException();
             }
+            return token.Data!;
+        }
 
-            return Result<TokenDto>.Create(
-                ResponseStatusCode.Created,
-                new() { AccessToken = accessToken, RefreshToken = refreshToken }
+        public async Task<string> GenerateRefreshTokenAsync(Guid accountId)
+        {
+            var newRefreshToken = new Guid();
+            await _refreshTokenRepository.AddAsync(
+                new()
+                {
+                    AccountId = accountId,
+                    Token = newRefreshToken.ToString(),
+                    ExpiresAt = DateTime.UtcNow.AddDays(
+                        int.Parse(_configuration["JwtSettings:RefreshTokenExpireInDays"] ?? "7")
+                    ),
+                }
             );
+            return newRefreshToken.ToString();
+        }
+
+        public async Task<string?> GenerateAccessTokenFromRefreshTokenAsync(string refreshToken)
+        {
+            var (res, accountId) = await ValidateRefreshTokenAsync(refreshToken);
+            if (!res || accountId is null)
+            {
+                return null;
+            }
+            return await GenerateAccessTokenAsync(accountId.Value);
         }
 
         /// <summary>
         /// Validate a refresh token
         /// </summary>
         /// <param name="refreshToken"></param>
-        /// <returns></returns>
+        /// <returns>(IsValid, AccountId)</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<Result<string>> ValidateRefreshToken(string refreshToken)
+        async Task<(bool IsValid, Guid? AccountId)> ValidateRefreshTokenAsync(string refreshToken)
         {
-            var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
-            if (res is null)
+            var tokenInfo = (
+                await _refreshTokenRepository.GetByUniqueKeyAsync(
+                    rt => rt.Token,
+                    refreshToken,
+                    rt => new RefreshTokenInfo()
+                    {
+                        AccountId = rt.AccountId,
+                        ExpiresAt = rt.ExpiresAt,
+                    }
+                )
+            );
+            if (tokenInfo is null)
             {
-                throw new AppException("REFRESH_TOKEN_INVALID", "Refresh token is invalid");
+                return (false, null);
             }
-
-            var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
-
-            if (rtExpiredTime < DateTime.UtcNow)
+            if (tokenInfo.ExpiresAt < DateTime.UtcNow)
             {
-                throw new RefreshTokenExpiredException();
+                return (false, null);
             }
-
-            return Result<string>.Create();
-        }
-
-        /// <summary>
-        /// Refresh the access token
-        /// </summary>
-        /// <param name="refreshToken"></param>
-        /// <returns></returns>
-        public async Task<Result<string>> RefreshAccessTokenAsync(string refreshToken)
-        {
-            // Find accound id by refresh token
-            var res = await _refreshTokenRepository.GetAccountIdAsync(refreshToken);
-            if (res is null)
-            {
-                throw new AppException("REFRESH_TOKEN_INVALID", "Refresh token is invalid");
-            }
-
-            // Find account by account id
-            var getAccountResult = await _accountRepository.GetAsync((Guid)res);
-            if (getAccountResult is null)
-                throw new AccountNotFoundException();
-            var account = getAccountResult;
-
-            // Check if refresh token is expired
-            var rtExpiredTime = await _refreshTokenRepository.GetExpiryTimeAsync(refreshToken);
-            if (rtExpiredTime < DateTime.UtcNow)
-            {
-                throw new RefreshTokenExpiredException();
-            }
-
-            var token = _jwtService.GenerateToken(account.Username, account.UserId);
-            return Result<string>.Create(ResponseStatusCode.Created, token.Data);
+            return (true, tokenInfo.AccountId);
         }
 
         /// <summary>
@@ -127,10 +119,14 @@ namespace Fatagram.Application.Services.TokenServices
         /// </summary>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
-        public async Task<Result<string>> DeleteRefreshTokenAsync(string refreshToken)
+        public async Task DeleteRefreshTokenAsync(string refreshToken)
         {
-            await _refreshTokenRepository.DeleteAsync(refreshToken);
-            return Result<string>.Create();
+            var rt = await _refreshTokenRepository.GetByUniqueKeyAsync(
+                rt => rt.Token,
+                refreshToken,
+                rt => rt.AccountId
+            );
+            await _refreshTokenRepository.SoftDeleteAsync(rt);
         }
     }
 }

@@ -4,18 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 
 namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces
 {
-    public interface IFriendRequestRepository
+    public interface IFriendRequestRepository : IBaseRepository<FriendRequest>
     {
-        Task AddAsync(FriendRequest friendRequest);
-        Task DeleteAsync(FriendRequest friendRequest);
-        Task<FriendRequest?> GetAsync(Guid senderId, Guid receiverId);
-        Task<(List<FriendRequest> requests, int total)> GetFriendRequestsAsync(
-            Guid userId,
-            int page,
-            int pageSize
-        );
+        Task<bool> RequestExistsAsync(Guid senderId, Guid receiverId);
     }
 }

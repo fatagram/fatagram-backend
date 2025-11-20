@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Fatagram.Application.Types;
 using Fatagram.Application.Utils;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
@@ -17,14 +18,6 @@ namespace Fatagram.Application.Services.JwtServices.Interface
         /// <param name="userId"></param>
         /// <returns></returns>
         Result<string> GenerateToken(string username, Guid userId);
-
-        /// <summary>
-        /// Validate a JWT token
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="userId"></param>
-        /// <returns></returns>
-        Result<string> GenerateToken(string username, string userId);
 
         /// <summary>
         /// Validate a JWT token

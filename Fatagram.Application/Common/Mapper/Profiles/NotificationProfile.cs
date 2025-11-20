@@ -25,7 +25,6 @@ namespace Fatagram.Application.Common.Mapper.Profiles
 
             CreateMap<NotificationDto, Notification>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToGuid()))
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToGuid()))
                 .ForMember(dest => dest.ActorId, opt => opt.MapFrom(src => src.ActorId.ToGuid()))
                 .ForMember(
                     dest => dest.CreatedAt,

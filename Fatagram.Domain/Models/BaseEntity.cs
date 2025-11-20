@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,13 +7,29 @@ namespace Fatagram.Domain.Models
 {
     public abstract class BaseEntity
     {
-        [Column("created_at", TypeName = "timestamptz")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        /// <summary>
+        /// Gets or sets the unique identifier of the entity.
+        /// </summary>
+        public Guid Id { get; set; }
 
-        [Column("updated_at", TypeName = "timestamptz")]
+        /// <summary>
+        /// Gets or sets the creation timestamp of the entity.
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last updated timestamp of the entity.
+        /// </summary>
         public DateTime? UpdatedAt { get; set; }
 
-        [Column("deleted_at", TypeName = "timestamptz")]
+        /// <summary>
+        /// Gets or sets the deletion timestamp of the entity.
+        /// </summary>
         public DateTime? DeletedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the account associated with the user.
+        /// </summary>
+        public uint Version { get; set; }
     }
 }

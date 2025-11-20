@@ -6,10 +6,9 @@ using AutoMapper;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
-using Fatagram.Application.Services.UserServices.UserProfileServices.Interface;
+using Fatagram.Application.Services.UserServices.UserProfileServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
-using Fatagram.Infrastructure.Repositories.UserPrivacyRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
@@ -20,23 +19,17 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
     public class UserProfileService : IUserProfileService
     {
         private readonly IUserRepository _userRepository;
-        private readonly IUserPrivacyRepository _userPrivacyRepository;
         private readonly IMapper _mapper;
 
-        public UserProfileService(
-            IUserRepository userRepository,
-            IUserPrivacyRepository userPrivacyRepository,
-            IMapper mapper
-        )
+        public UserProfileService(IUserRepository userRepository, IMapper mapper)
         {
             _userRepository = userRepository;
-            _userPrivacyRepository = userPrivacyRepository;
             _mapper = mapper;
         }
 
         public async Task<Result<string>> CheckUserExistAsync(Guid userId)
         {
-            var user = await _userRepository.GetAsync(userId.ToString());
+            var user = await _userRepository.GetAsync(userId, s => s);
             if (user is null)
             {
                 throw new UserNotFoundException();
@@ -56,23 +49,32 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             string fields
         )
         {
-            if (string.IsNullOrEmpty(fields))
-            {
-                throw new AppException("FIELDS_REQUIRED", "Fields are required");
-            }
-            var listField = fields.Split(',').ToList();
-            listField.Add("id");
-
-            var res = await _userRepository.GetAsync(target, listField);
-            var isOwner = userId.ToString() == res["id"]?.ToString();
-            listField.RemoveAt(listField.Count - 1);
-
-            var privacyDict = res.ToDictionary(k => k.Key, v => v.Value?.ToString());
-
-            return Result<GetUserProfileDto>.Create(
-                ResponseStatusCode.Success,
-                new GetUserProfileDto() { Infos = privacyDict, IsOwner = isOwner }
+            var user = await _userRepository.GetDynamicAsync(
+                fields,
+                u => u.Id.ToString() == target
             );
+            if (user is null)
+            {
+                throw new UserNotFoundException();
+            }
+
+            // Map dynamic object to dictionary
+            var infos = new Dictionary<string, string?>();
+            var properties = ((object)user).GetType().GetProperties();
+
+            foreach (var prop in properties)
+            {
+                var value = prop.GetValue(user);
+                infos[prop.Name] = value?.ToString();
+            }
+
+            var result = new GetUserProfileDto
+            {
+                Infos = infos,
+                IsOwner = userId.ToString() == target,
+            };
+
+            return Result<GetUserProfileDto>.Create(ResponseStatusCode.Success, result);
         }
 
         /// <summary>
@@ -86,7 +88,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             UpdateUserDto updateUserDto
         )
         {
-            var existingUser = await _userRepository.GetAsync(userId.ToString());
+            var existingUser = await _userRepository.GetAsync(userId, u => u);
             if (existingUser is null)
                 throw new UserNotFoundException();
 
@@ -100,11 +102,15 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             ChangeUrlNameDto changeUrlNameDto
         )
         {
-            var user = await _userRepository.GetAsync(userId.ToString());
+            var user = await _userRepository.GetAsync(userId, u => u);
             if (user == null)
                 throw new UserNotFoundException();
 
-            var existUser = await _userRepository.GetAsync(changeUrlNameDto.UrlName);
+            var existUser = await _userRepository.GetByUniqueKeyAsync(
+                u => u.UrlName,
+                changeUrlNameDto.UrlName,
+                u => u
+            );
             if (existUser != null && existUser.Id != user.Id)
             {
                 throw new AppException("URLNAME_ALREADY_EXISTS", "Url name already exists.");
@@ -119,7 +125,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             ChangeNameDto changeNameDto
         )
         {
-            var user = await _userRepository.GetAsync(userId.ToString());
+            var user = await _userRepository.GetAsync(userId, u => u);
             if (user == null)
             {
                 throw new UserNotFoundException();

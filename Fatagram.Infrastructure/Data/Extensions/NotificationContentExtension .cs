@@ -16,24 +16,41 @@ namespace Fatagram.Infrastructure.Data.Extensions
         {
             modelBuilder.Entity<NotificationContent>(entity =>
             {
-                entity.HasKey(nc => nc.Id);
+                entity.ConfigureBaseEntity();
+                entity.ToTable("notification_contents");
+                entity
+                    .Property(e => e.LanguageCode)
+                    .HasColumnName("language_code")
+                    .HasColumnType("VARCHAR(10)")
+                    .IsRequired();
+                entity
+                    .Property(e => e.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("SMALLINT")
+                    .HasConversion<int>()
+                    .IsRequired();
+                entity
+                    .Property(e => e.Content)
+                    .HasColumnName("content")
+                    .HasColumnType("TEXT")
+                    .IsRequired();
 
+                // Relationships
                 entity
                     .HasOne(e => e.Language)
                     .WithMany(l => l.NotificationContents)
                     .HasForeignKey(e => e.LanguageCode)
+                    .HasPrincipalKey(l => l.Code)
                     .OnDelete(DeleteBehavior.Restrict);
-            });
 
-            modelBuilder
-                .Entity<NotificationContent>()
-                .HasData(
+                entity.HasData(
                     new NotificationContent
                     {
                         Id = new Guid("11111111-1111-1111-1111-111111111111"),
                         Type = NotificationType.NewFriendRequest,
                         LanguageCode = "en",
                         Content = "{actorName} sent you a friend request.",
+                        CreatedAt = DateTime.UtcNow,
                     },
                     new NotificationContent
                     {
@@ -41,6 +58,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.FriendRequestAccepted,
                         LanguageCode = "en",
                         Content = "{actorName} accepted your friend request.",
+                        CreatedAt = DateTime.UtcNow,
                     },
                     new NotificationContent
                     {
@@ -48,6 +66,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.NewFriendRequest,
                         LanguageCode = "vi",
                         Content = "{actorName} đã gửi cho bạn một lời mời kết bạn.",
+                        CreatedAt = DateTime.UtcNow,
                     },
                     new NotificationContent
                     {
@@ -55,8 +74,10 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.FriendRequestAccepted,
                         LanguageCode = "vi",
                         Content = "{actorName} đã chấp nhận lời mời kết bạn của bạn.",
+                        CreatedAt = DateTime.UtcNow,
                     }
                 );
+            });
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Fatagram.API.Authentication
     public class JwtAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         private readonly IJwtService _jwtService;
+        private readonly IConfiguration _configuration;
         private readonly TimeProvider _clock;
 
         public JwtAuthenticationHandler(
@@ -22,12 +23,14 @@ namespace Fatagram.API.Authentication
             ILoggerFactory logger,
             UrlEncoder encoder,
             TimeProvider clock,
-            IJwtService jwtService
+            IJwtService jwtService,
+            IConfiguration configuration
         ) // Inject JwtService
             : base(options, logger, encoder)
         {
             _jwtService = jwtService;
             _clock = clock;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -38,7 +41,7 @@ namespace Fatagram.API.Authentication
         {
             // Get token from header
             if (
-                !Request.Cookies.TryGetValue("accessToken", out var token)
+                !Request.Cookies.TryGetValue("_accessToken", out var token)
                 || string.IsNullOrWhiteSpace(token)
             )
             {

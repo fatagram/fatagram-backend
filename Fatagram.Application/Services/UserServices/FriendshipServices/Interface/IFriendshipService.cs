@@ -24,12 +24,15 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices.Interfac
 
         Task<Result<int>> GetNumberOfFriendsAsync(Guid userId);
 
-        Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(Guid userId, PagedFilter filter);
+        Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(
+            Guid userId,
+            CursorFilter<Guid> filter
+        );
 
         Task<PagedResult<FriendDto>> GetFriendsAsync(
             Guid userId,
             Guid targetId,
-            PagedFilter filter
+            CursorFilter<Guid> filter
         );
     }
 }

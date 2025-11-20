@@ -8,6 +8,7 @@ using Fatagram.Application.Services.NotificationServices.Interfaces;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.NotificationServices
 {
@@ -30,7 +31,12 @@ namespace Fatagram.Application.Services.NotificationServices
                 case NotificationType.NewFriendRequest:
                     if (notification.ActorId == null)
                         return notification;
-                    var user = await _userRepository.GetAsync(notification.ActorId);
+                    var user = (
+                        await _userRepository.GetAllAsync(
+                            u => u.Id == notification.ActorId.ToGuid(),
+                            u => new User { FullName = u.FullName, Avatar = u.Avatar }
+                        )
+                    ).FirstOrDefault();
                     notification.ActorName = user?.FullName;
                     notification.ActorImageUrl = user?.Avatar;
                     return notification;

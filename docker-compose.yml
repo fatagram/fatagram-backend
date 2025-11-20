@@ -1,15 +1,15 @@
-version: "3.9"
-
 services:
   db:
-    image: postgres:latest
+    image: postgres:18
     container_name: fatagram_db
     environment:
       POSTGRES_DB: fatagram
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: FatPro@123
+    ports:
+      - "5456:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:

@@ -4,6 +4,7 @@ using Fatagram.API.Extensions.Configuration;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Extensions.Middleware;
 using Fatagram.API.Hubs;
+using Fatagram.API.Middlewares;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 
@@ -26,12 +27,8 @@ namespace Fatagram.API
             }
 
             app.UseRouting();
-
             // Cors
             app.UseCors(CorsPolicySettings.MyAllowSpecificOrigins);
-
-            // Exception handling
-            app.UseCustomMiddlewares();
 
             // Static files
             app.UseStaticFiles();
@@ -40,6 +37,8 @@ namespace Fatagram.API
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Middlewares
+            app.UseCustomMiddlewares();
             // Routing
             app.MapControllers().RequireCors(CorsPolicySettings.MyAllowSpecificOrigins);
             app.MapGet("/hi", () => "Hello World!");

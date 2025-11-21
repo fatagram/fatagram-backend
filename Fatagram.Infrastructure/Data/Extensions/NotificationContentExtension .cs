@@ -21,7 +21,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity
                     .Property(e => e.LanguageCode)
                     .HasColumnName("language_code")
-                    .HasColumnType("VARCHAR(10)")
+                    .HasColumnType("VARCHAR(2)")
                     .IsRequired();
                 entity
                     .Property(e => e.Type)
@@ -43,6 +43,8 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasPrincipalKey(l => l.Code)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                // Seed data (use fixed deterministic timestamps to avoid non-deterministic model changes)
+                var seedDate = new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc);
                 entity.HasData(
                     new NotificationContent
                     {
@@ -50,7 +52,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.NewFriendRequest,
                         LanguageCode = "en",
                         Content = "{actorName} sent you a friend request.",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     },
                     new NotificationContent
                     {
@@ -58,7 +60,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.FriendRequestAccepted,
                         LanguageCode = "en",
                         Content = "{actorName} accepted your friend request.",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     },
                     new NotificationContent
                     {
@@ -66,7 +68,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.NewFriendRequest,
                         LanguageCode = "vi",
                         Content = "{actorName} đã gửi cho bạn một lời mời kết bạn.",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     },
                     new NotificationContent
                     {
@@ -74,7 +76,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Type = NotificationType.FriendRequestAccepted,
                         LanguageCode = "vi",
                         Content = "{actorName} đã chấp nhận lời mời kết bạn của bạn.",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     }
                 );
             });

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 
 namespace Fatagram.API.Response
 {
-    public class PaginatedApiResponse<TData> : ApiResponse<IEnumerable<TData>>
+    public class PaginatedResponse<TData> : ApiResponse<IEnumerable<TData>>
     {
         [JsonPropertyName("items")]
         public IEnumerable<TData> Items { get; set; } = new List<TData>();

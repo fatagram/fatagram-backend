@@ -38,8 +38,9 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .IsRequired();
                 entity.Property(e => e.Data).HasColumnName("data").HasColumnType("jsonb");
 
+                // explicit collection navigation to avoid creating shadow foreign keys
                 entity
-                    .HasMany<UserNotification>()
+                    .HasMany(e => e.UserNotifications)
                     .WithOne(un => un.Notification)
                     .HasForeignKey(un => un.NotificationId)
                     .OnDelete(DeleteBehavior.Cascade);

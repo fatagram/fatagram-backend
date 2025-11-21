@@ -19,27 +19,19 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity
                     .Property(e => e.LastName)
                     .HasColumnName("last_name")
-                    .HasColumnType("VARCHAR(50)")
-                    .IsRequired();
+                    .HasColumnType("VARCHAR(50)");
                 entity
                     .Property(e => e.FirstName)
                     .HasColumnName("first_name")
-                    .HasColumnType("VARCHAR(50)")
-                    .IsRequired();
+                    .HasColumnType("VARCHAR(50)");
                 entity
                     .Property(e => e.MiddleName)
                     .HasColumnName("middle_name")
                     .HasColumnType("VARCHAR(50)");
                 entity
-                    .Property(e => e.LastName)
-                    .HasColumnName("last_name")
-                    .HasColumnType("VARCHAR(50)")
-                    .IsRequired();
-                entity
                     .Property(e => e.FullName)
                     .HasColumnName("full_name")
-                    .HasColumnType("VARCHAR(150)")
-                    .IsRequired();
+                    .HasColumnType("VARCHAR(150)");
                 entity.Property(e => e.BirthDay).HasColumnName("birth_day").HasColumnType("DATE");
                 entity.Property(e => e.Phone).HasColumnName("phone").HasColumnType("VARCHAR(15)");
                 entity.Property(e => e.Bio).HasColumnName("bio").HasColumnType("TEXT");
@@ -52,12 +44,8 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .Property(e => e.LanguageCode)
                     .HasColumnName("language_code")
                     .HasColumnType("VARCHAR(10)")
-                    .IsRequired();
-                entity
-                    .Property(e => e.LanguageCode)
-                    .HasColumnName("language_code")
-                    .HasColumnType("VARCHAR(10)")
-                    .IsRequired();
+                    .IsRequired()
+                    .HasDefaultValue("en");
                 entity
                     .Property(e => e.UrlName)
                     .HasColumnName("url_name")
@@ -69,9 +57,18 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity
                     .Property(e => e.Gender)
                     .HasColumnName("gender")
-                    .HasColumnType("SMALLINT")
-                    .HasConversion<int>()
-                    .IsRequired();
+                    .HasColumnType("int")
+                    .HasConversion<int>();
+                entity
+                    .Property(e => e.Nickname)
+                    .HasColumnName("nickname")
+                    .HasColumnType("VARCHAR(50)");
+                entity
+                    .Property(e => e.IsOnBoarding)
+                    .HasColumnName("is_on_boarding")
+                    .HasColumnType("BOOLEAN")
+                    .IsRequired()
+                    .HasDefaultValueSql("FALSE");
 
                 // Relationships
                 entity

@@ -136,5 +136,11 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             await _userRepository.UpdateAsync(user);
             return Result<ChangeNameDto>.Create(ResponseStatusCode.Success, changeNameDto);
         }
+
+        public async Task<Result<bool>> IsOnboardingCompletedAsync(Guid userId)
+        {
+            var isOnboarding = await _userRepository.GetAsync(userId, u => u.IsOnBoarding);
+            return Result<bool>.Create(ResponseStatusCode.Success, isOnboarding);
+        }
     }
 }

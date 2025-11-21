@@ -94,7 +94,7 @@ namespace Fatagram.Application.Services.AuthService
                 a => a.Username == registerDto.Username,
                 s => s.Username
             );
-            if (account is not null)
+            if (account.Count() > 0)
             {
                 throw new AppException("USERNAME_EXISTED", "Username already exists.");
             }
@@ -102,7 +102,7 @@ namespace Fatagram.Application.Services.AuthService
                 e => e.Address == registerDto.Email,
                 s => s.Address
             );
-            if (email is not null)
+            if (email.Count() > 0)
             {
                 throw new AppException("EMAIL_EXISTED", "Email already exists.");
             }
@@ -112,7 +112,6 @@ namespace Fatagram.Application.Services.AuthService
             // Get username and password from registerDto to newAccount
             var newAccount = _mapper.Map<Account>(registerDto);
             newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-            newUser.FullName = registerDto.Username;
             newUser.Accounts.Add(newAccount);
             await _userRepository.AddAsync(newUser);
 

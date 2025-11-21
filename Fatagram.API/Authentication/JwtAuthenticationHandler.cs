@@ -15,22 +15,16 @@ namespace Fatagram.API.Authentication
     public class JwtAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         private readonly IJwtService _jwtService;
-        private readonly IConfiguration _configuration;
-        private readonly TimeProvider _clock;
 
         public JwtAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            TimeProvider clock,
-            IJwtService jwtService,
-            IConfiguration configuration
+            IJwtService jwtService
         ) // Inject JwtService
             : base(options, logger, encoder)
         {
             _jwtService = jwtService;
-            _clock = clock;
-            _configuration = configuration;
         }
 
         /// <summary>

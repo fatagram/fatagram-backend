@@ -11,6 +11,7 @@ namespace Fatagram.API.Extensions.Middleware
         public static void UseCustomMiddlewares(this IApplicationBuilder app)
         {
             app.UseMiddleware<GlobalExceptionMiddleware>();
+            app.UseMiddleware<CheckOnboardingMiddleware>();
         }
     }
 }

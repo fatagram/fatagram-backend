@@ -31,21 +31,22 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 // Code is used as principal key for relationships
                 entity.HasAlternateKey(e => e.Code);
                 entity.HasIndex(e => e.Code).IsUnique();
-                // Seed data
+                // Seed data (use fixed deterministic timestamps to avoid non-deterministic model changes)
+                var seedDate = new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc);
                 entity.HasData(
                     new Language()
                     {
                         Id = Guid.Parse("b3bb9f4e-1d6e-4f4a-9f7a-2c3b5e6d7f8a"),
                         Code = "en",
                         Name = "English",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     },
                     new Language()
                     {
                         Id = Guid.Parse("c4cc9f4e-2d7e-5f5a-0f8a-3d4c6f7e8f9b"),
-                        Code = "vn",
+                        Code = "vi",
                         Name = "Vietnamese",
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = seedDate,
                     }
                 );
             });

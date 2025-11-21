@@ -15,7 +15,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the last name of the user.
         /// </summary>
-        public string LastName { get; set; } = null!;
+        public string? LastName { get; set; }
 
         /// <summary>
         /// Gets or sets the middle name of the user.
@@ -25,12 +25,12 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the first name of the user.
         /// </summary>
-        public string FirstName { get; set; } = null!;
+        public string? FirstName { get; set; }
 
         /// <summary>
         /// Gets or sets the full name of the user.
         /// </summary>
-        public string FullName { get; set; } = null!;
+        public string? FullName { get; set; }
 
         /// <summary>
         /// Gets or sets the phone number of the user.
@@ -80,7 +80,7 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets a value indicating whether the user has completed onboarding.
         /// </summary>
-        public bool IsOnBoarding { get; set; }
+        public bool IsOnBoarding { get; set; } = false;
 
         public Language? Language { get; set; }
 

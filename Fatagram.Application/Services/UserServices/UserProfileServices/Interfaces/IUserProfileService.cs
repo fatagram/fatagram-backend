@@ -54,5 +54,12 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <param name="userId"></param>
         /// <returns></returns>
         Task<Result<string>> CheckUserExistAsync(Guid userId);
+
+        /// <summary>
+        /// Check if onboarding is completed
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task<Result<bool>> IsOnboardingCompletedAsync(Guid userId);
     }
 }

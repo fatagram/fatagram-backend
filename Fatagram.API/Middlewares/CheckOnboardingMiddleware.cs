@@ -1,22 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Fatagram.API.Utils.Attributes;
+using Fatagram.API.Utils.Response;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Identity.Client;
 
 namespace Fatagram.API.Middlewares
 {
-    public class CheckOnboardingMiddleware
+    public class CheckOnboardingMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public CheckOnboardingMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
+        private readonly RequestDelegate _next = next;
 
         public async Task InvokeAsync(HttpContext context)
         {
@@ -47,9 +38,15 @@ namespace Fatagram.API.Middlewares
                     }
                 }
             }
+            var errorResponse = ErrorResponse.Create(
+                new ErrorDetails()
+                {
+                    Code = "ONBOARDING_NOT_COMPLETED",
+                    Detail = "Onboarding not completed.",
+                }
+            );
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsync("Onboarding not completed.");
-            return;
+            await context.Response.WriteAsync(errorResponse.ToString());
         }
     }
 }

@@ -1,17 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Fatagram.Shared.Common;
 
-namespace Fatagram.Application.Exceptions.DetailExceptions
+namespace Fatagram.Application.Exceptions.MiddleLevelExceptions
 {
-    public class BadRequestException : AppException
-    {
-        public BadRequestException(
-            string errorCode,
-            string message,
-            List<string>? errorMessages = null
-        )
-            : base(errorCode, message, errorMessages) { }
-    }
+    public class BadRequestException(Error error, List<Error>? errors = null)
+        : AppException(error, errors) { }
 }

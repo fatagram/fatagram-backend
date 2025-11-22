@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.API.Response;
+using Fatagram.API.Utils.Response;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 
@@ -31,7 +31,7 @@ namespace Fatagram.API.Utils
 
         public static IActionResult ToActionResult<TItem>(this PagedResult<TItem> result)
         {
-            var data = PaginatedApiResponse<TItem>.Create(
+            var data = PaginatedResponse<TItem>.Create(
                 result.Data ?? Enumerable.Empty<TItem>(),
                 result.Page,
                 result.PageSize,

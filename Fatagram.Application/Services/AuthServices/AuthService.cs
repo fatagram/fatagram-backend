@@ -1,22 +1,18 @@
 ﻿using AutoMapper;
-using Fatagram.Application.Dtos.Account;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
-using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Constants;
 using Fatagram.Shared.Enums;
-using Microsoft.AspNetCore.Http;
 
-namespace Fatagram.Application.Services.AuthService
+namespace Fatagram.Application.Services.AuthServices
 {
     /// <summary>
     /// AuthService class intehirating IAuthService
@@ -27,16 +23,24 @@ namespace Fatagram.Application.Services.AuthService
         private readonly IUserRepository _userRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly IEmailRepository _emailRepository;
-        private readonly IRefreshTokenRepository _refreshTokenRepository;
+
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
+
+        public AuthService()
+        {
+            _userRepository = null!;
+            _accountRepository = null!;
+            _emailRepository = null!;
+            _tokenService = null!;
+            _mapper = null!;
+        }
 
         // Constructor
         public AuthService(
             IUserRepository userRepository,
             IAccountRepository accountRepository,
             IEmailRepository emailRepository,
-            IRefreshTokenRepository refreshTokenRepository,
             ITokenService tokenService,
             IMapper mapper
         )
@@ -44,7 +48,7 @@ namespace Fatagram.Application.Services.AuthService
             _userRepository = userRepository;
             _accountRepository = accountRepository;
             _emailRepository = emailRepository;
-            _refreshTokenRepository = refreshTokenRepository;
+
             _tokenService = tokenService;
             _mapper = mapper;
         }
@@ -58,21 +62,19 @@ namespace Fatagram.Application.Services.AuthService
         /// <returns></returns>
         public async Task<Result<TokenResponseDto>> Login(LoginDto request)
         {
-            var account = (
-                await _accountRepository.GetAllAsync<Account>(a => a.Username == request.Username)
-            ).FirstOrDefault();
-            if (account is null)
-                throw new AccountNotFoundException();
+            var account =
+                (
+                    await _accountRepository.GetAllAsync<Account>(a =>
+                        a.Username == request.Username
+                    )
+                ).FirstOrDefault() ?? throw new AppException(Errors.Auth.AccountNotFound);
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, account.PasswordHash))
-                throw new BadRequestException(
-                    "INVALID_CREDENTIALS",
-                    "The provided credentials are invalid"
-                );
+                throw new AppException(Errors.Auth.InvalidCredentials);
 
-            var user = await _userRepository.GetByUsernameAsync(request.Username);
-            if (user is null)
-                throw new UserNotFoundException();
+            var user =
+                await _userRepository.GetByUsernameAsync(request.Username)
+                ?? throw new AppException(Errors.Auth.UserNotFound);
 
             var accessToken = await _tokenService.GenerateAccessTokenAsync(account.Id);
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.Id);
@@ -94,17 +96,17 @@ namespace Fatagram.Application.Services.AuthService
                 a => a.Username == registerDto.Username,
                 s => s.Username
             );
-            if (account.Count() > 0)
+            if (account?.Count > 0)
             {
-                throw new AppException("USERNAME_EXISTED", "Username already exists.");
+                throw new AppException(Errors.Auth.UsernameExisted);
             }
             var email = await _emailRepository.GetAllAsync(
                 e => e.Address == registerDto.Email,
                 s => s.Address
             );
-            if (email.Count() > 0)
+            if (email?.Count > 0)
             {
-                throw new AppException("EMAIL_EXISTED", "Email already exists.");
+                throw new AppException(Errors.Auth.EmailExisted);
             }
             // Get email, phone, name from registerDto to newUser
             var newUser = _mapper.Map<User>(registerDto);
@@ -129,14 +131,12 @@ namespace Fatagram.Application.Services.AuthService
             ChangePasswordDto changePasswordRequest
         )
         {
-            var res = await _accountRepository.GetByEmailAsync(userId.ToString());
-            if (res is null)
-            {
-                throw new AccountNotFoundException();
-            }
+            var res =
+                await _accountRepository.GetByEmailAsync(userId.ToString())
+                ?? throw new AppException(Errors.Auth.AccountNotFound);
             if (!BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, res.PasswordHash))
             {
-                throw new UnauthorizedException();
+                throw new AppException(Errors.Auth.Unauthorized);
             }
             res.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
             await _accountRepository.UpdateAsync(res);

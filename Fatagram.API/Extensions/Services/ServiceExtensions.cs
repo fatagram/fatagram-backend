@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.API.Extensions.Services.Swagger;
 using Fatagram.API.Extensions.SignalR;
+using Fatagram.Application.Validators.Auth;
+using FluentValidation;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -31,6 +33,9 @@ namespace Fatagram.API.Extensions.Services
             // Presentation Services
             builder.Services.AddControllerServices();
             builder.Services.AddSwaggerServices();
+
+            // FluentValidation
+            builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
         }
     }
 }

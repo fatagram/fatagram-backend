@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Shared.Common;
 
-namespace Fatagram.Application.Exceptions
+namespace Fatagram.Application.Exceptions.DetailExceptions
 {
-    public class DataNullException : AppException
-    {
-        public DataNullException(string errorCode = "DATA_NULL", string? message = null)
-            : base(errorCode, message) { }
-    }
+    public class DataNullException()
+        : BadRequestException(new Error("DATA_NULL", "Data is null")) { }
 }

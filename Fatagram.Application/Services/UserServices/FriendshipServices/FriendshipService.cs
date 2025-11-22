@@ -2,6 +2,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
@@ -15,41 +16,37 @@ using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {
-    public class FriendshipService : IFriendshipService
+    public class FriendshipService(
+        IFriendshipRepository friendshipRepository,
+        IFriendRequestRepository friendRequestRepository,
+        IUserRepository userRepository,
+        IMapper mapper,
+        INotificationService notificationService
+    ) : IFriendshipService
     {
-        private readonly IFriendshipRepository _friendshipRepository;
-        private readonly IFriendRequestRepository _friendRequestRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
-        private readonly INotificationService _notificationService;
-
-        public FriendshipService(
-            IFriendshipRepository friendshipRepository,
-            IFriendRequestRepository friendRequestRepository,
-            IUserRepository userRepository,
-            IMapper mapper,
-            INotificationService notificationService
-        )
-        {
-            _friendshipRepository = friendshipRepository;
-            _friendRequestRepository = friendRequestRepository;
-            _userRepository = userRepository;
-            _mapper = mapper;
-            _notificationService = notificationService;
-        }
+        private readonly IFriendshipRepository _friendshipRepository = friendshipRepository;
+        private readonly IFriendRequestRepository _friendRequestRepository =
+            friendRequestRepository;
+        private readonly IUserRepository _userRepository = userRepository;
+        private readonly IMapper _mapper = mapper;
+        private readonly INotificationService _notificationService = notificationService;
 
         public async Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId)
         {
             // Check if two users are friends
             if (await _friendshipRepository.AreFriendsAsync(senderId, receiverId))
             {
-                throw new AppException("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.");
+                throw new AppException(
+                    new("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.")
+                );
             }
 
             // Check if a request already exists
             if (await _friendRequestRepository.RequestExistsAsync(senderId, receiverId))
             {
-                throw new AppException("REQUEST_ALREADY_EXIST", "Friend request already exists.");
+                throw new AppException(
+                    new("REQUEST_ALREADY_EXIST", "Friend request already exists.")
+                );
             }
 
             // Check if the sender exists
@@ -83,7 +80,9 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             // Check if the two users are already friends
             if (await _friendshipRepository.AreFriendsAsync(acceptorId, requesterId))
             {
-                throw new AppException("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.");
+                throw new AppException(
+                    new("FRIENDSHIP_ALREADY_EXIST", "Friendship already exists.")
+                );
             }
 
             var request = await _friendRequestRepository.GetAllAsync<FriendRequest, Guid>(
@@ -94,7 +93,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             );
             if (!await _friendRequestRepository.RequestExistsAsync(requesterId, acceptorId))
             {
-                throw new AppException("REQUEST_NOT_EXIST", "Friend request does not exist.");
+                throw new AppException(new("REQUEST_NOT_EXIST", "Friend request does not exist."));
             }
 
             // Check if the acceptor exists
@@ -133,16 +132,16 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
         public async Task<Result<object>> CancelAddFriendAsync(Guid senderId, Guid receiverId)
         {
-            var friendRequest = (
-                await _friendRequestRepository.GetAllAsync(
-                    fr => fr.SenderId == senderId && fr.ReceiverId == receiverId,
-                    s => s
-                )
-            ).FirstOrDefault();
-            if (friendRequest == null)
-            {
-                throw new AppException("REQUEST_NOT_EXIST", "Friend request does not exist.");
-            }
+            var friendRequest =
+                (
+                    await _friendRequestRepository.GetAllAsync(
+                        fr => fr.SenderId == senderId && fr.ReceiverId == receiverId,
+                        s => s
+                    )
+                ).FirstOrDefault()
+                ?? throw new AppException(
+                    new("REQUEST_NOT_EXIST", "Friend request does not exist.")
+                );
             await _friendRequestRepository.DeleteAsync(friendRequest.Id);
 
             await _notificationService.DeleteNotificationsAsync(
@@ -159,16 +158,16 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             Guid requesterId
         )
         {
-            var friendRequest = (
-                await _friendRequestRepository.GetAllAsync(
-                    fr => fr.SenderId == requesterId && fr.ReceiverId == declinerId,
-                    s => s
-                )
-            ).FirstOrDefault();
-            if (friendRequest == null)
-            {
-                throw new AppException("REQUEST_NOT_EXIST", "Friend request does not exist.");
-            }
+            var friendRequest =
+                (
+                    await _friendRequestRepository.GetAllAsync(
+                        fr => fr.SenderId == requesterId && fr.ReceiverId == declinerId,
+                        s => s
+                    )
+                ).FirstOrDefault()
+                ?? throw new AppException(
+                    new("REQUEST_NOT_EXIST", "Friend request does not exist.")
+                );
 
             await _friendRequestRepository.DeleteAsync(friendRequest.Id);
             await _notificationService.DeleteNotificationsAsync(
@@ -182,18 +181,18 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
         public async Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId)
         {
-            var friendship = (
-                await _friendshipRepository.GetAllAsync(
-                    f =>
-                        (f.User1Id == userId && f.User2Id == friendId)
-                        || (f.User1Id == friendId && f.User2Id == userId),
-                    s => s
-                )
-            ).FirstOrDefault();
-            if (friendship == null)
-            {
-                throw new AppException("FRIENDSHIP_NOT_EXIST", "Friendship does not exist.");
-            }
+            var friendship =
+                (
+                    await _friendshipRepository.GetAllAsync(
+                        f =>
+                            (f.User1Id == userId && f.User2Id == friendId)
+                            || (f.User1Id == friendId && f.User2Id == userId),
+                        s => s
+                    )
+                ).FirstOrDefault()
+                ?? throw new AppException(
+                    new("FRIENDSHIP_NOT_EXIST", "Friendship does not exist.")
+                );
 
             await _friendshipRepository.DeleteAsync(friendship.Id);
             return Result<object>.Create();
@@ -250,9 +249,8 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
         public async Task<Result<int>> GetNumberOfFriendsAsync(Guid userId)
         {
-            var user = await _userRepository.GetAsync(userId, u => u);
-            if (user == null)
-                throw new UserNotFoundException();
+            var user =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
             var count = await _friendshipRepository
                 .GetAllAsync(f => f.User1Id == userId || f.User2Id == userId, s => s.Id)

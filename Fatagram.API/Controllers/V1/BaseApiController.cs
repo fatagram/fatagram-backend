@@ -24,7 +24,7 @@ namespace Fatagram.API.Controllers.V1
             var userId = GetCurrentUserIdOrNull();
             if (userId == null)
             {
-                throw new UnauthorizedException("User is not authenticated");
+                throw new UnauthorizedException();
             }
             return userId.Value;
         }

@@ -128,7 +128,7 @@ namespace Fatagram.Application.Services.JwtServices
             }
             catch (Exception)
             {
-                throw new UnauthorizedException("INVALID_TOKEN", "Token is invalid.");
+                throw new UnauthorizedException();
             }
         }
     }

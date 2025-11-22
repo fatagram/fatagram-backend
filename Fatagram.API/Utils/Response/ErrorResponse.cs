@@ -4,31 +4,60 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
+using Fatagram.API.Utils.Response;
+using Fatagram.Shared.Common;
 
-namespace Fatagram.API.Response
+namespace Fatagram.API.Utils.Response
 {
-    public class ErrorResponse : BaseResponse
+    public class ErrorDetails
     {
         [JsonPropertyName("code")]
+        public string Code { get; set; } = "UNKNOWN_ERROR";
+
+        [JsonPropertyName("detail")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Code { get; set; }
+        public string? Detail { get; set; }
+    }
 
-        public object? Errors { get; set; }
+    public class ErrorResponse : BaseResponse
+    {
+        [JsonPropertyName("error")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ErrorDetails? Error { get; set; }
 
-        private ErrorResponse(string code, object? errors, string? message)
+        [JsonPropertyName("errors")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ErrorDetails[]? Errors { get; set; }
+
+        private ErrorResponse(ErrorDetails? error, ErrorDetails[]? errors, string? message)
             : base(false, message, null)
         {
-            Code = code;
+            Error = error;
             Errors = errors;
         }
 
         public static ErrorResponse Create(
-            string code,
-            object? errors = null,
+            ErrorDetails? error,
+            ErrorDetails[]? errors = null,
             string? message = null
         )
         {
-            return new ErrorResponse(code, errors, message);
+            return new ErrorResponse(error, errors, message);
+        }
+
+        public static ErrorResponse Create(ErrorDetails[]? errors = null)
+        {
+            return new ErrorResponse(null, errors, null);
+        }
+
+        public static ErrorResponse Create(ErrorDetails? error)
+        {
+            return new ErrorResponse(error, null, null);
+        }
+
+        public override string ToString()
+        {
+            return System.Text.Json.JsonSerializer.Serialize(this);
         }
     }
 }

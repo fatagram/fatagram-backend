@@ -31,7 +31,7 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                 {
                     Id = src.User.Id,
                     Avatar = src.User.Avatar,
-                    Name = src.User.FullName,
+                    Name = src.User.FullName ?? "",
                     UrlName = src.User.UrlName,
                     IsFriend = src.IsFriend,
                 });

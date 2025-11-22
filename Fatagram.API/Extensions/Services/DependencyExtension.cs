@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Application.Common.Mapper;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
 

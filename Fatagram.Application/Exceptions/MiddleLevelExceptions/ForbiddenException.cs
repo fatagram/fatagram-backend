@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Fatagram.Shared.Common;
 
-namespace Fatagram.Application.Exceptions.DetailExceptions
+namespace Fatagram.Application.Exceptions.MiddleLevelExceptions
 {
-    public class ForbiddenException : AppException
-    {
-        public ForbiddenException(string errorCode, string message)
-            : base(errorCode, message) { }
-    }
+    public class ForbiddenException(Error error) : AppException(error) { }
 }

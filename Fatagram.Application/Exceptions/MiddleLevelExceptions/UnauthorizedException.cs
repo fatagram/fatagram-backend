@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Fatagram.Shared.Common;
 
 namespace Fatagram.Application.Exceptions.MiddleLevelExceptions
 {
-    public class UnauthorizedException : AppException
-    {
-        public UnauthorizedException(string errorCode = "UNAUTHORIZED", string? message = null)
-            : base(errorCode, message) { }
-    }
+    public class UnauthorizedException()
+        : AppException(new Error("UNAUTHORIZED", "Unauthorized")) { }
 }

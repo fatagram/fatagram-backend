@@ -9,6 +9,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
@@ -43,11 +44,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             ChangeNicknameDto changeNicknameDto
         )
         {
-            var user = await _userRepository.GetAsync(userId, u => u);
-            if (user is null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
             user.Nickname = changeNicknameDto.Nickname;
             await _userRepository.UpdateAsync(user);
             return Result<ChangeNicknameDto>.Create(ResponseStatusCode.Success, changeNicknameDto);

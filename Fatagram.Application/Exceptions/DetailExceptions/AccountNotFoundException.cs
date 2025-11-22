@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+﻿using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Shared.Common;
 
-namespace Fatagram.Application.Exceptions
+namespace Fatagram.Application.Exceptions.DetailExceptions
 {
-    public class AccountNotFoundException : NotFoundException
-    {
-        public AccountNotFoundException()
-            : base("ACCOUNT_NOT_FOUND", "Account not found") { }
-    }
+    public class AccountNotFoundException()
+        : NotFoundException(new Error("ACCOUNT_NOT_FOUND", "Account not found")) { }
 }

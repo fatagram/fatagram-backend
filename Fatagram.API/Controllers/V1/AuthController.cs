@@ -6,7 +6,6 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Utils;
-using Fatagram.Application.Dtos.Account;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;

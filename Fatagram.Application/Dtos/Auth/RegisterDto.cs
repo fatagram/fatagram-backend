@@ -2,7 +2,7 @@
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 
-namespace Fatagram.Application.Dtos.Account
+namespace Fatagram.Application.Dtos.Auth
 {
     /// <summary>
     /// Data Transfer Object for user registration.

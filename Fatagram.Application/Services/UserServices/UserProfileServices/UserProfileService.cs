@@ -6,6 +6,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
@@ -102,9 +103,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             ChangeUrlNameDto changeUrlNameDto
         )
         {
-            var user = await _userRepository.GetAsync(userId, u => u);
-            if (user == null)
-                throw new UserNotFoundException();
+            var user =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
             var existUser = await _userRepository.GetByUniqueKeyAsync(
                 u => u.UrlName,

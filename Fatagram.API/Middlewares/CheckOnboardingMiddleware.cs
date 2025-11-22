@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.API.Attributes;
+using Fatagram.API.Utils.Attributes;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Client;
@@ -11,7 +11,7 @@ namespace Fatagram.API.Middlewares
 {
     public class CheckOnboardingMiddleware
     {
-        private readonly RequestDelegate _
+        private readonly RequestDelegate _next;
 
         public CheckOnboardingMiddleware(RequestDelegate next)
         {

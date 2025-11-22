@@ -1,8 +1,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
-using Fatagram.API.Response;
 
-namespace Fatagram.API.Utils
+namespace Fatagram.API.Utils.Response
 {
     /// <summary>
     /// Response from API
@@ -39,6 +38,11 @@ namespace Fatagram.API.Utils
         )
         {
             return new CursorResponse<TCursor, TData>(data, nextCursor, total, message);
+        }
+
+        public override string ToString()
+        {
+            return System.Text.Json.JsonSerializer.Serialize(this);
         }
     }
 }

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
+using Fatagram.API.Utils.Response;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 
-namespace Fatagram.API.Response
+namespace Fatagram.API.Utils.Response
 {
     public class PaginatedResponse<TData> : ApiResponse<IEnumerable<TData>>
     {
@@ -31,7 +32,7 @@ namespace Fatagram.API.Response
         [JsonPropertyName("hasPreviousPage")]
         public bool HasPreviousPage;
 
-        private PaginatedApiResponse(
+        private PaginatedResponse(
             IEnumerable<TData> data,
             int page,
             int pageSize,
@@ -47,7 +48,7 @@ namespace Fatagram.API.Response
             TotalPages = (int)Math.Ceiling((double)total / pageSize);
         }
 
-        public static PaginatedApiResponse<TData> Create(
+        public static PaginatedResponse<TData> Create(
             IEnumerable<TData> data,
             int page,
             int pageSize,
@@ -55,7 +56,7 @@ namespace Fatagram.API.Response
             string? message
         )
         {
-            return new PaginatedApiResponse<TData>(data, page, pageSize, total, message);
+            return new PaginatedResponse<TData>(data, page, pageSize, total, message);
         }
     }
 }

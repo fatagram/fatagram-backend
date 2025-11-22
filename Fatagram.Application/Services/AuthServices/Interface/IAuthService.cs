@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using Fatagram.Application.Dtos.Account;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Utils;

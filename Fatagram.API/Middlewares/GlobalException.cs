@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
-using Fatagram.API.Response;
 using Fatagram.API.Utils;
+using Fatagram.API.Utils.Response;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
@@ -13,14 +13,17 @@ namespace Fatagram.API.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionMiddleware> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public GlobalExceptionMiddleware(
             RequestDelegate next,
-            ILogger<GlobalExceptionMiddleware> logger
+            ILogger<GlobalExceptionMiddleware> logger,
+            IWebHostEnvironment env
         )
         {
             _next = next;
             _logger = logger;
+            _env = env;
         }
 
         public async Task Invoke(HttpContext context)
@@ -31,8 +34,6 @@ namespace Fatagram.API.Middlewares
             }
             catch (Exception ex)
             {
-                // Color for log
-                // _logger.LogError($"An error occurred {ex}");
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -43,14 +44,24 @@ namespace Fatagram.API.Middlewares
             if (ex is AppException appException)
             {
                 var response = ErrorResponse.Create(
-                    code: appException.ErrorCode,
-                    message: appException.Message,
-                    errors: appException.ErrorMessages
+                    new ErrorDetails()
+                    {
+                        Code = appException.Error.Code,
+                        Detail = appException.Error.Message,
+                    },
+                    appException
+                        .Errors?.Select(x => new ErrorDetails()
+                        {
+                            Code = x.Code,
+                            Detail = x.Message,
+                        })
+                        .ToArray()
                 );
+                _logger.LogError(response.ToString());
 
                 context.Response.StatusCode = ex switch
                 {
-                    ValidateException => (int)HttpStatusCode.BadRequest,
+                    ForbiddenException => (int)HttpStatusCode.Forbidden,
                     BadRequestException => (int)HttpStatusCode.BadRequest,
                     NotFoundException => (int)HttpStatusCode.NotFound,
                     UnauthorizedException => (int)HttpStatusCode.Unauthorized,
@@ -62,9 +73,11 @@ namespace Fatagram.API.Middlewares
             else
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                var message = _env.IsDevelopment()
+                    ? ex.ToString()
+                    : "An unexpected error occurred.";
                 var response = ErrorResponse.Create(
-                    code: "INTERNAL_SERVER_ERROR",
-                    message: "An unexpected error occurred."
+                    error: new ErrorDetails() { Code = "INTERNAL_SERVER_ERROR", Detail = message }
                 );
                 await context.Response.WriteAsync(response.ToString());
             }

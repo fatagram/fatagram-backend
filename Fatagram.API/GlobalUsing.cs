@@ -5,7 +5,7 @@ global using Fatagram.API.Authentication;
 global using Fatagram.API.Hubs.Notifications;
 global using Fatagram.Application;
 global using Fatagram.Application.Common;
-global using Fatagram.Application.Services.AuthService;
+global using Fatagram.Application.Services.AuthServices;
 global using Fatagram.Application.Services.AuthServices.Interface;
 global using Fatagram.Application.Services.ImageService;
 global using Fatagram.Application.Services.ImageService.Interface;

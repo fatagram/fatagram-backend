@@ -197,7 +197,6 @@ namespace Fatagram.Application.Services.AuthServices
                         new Account
                         {
                             Emails = [new Email { Address = userInfo.Email, IsPrimary = true }],
-                            PasswordHash = "",
                         },
                     ],
                 };
@@ -207,6 +206,8 @@ namespace Fatagram.Application.Services.AuthServices
                     ?? throw new AppException(
                         new Error("LOGIN_WITH_GOOGLE_ERROR", "Failed to create user")
                     );
+
+                _logger.LogInformation("New user created with ID: {UserId}", user.Id);
 
                 accessToken = await _tokenService.GenerateAccessTokenAsync(
                     user.Accounts.First().Id
@@ -221,6 +222,7 @@ namespace Fatagram.Application.Services.AuthServices
             {
                 // Step 4b: Login existing user
                 _logger.LogInformation("Logging in existing user: {Email}", userInfo.Email);
+                _logger.LogInformation("Existing user ID: {UserId}", account.Id);
 
                 accessToken = await _tokenService.GenerateAccessTokenAsync(account.Id);
                 refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.Id);

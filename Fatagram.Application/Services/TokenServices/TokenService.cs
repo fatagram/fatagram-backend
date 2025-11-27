@@ -40,16 +40,11 @@ namespace Fatagram.Application.Services.TokenServices
         /// <returns></returns>
         public async Task<string> GenerateAccessTokenAsync(Guid accountId)
         {
-            var userAccount = await _accountRepository.GetAsync<Account>(accountId);
-            if (userAccount is null)
-            {
-                throw new AccountNotFoundException();
-            }
-            var token = _jwtService.GenerateToken(userAccount.Username, userAccount.UserId);
-            if (token is null)
-            {
-                throw new GenerateTokenException();
-            }
+            var userAccount =
+                await _accountRepository.GetAsync<Account>(accountId)
+                ?? throw new AccountNotFoundException();
+            var token =
+                _jwtService.GenerateToken(userAccount.UserId) ?? throw new GenerateTokenException();
             return token.Data!;
         }
 

@@ -11,12 +11,12 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the username for the account.
         /// </summary>
-        public string Username { get; set; } = string.Empty;
+        public string? Username { get; set; }
 
         /// <summary>
         /// Gets or sets the password hash for the account.
         /// </summary>
-        public string PasswordHash { get; set; } = string.Empty;
+        public string? PasswordHash { get; set; }
 
         /// <summary>
         /// Gets or sets the authentication provider for the account.
@@ -41,11 +41,11 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the emails associated with the account.
         /// </summary>
-        public ICollection<Email> Emails { get; set; } = new List<Email>();
+        public ICollection<Email> Emails { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the refresh token for the account.
         /// </summary>
-        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     }
 }

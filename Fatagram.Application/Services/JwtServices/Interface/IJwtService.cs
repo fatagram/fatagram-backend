@@ -17,7 +17,7 @@ namespace Fatagram.Application.Services.JwtServices.Interface
         /// <param name="username"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        Result<string> GenerateToken(string username, Guid userId);
+        Result<string> GenerateToken(Guid userId);
 
         /// <summary>
         /// Validate a JWT token

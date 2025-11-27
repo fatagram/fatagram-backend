@@ -19,14 +19,9 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity
                     .Property(a => a.Username)
                     .HasColumnName("username")
-                    .HasColumnType("VARCHAR(30)")
-                    .IsRequired();
-                entity.Property(a => a.PasswordHash).HasColumnName("password_hash").IsRequired();
-                entity
-                    .Property(a => a.UserId)
-                    .HasColumnName("user_id")
-                    .HasColumnType("uuid")
-                    .IsRequired();
+                    .HasColumnType("VARCHAR(30)");
+                entity.Property(a => a.PasswordHash).HasColumnName("password_hash");
+                entity.Property(a => a.UserId).HasColumnName("user_id").HasColumnType("uuid");
                 entity
                     .Property(a => a.IsActive)
                     .HasColumnName("is_active")

@@ -177,7 +177,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             var res = await _userProfileService.GetUserProfileAsync(
                 userId,
                 userId.ToString(),
-                "id,urlName,languageCode"
+                "id,urlName,languageCode,isOnboarding"
             );
             return res.ToActionResult();
         }

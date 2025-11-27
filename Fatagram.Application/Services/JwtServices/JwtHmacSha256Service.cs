@@ -14,39 +14,21 @@ namespace Fatagram.Application.Services.JwtServices
     /// <summary>
     /// Service for generating JWT tokens
     /// </summary>
-    public class JwtHmacSha256Service : IJwtService
+    public class JwtHmacSha256Service(IConfiguration config) : IJwtService
     {
-        private readonly IConfiguration _config;
-
-        public JwtHmacSha256Service(IConfiguration config)
-        {
-            _config = config;
-        }
+        private readonly IConfiguration _config = config;
 
         /// <summary>
         /// Generate a JWT token
         /// </summary>
-        /// <param name="username"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public Result<string> GenerateToken(string username, Guid userId)
+        public Result<string> GenerateToken(Guid userId)
         {
-            var secretKey =
-                _config["JwtSettings:SecretKey"]
-                ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
-            var issuer =
-                _config["JwtSettings:Issuer"]
-                ?? throw new ArgumentNullException("JwtSettings:Issuer is missing");
-            ;
-            var audience =
-                _config["JwtSettings:Audience"]
-                ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
-
-            if (!int.TryParse(_config["JwtSettings:ExpireInMinutes"], out var expirationInMinutes))
-            {
-                expirationInMinutes = 60;
-            }
+            var secretKey = _config["JwtSettings:SecretKey"] ?? "";
+            var issuer = _config["JwtSettings:Issuer"] ?? "";
+            var audience = _config["JwtSettings:Audience"] ?? "";
+            var expirationInMinutes = int.Parse(_config["JwtSettings:ExpireInMinutes"] ?? "60");
 
             // if (secretKey == null) throw new ArgumentNullException("Secret key is null");
 
@@ -56,7 +38,6 @@ namespace Fatagram.Application.Services.JwtServices
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.UniqueName, username),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
@@ -77,11 +58,9 @@ namespace Fatagram.Application.Services.JwtServices
         /// <summary>
         /// Generate a JWT token
         /// </summary>
-        /// <param name="username"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Result<string> GenerateToken(string username, string userId) =>
-            GenerateToken(username, userId.ToGuid());
+        public Result<string> GenerateToken(string userId) => GenerateToken(userId.ToGuid());
 
         /// <summary>
         /// Validate a JWT token
@@ -92,16 +71,9 @@ namespace Fatagram.Application.Services.JwtServices
         /// <exception cref="ArgumentNullException"></exception>
         public Result<ClaimsPrincipal> ValidateToken(string token)
         {
-            var secretKey =
-                _config["JwtSettings:SecretKey"]
-                ?? throw new ArgumentNullException("JwtSettings:SecretKey is missing");
-            var issuer =
-                _config["JwtSettings:Issuer"]
-                ?? throw new ArgumentNullException("JwtSettings:Issuer is missing");
-            ;
-            var audience =
-                _config["JwtSettings:Audience"]
-                ?? throw new ArgumentNullException("JwtSettings:Audience is missing");
+            var secretKey = _config["JwtSettings:SecretKey"] ?? "";
+            var issuer = _config["JwtSettings:Issuer"] ?? "";
+            var audience = _config["JwtSettings:Audience"] ?? "";
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();

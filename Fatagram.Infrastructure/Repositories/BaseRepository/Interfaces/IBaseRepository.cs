@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
 {
@@ -39,6 +42,15 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
         );
         Task<TEntity> AddAsync(TEntity entity);
         Task<TEntity> UpdateAsync(TEntity entity);
+        Task<List<TEntity>> UpdateAsync(
+            Expression<Func<TEntity, bool>>? where,
+            Action<TEntity> update
+        );
+        Task<TEntity?> UpdateAsync<TKey>(
+            Expression<Func<TEntity, TKey>> keySelector,
+            TKey key,
+            Action<TEntity> update
+        );
         Task DeleteAsync(Guid id);
         Task SoftDeleteAsync(Guid id);
     }

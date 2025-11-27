@@ -8,6 +8,6 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository.Interface
     /// </summary>
     public interface IAccountRepository : IBaseRepository<Account>
     {
-        Task<Account?> GetByEmailAsync(string email, bool? isVerified = null);
+        Task<Account?> GetByEmailAsync(string email);
     }
 }

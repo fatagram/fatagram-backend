@@ -12,20 +12,16 @@ namespace Fatagram.API.Authentication
     /// <summary>
     /// Custom authentication handler for JWT
     /// </summary>
-    public class JwtAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class JwtAuthenticationHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory loggerFactory,
+        UrlEncoder encoder,
+        IJwtService jwtService,
+        ILogger<JwtAuthenticationHandler> logger
+    ) : AuthenticationHandler<AuthenticationSchemeOptions>(options, loggerFactory, encoder)
     {
-        private readonly IJwtService _jwtService;
-
-        public JwtAuthenticationHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder,
-            IJwtService jwtService
-        ) // Inject JwtService
-            : base(options, logger, encoder)
-        {
-            _jwtService = jwtService;
-        }
+        private readonly IJwtService _jwtService = jwtService;
+        private readonly ILogger<JwtAuthenticationHandler> _logger = logger;
 
         /// <summary>
         /// Handle authentication
@@ -33,7 +29,6 @@ namespace Fatagram.API.Authentication
         /// <returns></returns>
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            // Get token from header
             if (
                 !Request.Cookies.TryGetValue("_accessToken", out var token)
                 || string.IsNullOrWhiteSpace(token)

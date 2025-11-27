@@ -32,6 +32,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("is_active")
                     .IsRequired()
                     .HasDefaultValue(true);
+                // entity
+                //     .Property(a => a.AuthProvider)
+                //     .HasColumnName("auth_provider")
+                //     .HasColumnType("VARCHAR(20)")
+                //     .HasConversion<string>()
+                //     .IsRequired();
 
                 entity.HasIndex(a => a.Username).IsUnique();
 

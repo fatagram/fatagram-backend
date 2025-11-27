@@ -7,31 +7,32 @@ namespace Fatagram.Shared.Constants
         public static class Auth
         {
             public static readonly Error InvalidCredentials = new(
-                "Auth.InvalidCredentials",
+                "INVALID_CREDENTIALS",
                 "The provided credentials are invalid."
             );
             public static readonly Error UsernameExisted = new(
-                "Auth.UsernameExisted",
+                "USERNAME_EXISTED",
                 "Username already exists."
             );
             public static readonly Error EmailExisted = new(
-                "Auth.EmailExisted",
+                "EMAIL_EXISTED",
                 "Email already exists."
             );
-            public static readonly Error UserNotFound = new("Auth.UserNotFound", "User not found.");
+            public static readonly Error UserNotFound = new("USER_NOT_FOUND", "User not found.");
             public static readonly Error AccountNotFound = new(
-                "Auth.AccountNotFound",
+                "ACCOUNT_NOT_FOUND",
                 "Account not found."
             );
-            public static readonly Error Unauthorized = new(
-                "Auth.Unauthorized",
-                "Unauthorized access."
+            public static readonly Error Unauthorized = new("UNAUTHORIZED", "Unauthorized access.");
+            public static readonly Error PasswordIncorrect = new(
+                "PASSWORD_INCORRECT",
+                "Password is incorrect."
             );
         }
 
         public static class User
         {
-            public static readonly Error NotFound = new("User.NotFound", "User not found.");
+            public static readonly Error NotFound = new("USER_NOT_FOUND", "User not found.");
         }
     }
 }

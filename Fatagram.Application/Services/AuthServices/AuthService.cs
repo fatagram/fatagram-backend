@@ -1,57 +1,46 @@
-﻿using AutoMapper;
+﻿using System.Runtime.CompilerServices;
+using AutoMapper;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.DetailExceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.AuthServices.Interface;
 using Fatagram.Application.Services.TokenServices.Interface;
 using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Data.Extensions;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Common;
 using Fatagram.Shared.Constants;
 using Fatagram.Shared.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.AuthServices
 {
     /// <summary>
     /// AuthService class intehirating IAuthService
     /// </summary>
-    public class AuthService : IAuthService
+    public class AuthService(
+        IUserRepository userRepository,
+        IAccountRepository accountRepository,
+        IEmailRepository emailRepository,
+        ITokenService tokenService,
+        GoogleOAuthService googleOAuthService,
+        IMapper mapper,
+        ILogger<AuthService> logger
+    ) : IAuthService
     {
-        // AppDbContext Instance
-        private readonly IUserRepository _userRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IEmailRepository _emailRepository;
-
-        private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
-
-        public AuthService()
-        {
-            _userRepository = null!;
-            _accountRepository = null!;
-            _emailRepository = null!;
-            _tokenService = null!;
-            _mapper = null!;
-        }
-
-        // Constructor
-        public AuthService(
-            IUserRepository userRepository,
-            IAccountRepository accountRepository,
-            IEmailRepository emailRepository,
-            ITokenService tokenService,
-            IMapper mapper
-        )
-        {
-            _userRepository = userRepository;
-            _accountRepository = accountRepository;
-            _emailRepository = emailRepository;
-
-            _tokenService = tokenService;
-            _mapper = mapper;
-        }
+        private readonly IUserRepository _userRepository = userRepository;
+        private readonly IAccountRepository _accountRepository = accountRepository;
+        private readonly IEmailRepository _emailRepository = emailRepository;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly GoogleOAuthService _googleOAuthService = googleOAuthService;
+        private readonly IMapper _mapper = mapper;
+        private readonly ILogger<AuthService> _logger = logger;
 
         /// <summary>
         /// Login method
@@ -62,26 +51,31 @@ namespace Fatagram.Application.Services.AuthServices
         /// <returns></returns>
         public async Task<Result<TokenResponseDto>> Login(LoginDto request)
         {
-            var account =
-                (
-                    await _accountRepository.GetAllAsync<Account>(a =>
-                        a.Username == request.Username
-                    )
-                ).FirstOrDefault() ?? throw new AppException(Errors.Auth.AccountNotFound);
+            var accountByEmail = await _accountRepository.GetByEmailAsync(request.UsernameOrEmail);
+            var accountByUsername = await _accountRepository.GetByUniqueKeyAsync<Account, string>(
+                u => u.Username,
+                request.UsernameOrEmail
+            );
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, account.PasswordHash))
-                throw new AppException(Errors.Auth.InvalidCredentials);
+            if (accountByEmail == null && accountByUsername == null)
+            {
+                throw new AccountNotFoundException();
+            }
 
-            var user =
-                await _userRepository.GetByUsernameAsync(request.Username)
-                ?? throw new AppException(Errors.Auth.UserNotFound);
+            var passwordHash = accountByEmail?.PasswordHash ?? accountByUsername?.PasswordHash;
+            var accountId = accountByEmail?.Id ?? accountByUsername?.Id;
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, passwordHash))
+            {
+                throw new BadRequestException(Errors.Auth.PasswordIncorrect);
+            }
 
-            var accessToken = await _tokenService.GenerateAccessTokenAsync(account.Id);
-            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.Id);
-
+            var accessToken = await _tokenService.GenerateAccessTokenAsync(accountId ?? Guid.Empty);
+            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(
+                accountId ?? Guid.Empty
+            );
             return Result<TokenResponseDto>.Create(
                 ResponseStatusCode.Success,
-                new() { AccessToken = accessToken, RefreshToken = refreshToken }
+                new TokenResponseDto { AccessToken = accessToken, RefreshToken = refreshToken }
             );
         }
 
@@ -114,10 +108,21 @@ namespace Fatagram.Application.Services.AuthServices
             // Get username and password from registerDto to newAccount
             var newAccount = _mapper.Map<Account>(registerDto);
             newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+            newAccount.Emails = [new() { Address = registerDto.Email, IsPrimary = true }];
             newUser.Accounts.Add(newAccount);
-            await _userRepository.AddAsync(newUser);
+            var user = await _userRepository.AddAsync(newUser);
 
-            return Result<TokenResponseDto>.Create(ResponseStatusCode.Created);
+            var accessToken = await _tokenService.GenerateAccessTokenAsync(
+                user.Accounts.FirstOrDefault()?.Id ?? Guid.Empty
+            );
+            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(
+                user.Accounts.FirstOrDefault()?.Id ?? Guid.Empty
+            );
+
+            return Result<TokenResponseDto>.Create(
+                ResponseStatusCode.Success,
+                new TokenResponseDto { AccessToken = accessToken, RefreshToken = refreshToken }
+            );
         }
 
         /// <summary>
@@ -141,7 +146,90 @@ namespace Fatagram.Application.Services.AuthServices
             res.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
             await _accountRepository.UpdateAsync(res);
 
-            return Result<string>.Create();
+            return Result<string>.Create(
+                ResponseStatusCode.Success,
+                "Change password successfully"
+            );
+        }
+
+        public async Task<Result<TokenResponseDto>> GoogleCallback(GoogleCallbackDto request)
+        {
+            // Step 1: Exchange authorization code for access token
+            var oauthResponse = await _googleOAuthService.ExchangeCodeAsync(request.Code);
+            _logger.LogInformation(
+                "Google OAuth token received, expires in: {ExpiresIn}s",
+                oauthResponse.ExpiresIn
+            );
+
+            // Step 2: Get user info from Google using access token
+            var userInfo = await _googleOAuthService.GetUserInfoAsync(oauthResponse.AccessToken);
+            _logger.LogInformation(
+                "Google user info: {Email}, {Name}, {Picture}",
+                userInfo.Email,
+                userInfo.Name,
+                userInfo.Picture
+            );
+
+            if (string.IsNullOrEmpty(userInfo.Email))
+            {
+                throw new AppException(new Error("LOGIN_WITH_GOOGLE_ERROR", "Email not found"));
+            }
+
+            // Step 3: Check if account exists
+            var account = await _accountRepository.GetByEmailAsync(userInfo.Email);
+            string accessToken;
+            string refreshToken;
+
+            if (account is null)
+            {
+                // Step 4a: Create new user if not exists
+                _logger.LogInformation("Creating new user for email: {Email}", userInfo.Email);
+
+                var newUser = new User
+                {
+                    FullName = userInfo.Name,
+                    FirstName = userInfo.GivenName,
+                    LastName = userInfo.FamilyName,
+                    Avatar = userInfo.Picture,
+                    IsOnBoarding = false,
+                    Accounts =
+                    [
+                        new Account
+                        {
+                            Emails = [new Email { Address = userInfo.Email, IsPrimary = true }],
+                            PasswordHash = "",
+                        },
+                    ],
+                };
+
+                var user =
+                    await _userRepository.AddAsync(newUser)
+                    ?? throw new AppException(
+                        new Error("LOGIN_WITH_GOOGLE_ERROR", "Failed to create user")
+                    );
+
+                accessToken = await _tokenService.GenerateAccessTokenAsync(
+                    user.Accounts.First().Id
+                );
+                refreshToken = await _tokenService.GenerateRefreshTokenAsync(
+                    user.Accounts.First().Id
+                );
+
+                _logger.LogInformation("New user created with ID: {UserId}", user.Id);
+            }
+            else
+            {
+                // Step 4b: Login existing user
+                _logger.LogInformation("Logging in existing user: {Email}", userInfo.Email);
+
+                accessToken = await _tokenService.GenerateAccessTokenAsync(account.Id);
+                refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.Id);
+            }
+
+            return Result<TokenResponseDto>.Create(
+                ResponseStatusCode.Success,
+                new TokenResponseDto { AccessToken = accessToken, RefreshToken = refreshToken }
+            );
         }
     }
 }

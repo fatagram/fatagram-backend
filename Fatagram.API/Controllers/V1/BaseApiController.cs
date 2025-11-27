@@ -21,12 +21,7 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException">Thrown when user is not authenticated</exception>
         protected Guid GetCurrentUserId()
         {
-            var userId = GetCurrentUserIdOrNull();
-            if (userId == null)
-            {
-                throw new UnauthorizedException();
-            }
-            return userId.Value;
+            return GetCurrentUserIdOrNull() ?? throw new UnauthorizedException();
         }
 
         /// <summary>

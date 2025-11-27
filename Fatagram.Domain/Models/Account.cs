@@ -1,4 +1,5 @@
 ﻿using Fatagram.Domain;
+using Fatagram.Domain.Enums;
 
 namespace Fatagram.Domain.Models
 {
@@ -16,6 +17,11 @@ namespace Fatagram.Domain.Models
         /// Gets or sets the password hash for the account.
         /// </summary>
         public string PasswordHash { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the authentication provider for the account.
+        /// </summary>
+        // public AuthProvider AuthProvider { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the account is active.

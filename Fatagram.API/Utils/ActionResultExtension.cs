@@ -16,6 +16,12 @@ namespace Fatagram.API.Utils
             return CreateActionResult(result.Code, data);
         }
 
+        public static IActionResult ToActionResult(this Result result)
+        {
+            var data = ApiResponse<object>.Create(null, result.Message);
+            return CreateActionResult(result.Code, data);
+        }
+
         public static IActionResult ToActionResult<TCursor, TItem>(
             this CursorResult<TCursor, TItem> result
         )

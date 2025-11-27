@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Common.Mapper;
+using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.BaseRepository;
+using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
 
@@ -21,6 +24,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IImageService, LocalImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<IUserInfoService, UserInfoService>();
+            services.AddScoped<GoogleOAuthService>();
 
             // Scoped for repositories
             services.AddScoped<IUserRepository, UserRepository>();

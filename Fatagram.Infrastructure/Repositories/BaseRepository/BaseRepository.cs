@@ -5,6 +5,8 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Infrastructure.Repositories.BaseRepository
 {
@@ -12,11 +14,16 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
         where TEntity : BaseEntity
     {
         protected readonly AppDbContext _dbContext;
+        protected readonly ILogger<BaseRepository<TEntity>>? _logger;
         protected readonly DbSet<TEntity> _dbSet;
 
-        public BaseRepository(AppDbContext dbContext)
+        public BaseRepository(
+            AppDbContext dbContext,
+            ILogger<BaseRepository<TEntity>>? logger = null
+        )
         {
             _dbContext = dbContext;
+            _logger = logger;
             _dbSet = _dbContext.Set<TEntity>();
         }
 
@@ -80,7 +87,8 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 if (typeof(TResult) == typeof(TEntity))
                 {
                     var entities = await query.ToListAsync();
-                    return entities.Cast<TResult>().ToList();
+                    _logger?.LogInformation("Entities count: {Count}", entities.Count);
+                    return [.. entities.Cast<TResult>()];
                 }
                 else
                 {
@@ -112,7 +120,9 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 if (typeof(TResult) == typeof(TEntity))
                 {
                     var entity = await query.FirstOrDefaultAsync(e => e.Id == id);
-                    return entity is TResult result ? result : default;
+                    if (entity == null)
+                        return default;
+                    return (TResult)(object)entity;
                 }
                 else
                 {
@@ -142,7 +152,9 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 if (typeof(TResult) == typeof(TEntity))
                 {
                     var entity = await _dbSet.FirstOrDefaultAsync(lambda);
-                    return entity is TResult result ? result : default;
+                    if (entity == null)
+                        return default;
+                    return (TResult)(object)entity;
                 }
                 else
                 {
@@ -178,6 +190,45 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             _dbSet.Update(entity);
             await _dbContext.SaveChangesAsync();
             return entity;
+        }
+
+        public async Task<List<TEntity>> UpdateAsync(
+            Expression<Func<TEntity, bool>>? where,
+            Action<TEntity> update
+        )
+        {
+            var query = _dbSet.AsQueryable();
+            if (where != null)
+            {
+                query = query.Where(where);
+            }
+            var entities = await query.ToListAsync();
+            foreach (var entity in entities)
+            {
+                update(entity);
+            }
+            await _dbContext.SaveChangesAsync();
+            return entities;
+        }
+
+        public async Task<TEntity?> UpdateAsync<TKey>(
+            Expression<Func<TEntity, TKey>> keySelector,
+            TKey key,
+            Action<TEntity> update
+        )
+        {
+            var parameter = keySelector.Parameters[0];
+            var body = Expression.Equal(keySelector.Body, Expression.Constant(key));
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+
+            var entity = await _dbSet.Where(lambda).FirstOrDefaultAsync();
+            if (entity != null)
+            {
+                update(entity);
+                await _dbContext.SaveChangesAsync();
+                return entity;
+            }
+            return default;
         }
     }
 }

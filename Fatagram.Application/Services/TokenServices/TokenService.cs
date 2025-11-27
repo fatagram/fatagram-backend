@@ -14,29 +14,24 @@ using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 
 namespace Fatagram.Application.Services.TokenServices
 {
-    public class TokenService : ITokenService
+    public class TokenService(
+        IJwtService jwtService,
+        IAccountRepository accountRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IConfiguration configuration,
+        ILogger<TokenService> logger
+    ) : ITokenService
     {
-        private readonly IJwtService _jwtService;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IRefreshTokenRepository _refreshTokenRepository;
-        private readonly IConfiguration _configuration;
-
-        public TokenService(
-            IJwtService jwtService,
-            IAccountRepository accountRepository,
-            IRefreshTokenRepository refreshTokenRepository,
-            IConfiguration configuration
-        )
-        {
-            _jwtService = jwtService;
-            _accountRepository = accountRepository;
-            _refreshTokenRepository = refreshTokenRepository;
-            _configuration = configuration;
-        }
+        private readonly IJwtService _jwtService = jwtService;
+        private readonly IAccountRepository _accountRepository = accountRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ILogger<TokenService> _logger = logger;
 
         /// <summary>
         /// Generate tokens for a user
@@ -60,9 +55,9 @@ namespace Fatagram.Application.Services.TokenServices
 
         public async Task<string> GenerateRefreshTokenAsync(Guid accountId)
         {
-            var newRefreshToken = new Guid();
+            var newRefreshToken = Guid.NewGuid();
             await _refreshTokenRepository.AddAsync(
-                new()
+                new RefreshToken
                 {
                     AccountId = accountId,
                     Token = newRefreshToken.ToString(),
@@ -77,6 +72,7 @@ namespace Fatagram.Application.Services.TokenServices
         public async Task<string?> GenerateAccessTokenFromRefreshTokenAsync(string refreshToken)
         {
             var (res, accountId) = await ValidateRefreshTokenAsync(refreshToken);
+            _logger.LogInformation("Refresh token is valid: {IsValid}", res);
             if (!res || accountId is null)
             {
                 return null;
@@ -126,7 +122,7 @@ namespace Fatagram.Application.Services.TokenServices
                 refreshToken,
                 rt => rt.AccountId
             );
-            await _refreshTokenRepository.SoftDeleteAsync(rt);
+            await _refreshTokenRepository.DeleteAsync(rt);
         }
     }
 }

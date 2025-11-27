@@ -14,14 +14,10 @@ using Microsoft.AspNetCore.Authorization;
 namespace Fatagram.API.Controllers.V1
 {
     [Route("api/[controller]")]
-    public class NotificationController : BaseApiController
+    public class NotificationController(INotificationService notificationService)
+        : BaseApiController
     {
-        private readonly INotificationService _notificationService;
-
-        public NotificationController(INotificationService notificationService)
-        {
-            _notificationService = notificationService;
-        }
+        private readonly INotificationService _notificationService = notificationService;
 
         /// <summary>
         /// Get notifications for the authenticated user with pagination support.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.User;
@@ -13,28 +14,26 @@ using Fatagram.Domain.Enums;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
 {
-    public class UserProfileService : IUserProfileService
+    public class UserProfileService(
+        IUserRepository userRepository,
+        IMapper mapper,
+        ILogger<UserProfileService> logger
+    ) : IUserProfileService
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
-
-        public UserProfileService(IUserRepository userRepository, IMapper mapper)
-        {
-            _userRepository = userRepository;
-            _mapper = mapper;
-        }
+        private readonly IUserRepository _userRepository = userRepository;
+        private readonly IMapper _mapper = mapper;
+        private readonly ILogger<UserProfileService> _logger = logger;
 
         public async Task<Result<string>> CheckUserExistAsync(Guid userId)
         {
-            var user = await _userRepository.GetAsync(userId, s => s);
-            if (user is null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user =
+                await _userRepository.GetAsync(userId, s => s) ?? throw new UserNotFoundException();
             return Result<string>.Create();
         }
 
@@ -50,23 +49,32 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             string fields
         )
         {
-            var user = await _userRepository.GetDynamicAsync(
-                fields,
-                u => u.Id.ToString() == target
-            );
-            if (user is null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user =
+                await _userRepository.GetDynamicAsync(fields, u => u.Id.ToString() == target)
+                ?? throw new UserNotFoundException();
 
             // Map dynamic object to dictionary
             var infos = new Dictionary<string, string?>();
-            var properties = ((object)user).GetType().GetProperties();
 
-            foreach (var prop in properties)
+            // Convert dynamic to dictionary safely
+            if (user != null)
             {
-                var value = prop.GetValue(user);
-                infos[prop.Name] = value?.ToString();
+                var userObj = (object)user;
+                var properties = userObj.GetType().GetProperties();
+
+                foreach (var prop in properties)
+                {
+                    try
+                    {
+                        var value = prop.GetValue(userObj, null);
+                        infos[prop.Name.ToLowerFirstLetter()] = value?.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to get property {PropertyName}", prop.Name);
+                        infos[prop.Name.ToLowerFirstLetter()] = null;
+                    }
+                }
             }
 
             var result = new GetUserProfileDto
@@ -89,9 +97,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             UpdateUserDto updateUserDto
         )
         {
-            var existingUser = await _userRepository.GetAsync(userId, u => u);
-            if (existingUser is null)
-                throw new UserNotFoundException();
+            var existingUser =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
             _mapper.Map(updateUserDto, existingUser);
             await _userRepository.UpdateAsync(existingUser.NormalizeEmptyStringToNull());
@@ -125,11 +132,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             ChangeNameDto changeNameDto
         )
         {
-            var user = await _userRepository.GetAsync(userId, u => u);
-            if (user == null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
             user.FirstName = changeNameDto.FirstName;
             user.LastName = changeNameDto.LastName;
             user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
@@ -139,8 +143,68 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
 
         public async Task<Result<bool>> IsOnboardingCompletedAsync(Guid userId)
         {
+            _logger.LogInformation("Checking onboarding status for user {UserId}", userId);
             var isOnboarding = await _userRepository.GetAsync(userId, u => u.IsOnBoarding);
             return Result<bool>.Create(ResponseStatusCode.Success, isOnboarding);
+        }
+
+        public async Task<Result> OnboardingAsync(Guid userId, OnboardingDto onboardingDto)
+        {
+            var result = await _userRepository.UpdateAsync(
+                u => u.Id == userId,
+                u =>
+                {
+                    u.IsOnBoarding = true;
+                    u.BirthDay = onboardingDto.BirthDay;
+                    u.Gender = onboardingDto.Gender;
+                    u.FirstName = onboardingDto.FirstName;
+                    u.MiddleName = onboardingDto.MiddleName;
+                    u.LastName = onboardingDto.LastName;
+                    u.FullName =
+                        onboardingDto.FirstName
+                        + " "
+                        + onboardingDto.MiddleName
+                        + " "
+                        + onboardingDto.LastName;
+                }
+            );
+            return Result.Create(ResponseStatusCode.Created);
+        }
+
+        public async Task<Result<OnboardingDefaultDataDto>> GetOnboardingDefaultDataAsync(
+            Guid userId
+        )
+        {
+            var user =
+                await _userRepository.GetAsync(
+                    userId,
+                    u => new
+                    {
+                        u.FirstName,
+                        u.LastName,
+                        u.MiddleName,
+                        u.Avatar,
+                        u.Gender,
+                        u.BirthDay,
+                        Email = u
+                            .Accounts.SelectMany(a => a.Emails)
+                            .Where(e => e.IsPrimary)
+                            .Select(e => e.Address)
+                            .FirstOrDefault(),
+                    }
+                ) ?? throw new UserNotFoundException();
+
+            var data = new OnboardingDefaultDataDto
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                MiddleName = user.MiddleName,
+                Avatar = user.Avatar,
+                Gender = user.Gender,
+                BirthDay = user.BirthDay,
+                Email = user.Email,
+            };
+            return Result<OnboardingDefaultDataDto>.Create(ResponseStatusCode.Success, data);
         }
     }
 }

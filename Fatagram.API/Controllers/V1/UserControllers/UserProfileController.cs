@@ -4,7 +4,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Fatagram.API.Controllers.V1;
+using Fatagram.API.Middlewares;
 using Fatagram.API.Utils;
+using Fatagram.API.Utils.Attributes;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
@@ -19,19 +21,15 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
     [Route("api/[controller]")]
-    public class UserProfileController : BaseApiController
+    public class UserProfileController(
+        IUserProfileService userProfileService,
+        IImageService imageService,
+        ILogger<UserProfileController> logger
+    ) : BaseApiController
     {
-        private readonly IUserProfileService _userProfileService;
-        private readonly IImageService _imageService;
-
-        public UserProfileController(
-            IUserProfileService userProfileService,
-            IImageService imageService
-        )
-        {
-            _userProfileService = userProfileService;
-            _imageService = imageService;
-        }
+        private readonly IUserProfileService _userProfileService = userProfileService;
+        private readonly IImageService _imageService = imageService;
+        private readonly ILogger<UserProfileController> _logger = logger;
 
         /// <summary>
         /// Get a user by username
@@ -171,6 +169,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
+        [NotRequireOnBoarding]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
@@ -181,6 +180,29 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 "id,urlName,languageCode"
             );
             return res.ToActionResult();
+        }
+
+        [Authorize]
+        [NotRequireOnBoarding]
+        [HttpPost("onboarding")]
+        public async Task<IActionResult> OnboardingAsync([FromBody] OnboardingDto onboardingDto)
+        {
+            var result = await _userProfileService.OnboardingAsync(
+                GetCurrentUserId(),
+                onboardingDto
+            );
+            return result.ToActionResult();
+        }
+
+        [Authorize]
+        [NotRequireOnBoarding]
+        [HttpGet("onboarding/defaults")]
+        public async Task<IActionResult> GetOnboardingDefaultData()
+        {
+            var result = await _userProfileService.GetOnboardingDefaultDataAsync(
+                GetCurrentUserId()
+            );
+            return result.ToActionResult();
         }
     }
 }

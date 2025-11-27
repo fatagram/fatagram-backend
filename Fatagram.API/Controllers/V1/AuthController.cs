@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Utils;
+using Fatagram.API.Utils.Attributes;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
@@ -16,26 +17,20 @@ using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 
 namespace Fatagram.API.Controllers.V1
 {
     [Route("api/[controller]")]
-    public class AuthController : BaseApiController
+    public class AuthController(
+        IAuthService authService,
+        ITokenService tokenService,
+        ILogger<AuthController> logger
+    ) : BaseApiController
     {
-        private readonly IAuthService _authService;
-        private readonly ITokenService _tokenService;
-        private readonly ILogger<AuthController> _logger;
-
-        public AuthController(
-            IAuthService authService,
-            ITokenService tokenService,
-            ILogger<AuthController> logger
-        )
-        {
-            _authService = authService;
-            _tokenService = tokenService;
-            _logger = logger;
-        }
+        private readonly IAuthService _authService = authService;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly ILogger<AuthController> _logger = logger;
 
         /// <summary>
         /// Login a user
@@ -46,29 +41,18 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
             var res = await _authService.Login(request);
-            this._logger.LogInformation("Token: {Token}", res);
-            Response.Cookies.Append(
-                "_accessToken",
-                res.Data!.AccessToken,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.Now.AddMinutes(30),
-                }
-            );
-            Response.Cookies.Append(
-                "_refreshToken",
-                res.Data!.RefreshToken,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.Now.AddDays(7),
-                }
-            );
+            AppendAccessToken(res.Data!.AccessToken);
+            AppendRefreshToken(res.Data!.RefreshToken);
+            return Ok();
+        }
+
+        [HttpPost("google/callback")]
+        public async Task<IActionResult> GoogleCallback([FromBody] GoogleCallbackDto request)
+        {
+            _logger.LogInformation("Google callback: {request}", request.Code);
+            var res = await _authService.GoogleCallback(request);
+            AppendAccessToken(res.Data!.AccessToken);
+            AppendRefreshToken(res.Data!.RefreshToken);
             return Ok();
         }
 
@@ -80,19 +64,12 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost("refreshToken")]
         public async Task<IActionResult> RefreshToken()
         {
-            var refreshToken = Request.Cookies["_refreshToken"]!;
+            if (!Request.Cookies.TryGetValue("_refreshToken", out var refreshToken))
+            {
+                throw new GenerateTokenException();
+            }
             var res = await _tokenService.GenerateAccessTokenFromRefreshTokenAsync(refreshToken);
-            Response.Cookies.Append(
-                "_accessToken",
-                res!,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.Now.AddMinutes(30),
-                }
-            );
+            AppendAccessToken(res!);
             return Ok();
         }
 
@@ -110,28 +87,8 @@ namespace Fatagram.API.Controllers.V1
             )
                 await _tokenService.DeleteRefreshTokenAsync(token!);
 
-            Response.Cookies.Append(
-                "_accessToken",
-                "",
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.Now.AddDays(-1),
-                }
-            );
-            Response.Cookies.Append(
-                "_refreshToken",
-                "",
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.Now.AddDays(-1),
-                }
-            );
+            RemoveAccessToken();
+            RemoveRefreshToken();
             return Ok();
         }
 
@@ -166,10 +123,53 @@ namespace Fatagram.API.Controllers.V1
         /// </summary>
         /// <returns></returns>
         [Authorize]
+        [NotRequireOnBoarding]
         [HttpGet("ping")]
         public IActionResult Ping()
         {
             return Ok();
+        }
+
+        private void RemoveAccessToken()
+        {
+            Response.Cookies.Delete("_accessToken");
+        }
+
+        private void RemoveRefreshToken()
+        {
+            Response.Cookies.Delete("_refreshToken");
+        }
+
+        private void AppendAccessToken(string value)
+        {
+            Response.Cookies.Append(
+                "_accessToken",
+                value,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    Expires = DateTime.Now.AddMinutes(30),
+                }
+            );
+        }
+
+        private void AppendRefreshToken(string value)
+        {
+            Response.Cookies.Append(
+                "_refreshToken",
+                value,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    Expires = DateTime.Now.AddDays(7),
+                }
+            );
         }
     }
 }

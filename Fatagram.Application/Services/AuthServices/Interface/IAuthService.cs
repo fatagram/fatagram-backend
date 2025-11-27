@@ -18,6 +18,8 @@ namespace Fatagram.Application.Services.AuthServices.Interface
         /// <returns></returns>
         Task<Result<TokenResponseDto>> Login(LoginDto loginDto);
 
+        Task<Result<TokenResponseDto>> GoogleCallback(GoogleCallbackDto request);
+
         /// <summary>
         /// Register a new user
         /// </summary>

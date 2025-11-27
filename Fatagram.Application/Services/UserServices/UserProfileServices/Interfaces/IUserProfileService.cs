@@ -61,5 +61,20 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
         /// <param name="userId"></param>
         /// <returns></returns>
         Task<Result<bool>> IsOnboardingCompletedAsync(Guid userId);
+
+        /// <summary>
+        /// Update onboarding
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="onboardingDto"></param>
+        /// <returns></returns>
+        Task<Result> OnboardingAsync(Guid userId, OnboardingDto onboardingDto);
+
+        /// <summary>
+        /// Get default data for onboarding
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task<Result<OnboardingDefaultDataDto>> GetOnboardingDefaultDataAsync(Guid userId);
     }
 }

@@ -77,9 +77,9 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                     ImageStream = file.OpenReadStream(),
                     Format = ImageFormat.Jpeg,
                     Quality = ImageQuality.Low,
-                    Folder = $"{userId}/avatars",
-                    FileName = $"avatar_{DateTime.UtcNow.Ticks}",
-                }
+                    SizePreset = ImageSizePreset.Small,
+                },
+                "avatars"
             );
             await _userProfileService.UpdateUserAsync(
                 userId,
@@ -105,10 +105,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 {
                     ImageStream = file.OpenReadStream(),
                     Format = ImageFormat.Jpeg,
-                    Quality = ImageQuality.Low,
-                    Folder = $"{userId}/backgrounds",
-                    FileName = $"background_{DateTime.UtcNow.Ticks}",
-                }
+                    Quality = ImageQuality.High,
+                    SizePreset = ImageSizePreset.Large,
+                },
+                "backgrounds"
             );
             await _userProfileService.UpdateUserAsync(
                 userId,

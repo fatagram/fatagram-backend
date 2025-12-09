@@ -39,6 +39,7 @@ namespace Fatagram.API
 
             // Middlewares
             app.UseCustomMiddlewares();
+
             // Routing
             app.MapControllers().RequireCors(CorsPolicySettings.MyAllowSpecificOrigins);
             app.MapGet("/hi", () => "Hello World!");

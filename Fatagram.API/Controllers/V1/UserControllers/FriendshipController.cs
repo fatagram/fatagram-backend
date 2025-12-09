@@ -16,14 +16,9 @@ using Microsoft.AspNetCore.Authorization;
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
     [Route("api/[controller]")]
-    public class FriendshipController : BaseApiController
+    public class FriendshipController(IFriendshipService friendshipService) : BaseApiController
     {
-        private readonly IFriendshipService _friendshipService;
-
-        public FriendshipController(IFriendshipService friendshipService)
-        {
-            _friendshipService = friendshipService;
-        }
+        private readonly IFriendshipService _friendshipService = friendshipService;
 
         /// <summary>
         /// Send a friend request to another user.
@@ -137,12 +132,11 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("requests")]
-        public async Task<IActionResult> GetFriendRequests(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
-        )
+        public async Task<IActionResult> GetFriendRequests([FromBody] CursorFilter<Guid> filter)
         {
-            throw new NotImplementedException();
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.GetFriendRequestsAsync(userId, filter);
+            return res.ToActionResult();
         }
 
         /// <summary>
@@ -156,12 +150,12 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         [HttpGet("friends/{targetId}")]
         public async Task<IActionResult> GetFriends(
             string targetId,
-            string keyword,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10
+            [FromBody] CursorFilter<Guid> filter
         )
         {
-            throw new NotImplementedException();
+            var userId = GetCurrentUserId();
+            var res = await _friendshipService.GetFriendsAsync(userId, targetId.ToGuid(), filter);
+            return res.ToActionResult();
         }
     }
 }

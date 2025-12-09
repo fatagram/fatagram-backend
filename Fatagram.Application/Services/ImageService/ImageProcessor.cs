@@ -13,18 +13,20 @@ namespace Fatagram.Application.Services.ImageService
 {
     public static class ImageProcessor
     {
-        public static async Task<string> SaveImageOnLocal(ImageRequest request)
+        public static async Task<Image> ProcessImageAsync(ImageRequest request)
         {
             var imageEncoder = CreateImageEncoder(request);
             var (w, h) = ResolveSize(request);
 
-            var path = Path.Combine(
-                request.Folder,
-                $"{request.FileName}.{request.Format.ToString().ToLower()}"
-            );
+            // if (!Directory.Exists(folder))
+            // {
+            //     Directory.CreateDirectory(folder);
+            // }
 
-            request.ImageStream.Position = 0; // reset stream trước khi load
-            using var image = await Image.LoadAsync(request.ImageStream);
+            // var path = Path.Combine(folder, $"{fileName}.{request.Format.ToString().ToLower()}");
+
+            request.ImageStream.Position = 0;
+            var image = await Image.LoadAsync(request.ImageStream);
 
             // Resize
             image.Mutate(x =>
@@ -37,8 +39,7 @@ namespace Fatagram.Application.Services.ImageService
                 )
             );
 
-            await image.SaveAsync(path, imageEncoder);
-            return path;
+            return image;
         }
 
         public static async Task<string> SaveImageOnCloud(ImageRequest request)
@@ -55,8 +56,8 @@ namespace Fatagram.Application.Services.ImageService
                 ImageSizePreset.Small => (320, 240),
                 ImageSizePreset.Medium => (640, 480),
                 ImageSizePreset.Large => (1024, 768),
-                ImageSizePreset.Original => (request.Width ?? 0, request.Height ?? 0),
-                _ => (request.Width ?? 0, request.Height ?? 0),
+                ImageSizePreset.Original => (request.Width ?? 150, request.Height ?? 150),
+                _ => (150, 150),
             };
         }
 

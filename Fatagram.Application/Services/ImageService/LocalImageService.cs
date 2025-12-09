@@ -14,28 +14,39 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Fatagram.Application.Services.ImageService
 {
-    public class LocalImageService : IImageService
+    public class LocalImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        : IImageService
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string _storagePath;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly string _storagePath = config["LocalStorage:Path"] ?? "";
 
-        public LocalImageService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        public async Task<Result<string>> SaveImageAsync(ImageRequest request, string folder)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _storagePath = config["ImageLocalStorage:Path"] ?? "";
-        }
-
-        public async Task<Result<string>> SaveImageAsync(ImageRequest request)
-        {
-            request.Folder = Path.Combine(_storagePath, request.Folder);
-            var res = await ImageProcessor.SaveImageOnLocal(request);
-            var finalUrl = Path.Combine(
-                _httpContextAccessor.HttpContext?.Request.Scheme ?? "http",
-                _httpContextAccessor.HttpContext?.Request.Host.ToString() ?? "localhost",
-                _httpContextAccessor.HttpContext?.Request.PathBase.ToString() ?? "",
-                res.Replace("\\", "/").Replace(_storagePath.Replace("\\", "/"), "").TrimStart('/')
+            var fullFolderPath = Path.Combine(_storagePath, folder);
+            var fileName = GenerateFileName();
+            var filePath = Path.Combine(
+                fullFolderPath,
+                $"{fileName}.{request.Format.ToString().ToLower()}"
             );
+
+            if (!Directory.Exists(fullFolderPath))
+            {
+                Directory.CreateDirectory(fullFolderPath);
+            }
+
+            var image = await ImageProcessor.ProcessImageAsync(request);
+
+            await image.SaveAsync(filePath);
+
+            var scheme = _httpContextAccessor.HttpContext?.Request.Scheme ?? "http";
+            var host = _httpContextAccessor.HttpContext?.Request.Host.ToString() ?? "localhost";
+            var port = _httpContextAccessor.HttpContext?.Request.Host.Port ?? 5000;
+            var pathBase = filePath.Replace(_storagePath, "");
+
+            var finalUrl = $"{scheme}://{host}:{port}{pathBase}";
             return Result<string>.Create(ResponseStatusCode.Success, finalUrl);
         }
+
+        private static string GenerateFileName() => Guid.NewGuid().ToString();
     }
 }

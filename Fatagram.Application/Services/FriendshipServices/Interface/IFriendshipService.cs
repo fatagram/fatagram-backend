@@ -10,29 +10,28 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices.Interfac
 {
     public interface IFriendshipService
     {
-        Task<Result<object>> SendAddFriendAsync(Guid senderId, Guid receiverId);
+        Task<Result> SendFriendRequestAsync(Guid senderId, Guid receiverId);
 
-        Task<Result<object>> AcceptAddFriendAsync(Guid acceptorId, Guid requesterId);
+        Task<Result> AcceptFriendRequestAsync(Guid acceptorId, Guid requesterId);
 
-        Task<Result<object>> CancelAddFriendAsync(Guid receiverId, Guid senderId);
+        Task<Result> RevokeFriendRequestAsync(Guid receiverId, Guid senderId);
 
-        Task<Result<object>> UnfriendAsync(Guid userId, Guid friendId);
+        Task<Result> UnfriendAsync(Guid userId, Guid friendId);
 
-        Task<Result<object>> DeclineAddFriendRequestAsync(Guid declinerId, Guid requesterId);
-
+        Task<Result> DeclineFriendRequestAsync(Guid declinerId, Guid requesterId);
         Task<Result<GetFriendShipStatusDto>> GetFriendshipStatusAsync(Guid sourceId, Guid desId);
 
         Task<Result<int>> GetNumberOfFriendsAsync(Guid userId);
 
-        Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(
+        Task<CursorResult<DateTime, FriendRequestDto>> GetFriendRequestsAsync(
             Guid userId,
-            CursorFilter<Guid> filter
+            CursorFilter<DateTime> filter
         );
 
-        Task<PagedResult<FriendDto>> GetFriendsAsync(
+        Task<CursorResult<DateTime, FriendDto>> GetFriendsAsync(
             Guid userId,
             Guid targetId,
-            CursorFilter<Guid> filter
+            CursorFilter<DateTime> filter
         );
     }
 }

@@ -80,17 +80,17 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             throw new NotImplementedException();
         }
 
-        public Task<CursorResult<Guid?, NotificationDto>> GetNotificationsAsync(
+        public Task<CursorResult<DateTime, NotificationDto>> GetNotificationsAsync(
             Guid userId,
-            CursorFilter<Guid> query
+            CursorFilter<DateTime> query
         )
         {
             throw new NotImplementedException();
         }
 
-        public Task<CursorResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
+        public Task<CursorResult<DateTime, NotificationDto>> GetUnreadNotificationsAsync(
             Guid userId,
-            CursorFilter<Guid> query
+            CursorFilter<DateTime> query
         )
         {
             throw new NotImplementedException();

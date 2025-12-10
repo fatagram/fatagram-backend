@@ -18,13 +18,13 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             NotificationDto notificationDto,
             bool isSave = true
         );
-        Task<CursorResult<Guid?, NotificationDto>> GetNotificationsAsync(
+        Task<CursorResult<DateTime, NotificationDto>> GetNotificationsAsync(
             Guid userId,
-            CursorFilter<Guid> query
+            CursorFilter<DateTime> query
         );
-        Task<CursorResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
+        Task<CursorResult<DateTime, NotificationDto>> GetUnreadNotificationsAsync(
             Guid userId,
-            CursorFilter<Guid> query
+            CursorFilter<DateTime> query
         );
         Task MarkNotificationAsReadAsync(Guid notificationId);
         Task MarkAllNotificationsAsReadAsync(Guid userId);

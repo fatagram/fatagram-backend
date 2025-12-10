@@ -19,5 +19,6 @@ namespace Fatagram.Application.Dtos.User
         public string Name { get; set; } = null!;
         public string? UrlName { get; set; } = null;
         public bool IsFriend { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

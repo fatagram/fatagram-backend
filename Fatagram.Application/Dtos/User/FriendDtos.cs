@@ -27,6 +27,6 @@ namespace Fatagram.Application.Dtos.User
         public string? SenderUrlName { get; set; } = null;
         public string? SenderAvatar { get; set; }
         public string? SenderName { get; set; } = null!;
-        public TimeDistance CreatedAt { get; set; } = new(0, TimeUnit.Miliseconds);
+        public DateTime CreatedAt { get; set; }
     }
 }

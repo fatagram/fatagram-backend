@@ -34,7 +34,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             _mapper = mapper;
         }
 
-        public async Task<Result<UserInfoOverview>> GetUserInfoAsync(Guid userId, Guid targetId)
+        public Task<Result<UserInfoOverview>> GetUserInfoAsync(Guid userId, Guid targetId)
         {
             throw new NotImplementedException();
         }

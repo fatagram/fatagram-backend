@@ -17,7 +17,6 @@ using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 
 namespace Fatagram.API.Controllers.V1
 {

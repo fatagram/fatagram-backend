@@ -13,14 +13,16 @@ namespace Fatagram.API.Extensions.Hosting
             //var certPassword = builder.Configuration["PfxPassword"];
 
             // Add authorization
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                options.ListenLocalhost(5000);
-                //options.ListenLocalhost(5001, listenOptions =>
-                //{
-                //    listenOptions.UseHttps(certPath, certPassword);
-                //});
-            });
+            // builder.WebHost.ConfigureKestrel(options =>
+            // {
+            //     options.ListenLocalhost(5000);
+            //     //options.ListenLocalhost(5001, listenOptions =>
+            //     //{
+            //     //    listenOptions.UseHttps(certPath, certPassword);
+            //     //});
+            // });
+
+            builder.WebHost.UseKestrel();
         }
     }
 }

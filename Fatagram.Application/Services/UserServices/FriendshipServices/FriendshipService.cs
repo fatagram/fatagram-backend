@@ -258,7 +258,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             return Result<int>.Create(ResponseStatusCode.Success, count);
         }
 
-        public async Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(
+        public Task<PagedResult<FriendRequestDto>> GetFriendRequestsAsync(
             Guid userId,
             CursorFilter<Guid> filter
         )
@@ -266,7 +266,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             throw new NotImplementedException();
         }
 
-        public async Task<PagedResult<FriendDto>> GetFriendsAsync(
+        public Task<PagedResult<FriendDto>> GetFriendsAsync(
             Guid userId,
             Guid targetId,
             CursorFilter<Guid> filter

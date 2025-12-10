@@ -19,8 +19,8 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
             Expression<Func<TEntity, TResult>>? selector = null
         );
         Task<TResult?> GetByUniqueKeyAsync<TResult, TKey>(
-            Expression<Func<TEntity, TKey>> keySelector,
-            TKey key,
+            Expression<Func<TEntity, TKey?>> keySelector,
+            TKey? key,
             Expression<Func<TEntity, TResult>>? selector = null
         );
         Task<List<TResult>> GetAllAsync<TResult, TKey>(

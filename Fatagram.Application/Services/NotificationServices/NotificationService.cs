@@ -70,17 +70,17 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             await _notificationSender.SendNotificationAsync(userId, attachedNotification);
         }
 
-        public async Task DeleteAllNotificationsAsync(Guid userId)
+        public Task DeleteAllNotificationsAsync(Guid userId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task DeleteNotificationAsync(Guid notificationId)
+        public Task DeleteNotificationAsync(Guid notificationId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<CursorResult<Guid?, NotificationDto>> GetNotificationsAsync(
+        public Task<CursorResult<Guid?, NotificationDto>> GetNotificationsAsync(
             Guid userId,
             CursorFilter<Guid> query
         )
@@ -88,7 +88,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             throw new NotImplementedException();
         }
 
-        public async Task<CursorResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
+        public Task<CursorResult<Guid?, NotificationDto>> GetUnreadNotificationsAsync(
             Guid userId,
             CursorFilter<Guid> query
         )
@@ -96,17 +96,17 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             throw new NotImplementedException();
         }
 
-        public async Task MarkNotificationAsReadAsync(Guid notificationId)
+        public Task MarkNotificationAsReadAsync(Guid notificationId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task MarkAllNotificationsAsReadAsync(Guid userId)
+        public Task MarkAllNotificationsAsReadAsync(Guid userId)
         {
             throw new NotImplementedException();
         }
 
-        private async Task<IEnumerable<Notification>> FindNotificationAsync(
+        private Task<IEnumerable<Notification>> FindNotificationAsync(
             Guid userId,
             Guid actorId,
             NotificationType type,
@@ -116,7 +116,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             throw new NotImplementedException();
         }
 
-        public async Task DeleteNotificationsAsync(
+        public Task DeleteNotificationsAsync(
             Guid userId,
             Guid actorId,
             NotificationType type,

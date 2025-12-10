@@ -134,8 +134,8 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
         }
 
         public async Task<TResult?> GetByUniqueKeyAsync<TResult, TKey>(
-            Expression<Func<TEntity, TKey>> keySelector,
-            TKey key,
+            Expression<Func<TEntity, TKey?>> keySelector,
+            TKey? key,
             Expression<Func<TEntity, TResult>>? selector = null
         )
         {

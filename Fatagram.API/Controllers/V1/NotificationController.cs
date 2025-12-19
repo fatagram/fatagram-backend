@@ -28,7 +28,7 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getNotifications")]
-        public async Task<IActionResult> GetNotifications(CursorFilter<Guid> filter)
+        public async Task<IActionResult> GetNotifications(CursorFilter<DateTime> filter)
         {
             var userId = GetCurrentUserId();
             var result = await _notificationService.GetNotificationsAsync(userId, filter);
@@ -44,7 +44,7 @@ namespace Fatagram.API.Controllers.V1
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("getUnreadNotifications")]
-        public async Task<IActionResult> GetUnreadNotifications(CursorFilter<Guid> filter)
+        public async Task<IActionResult> GetUnreadNotifications(CursorFilter<DateTime> filter)
         {
             var userId = GetCurrentUserId();
             var result = await _notificationService.GetUnreadNotificationsAsync(userId, filter);

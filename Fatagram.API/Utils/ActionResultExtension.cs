@@ -25,11 +25,12 @@ namespace Fatagram.API.Utils
         public static IActionResult ToActionResult<TCursor, TItem>(
             this CursorResult<TCursor, TItem> result
         )
+            where TCursor : struct
         {
             var data = CursorResponse<TCursor, TItem>.Create(
                 result.Data ?? Enumerable.Empty<TItem>(),
                 result.NextCursor,
-                result.Total,
+                result.HasNext,
                 result.Message
             );
             return CreateActionResult(result.Code, data);

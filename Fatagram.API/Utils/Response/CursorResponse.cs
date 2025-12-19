@@ -8,36 +8,34 @@ namespace Fatagram.API.Utils.Response
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class CursorResponse<TCursor, TData> : ApiResponse<IEnumerable<TData>>
+        where TCursor : struct
     {
         [JsonPropertyName("nextCursor")]
         public TCursor? NextCursor { get; set; }
 
-        [JsonPropertyName("hasNextCursor")]
-        public bool HasNextCursor => NextCursor != null;
-
-        [JsonPropertyName("total")]
-        public int Total { get; set; }
+        [JsonPropertyName("hasNext")]
+        public bool HasNext { get; set; }
 
         private CursorResponse(
             IEnumerable<TData> data,
             TCursor? nextCursor,
-            int total,
+            bool hasNext,
             string? message
         )
             : base(data: data, message: message)
         {
             NextCursor = nextCursor;
-            Total = total;
+            HasNext = hasNext;
         }
 
         public static CursorResponse<TCursor, TData> Create(
             IEnumerable<TData> data,
             TCursor? nextCursor,
-            int total,
+            bool hasNext,
             string? message
         )
         {
-            return new CursorResponse<TCursor, TData>(data, nextCursor, total, message);
+            return new CursorResponse<TCursor, TData>(data, nextCursor, hasNext, message);
         }
 
         public override string ToString()

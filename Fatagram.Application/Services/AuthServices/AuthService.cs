@@ -63,6 +63,11 @@ namespace Fatagram.Application.Services.AuthServices
             }
 
             var passwordHash = accountByEmail?.PasswordHash ?? accountByUsername?.PasswordHash;
+            if (string.IsNullOrEmpty(passwordHash))
+            {
+                throw new AccountNotFoundException();
+            }
+
             var accountId = accountByEmail?.Id ?? accountByUsername?.Id;
             if (!BCrypt.Net.BCrypt.Verify(request.Password, passwordHash))
             {

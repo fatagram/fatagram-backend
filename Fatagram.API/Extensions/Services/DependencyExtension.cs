@@ -26,6 +26,11 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IUserInfoService, UserInfoService>();
             services.AddScoped<GoogleOAuthService>();
 
+            // Friendship service dependencies
+            services.AddScoped<IFriendRequestManager, FriendRequestManager>();
+            services.AddScoped<FriendshipValidator>();
+            services.AddScoped<IFriendshipNotificationStrategy, FriendshipNotificationStrategy>();
+
             // Scoped for repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();

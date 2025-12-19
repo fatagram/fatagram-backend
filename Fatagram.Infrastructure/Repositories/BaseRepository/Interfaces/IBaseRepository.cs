@@ -28,10 +28,11 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
             Expression<Func<TEntity, TResult>>? selector = null,
             Expression<Func<TEntity, TKey>>? orderBy = null,
             bool orderDesc = false,
-            int? page = null,
-            int? pageSize = null,
-            TKey? lastKey = default
+            int? limit = null,
+            TKey? lastKey = default,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null // New
         );
+        Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null);
         Task<dynamic?> GetDynamicAsync(
             string fields,
             Expression<Func<TEntity, bool>>? filter = null
@@ -52,6 +53,7 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
             Action<TEntity> update
         );
         Task DeleteAsync(Guid id);
+        Task DeleteAsync(TEntity entity);
         Task SoftDeleteAsync(Guid id);
     }
 }

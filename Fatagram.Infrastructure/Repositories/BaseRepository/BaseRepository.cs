@@ -41,17 +41,28 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             await _dbContext.SaveChangesAsync();
         }
 
+        public Task DeleteAsync(TEntity entity)
+        {
+            _dbSet.Remove(entity);
+            return _dbContext.SaveChangesAsync();
+        }
+
         public async Task<List<TResult>> GetAllAsync<TResult, TKey>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<TEntity, TResult>>? selector = null,
             Expression<Func<TEntity, TKey>>? orderBy = null,
             bool orderDesc = false,
-            int? page = null,
-            int? pageSize = null,
-            TKey? lastKey = default
+            int? limit = null,
+            TKey? lastKey = default,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
         )
         {
             var query = _dbSet.AsQueryable();
+
+            if (include != null)
+            {
+                query = include(query);
+            }
 
             if (filter != null)
                 query = query.Where(filter);
@@ -72,12 +83,10 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             {
                 query = orderDesc ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
             }
-
-            if (page != null && pageSize != null)
+            if (limit != null)
             {
-                query = query.Skip(((int)page - 1) * (int)pageSize).Take((int)pageSize);
+                query = query.Take(limit.Value);
             }
-
             if (selector != null)
             {
                 return await query.Select(selector).ToListAsync();
@@ -103,6 +112,16 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<TEntity, TResult>>? selector = null
         ) => GetAllAsync<TResult, object>(filter, selector);
+
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null)
+        {
+            var query = _dbSet.AsQueryable();
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            return await query.CountAsync();
+        }
 
         public async Task<TResult?> GetAsync<TResult>(
             Guid id,

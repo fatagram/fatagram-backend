@@ -153,9 +153,9 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             var user =
                 await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
-            var count = await _friendshipRepository
-                .GetAllAsync(f => f.User1Id == userId || f.User2Id == userId, s => s.Id)
-                .ContinueWith(t => t.Result.Count);
+            var count = await _friendshipRepository.CountAsync(u =>
+                u.User1Id == userId || u.User2Id == userId
+            );
             return Result<int>.Create(ResponseStatusCode.Success, count);
         }
 

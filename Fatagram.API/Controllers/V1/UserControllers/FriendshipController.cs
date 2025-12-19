@@ -16,9 +16,13 @@ using Microsoft.AspNetCore.Authorization;
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
     [Route("api/[controller]")]
-    public class FriendshipController(IFriendshipService friendshipService) : BaseApiController
+    public class FriendshipController(
+        IFriendshipService friendshipService,
+        ILogger<FriendshipController> logger
+    ) : BaseApiController
     {
         private readonly IFriendshipService _friendshipService = friendshipService;
+        private readonly ILogger<FriendshipController> _logger = logger;
 
         /// <summary>
         /// Send a friend request to another user.
@@ -30,7 +34,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> AddFriend([FromRoute] string receiverId)
         {
             var userId = GetCurrentUserId();
-            var result = await _friendshipService.SendAddFriendAsync(userId, receiverId.ToGuid());
+            var result = await _friendshipService.SendFriendRequestAsync(
+                userId,
+                receiverId.ToGuid()
+            );
             return result.ToActionResult();
         }
 
@@ -44,7 +51,10 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> AcceptFriend([FromRoute] string senderId)
         {
             var userId = GetCurrentUserId();
-            var result = await _friendshipService.AcceptAddFriendAsync(userId, senderId.ToGuid());
+            var result = await _friendshipService.AcceptFriendRequestAsync(
+                userId,
+                senderId.ToGuid()
+            );
             return result.ToActionResult();
         }
 
@@ -74,7 +84,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> CancelAddFriendRequest([FromRoute] string senderId)
         {
             var userId = GetCurrentUserId();
-            var res = await _friendshipService.CancelAddFriendAsync(userId, senderId.ToGuid());
+            var res = await _friendshipService.RevokeFriendRequestAsync(userId, senderId.ToGuid());
             return res.ToActionResult();
         }
 
@@ -89,7 +99,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> DeclineAddFriendRequest([FromRoute] string requesterId)
         {
             var userId = GetCurrentUserId();
-            var res = await _friendshipService.DeclineAddFriendRequestAsync(
+            var res = await _friendshipService.DeclineFriendRequestAsync(
                 userId,
                 requesterId.ToGuid()
             );
@@ -132,9 +142,16 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpGet("requests")]
-        public async Task<IActionResult> GetFriendRequests([FromBody] CursorFilter<Guid> filter)
+        public async Task<IActionResult> GetFriendRequests(
+            [FromQuery] CursorFilter<DateTime> filter
+        )
         {
             var userId = GetCurrentUserId();
+            _logger.LogInformation(
+                "Getting friend requests for user {UserId} with filter {@Filter}",
+                userId,
+                filter
+            );
             var res = await _friendshipService.GetFriendRequestsAsync(userId, filter);
             return res.ToActionResult();
         }
@@ -150,7 +167,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         [HttpGet("friends/{targetId}")]
         public async Task<IActionResult> GetFriends(
             string targetId,
-            [FromBody] CursorFilter<Guid> filter
+            [FromQuery] CursorFilter<DateTime> filter
         )
         {
             var userId = GetCurrentUserId();

@@ -100,7 +100,7 @@ namespace Fatagram.Application.Services.JwtServices
             }
             catch (Exception)
             {
-                throw new UnauthorizedException();
+                return Result<ClaimsPrincipal>.Create(ResponseStatusCode.Unauthorized);
             }
         }
     }

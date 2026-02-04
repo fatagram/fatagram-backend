@@ -364,7 +364,7 @@ FodyWeavers.xsd
 
 # wwwroot folder for ASP.NET Core projects
 Fatagram.API/wwwroot/
-appsettings.Local.json
+Fatagram.Tools/appsettings.json
 Fatagram.API/appsettings.Local.json
 
 docker-compose.yml

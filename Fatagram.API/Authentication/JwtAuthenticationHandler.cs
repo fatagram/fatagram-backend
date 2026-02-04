@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Fatagram.Application.Services.JwtServices.Interface;
 using Fatagram.Application.Utils;
+using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Options;
@@ -29,26 +30,41 @@ namespace Fatagram.API.Authentication
         /// <returns></returns>
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (
-                !Request.Cookies.TryGetValue("_accessToken", out var token)
-                || string.IsNullOrWhiteSpace(token)
-            )
+            string? token = null;
+            if (Request.Headers.TryGetValue("Authorization", out var authHeaderValues))
             {
-                return Task.FromResult(AuthenticateResult.Fail("Missing Authorization Header"));
+                var authHeader = authHeaderValues.ToString();
+                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    token = authHeader.Substring("Bearer ".Length).Trim();
+                }
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                Request.Cookies.TryGetValue("_accessToken", out token);
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return Task.FromResult(AuthenticateResult.NoResult());
             }
 
             try
             {
-                var res = _jwtService.ValidateToken(token);
-                var ticket = new AuthenticationTicket(res.Data!, "JwtCustomScheme");
+                var res = _jwtService.ValidateToken(token!);
+                if (res == null || res.Data == null || res.Code == ResponseStatusCode.Unauthorized)
+                {
+                    return Task.FromResult(AuthenticateResult.Fail("Invalid token"));
+                }
 
+                var ticket = new AuthenticationTicket(res.Data!, Scheme.Name);
                 return Task.FromResult(AuthenticateResult.Success(ticket));
             }
             catch (Exception ex)
             {
-                return Task.FromResult(
-                    AuthenticateResult.Fail($"Token validation failed: {ex.Message}")
-                );
+                _logger.LogError(ex, "Error occurred while validating token");
+                return Task.FromResult(AuthenticateResult.Fail("Invalid token"));
             }
         }
     }

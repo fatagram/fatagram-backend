@@ -10,7 +10,7 @@ namespace Fatagram.API.Utils.Response
     public class ApiResponse<T> : BaseResponse
     {
         [JsonPropertyName("data")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public T? Data { get; set; }
 
         protected ApiResponse(T? data, string? message)

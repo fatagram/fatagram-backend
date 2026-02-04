@@ -52,10 +52,11 @@ namespace Fatagram.Application.Services.AuthServices
         public async Task<Result<TokenResponseDto>> Login(LoginDto request)
         {
             var accountByEmail = await _accountRepository.GetByEmailAsync(request.UsernameOrEmail);
-            var accountByUsername = await _accountRepository.GetByUniqueKeyAsync<Account, string>(
-                u => u.Username,
-                request.UsernameOrEmail
+            var accounts = await _accountRepository.GetAllAsync<Account, Guid>(
+                filter: a => a.Username == request.UsernameOrEmail,
+                limit: 1
             );
+            var accountByUsername = accounts.FirstOrDefault();
 
             if (accountByEmail == null && accountByUsername == null)
             {

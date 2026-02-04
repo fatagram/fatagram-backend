@@ -8,10 +8,13 @@ using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.UserServices.UserProfileServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
+using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
@@ -113,14 +116,16 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var user =
                 await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
-            var existUser = await _userRepository.GetByUniqueKeyAsync(
-                u => u.UrlName,
-                changeUrlNameDto.UrlName,
-                u => u
+            var _user = await _userRepository.GetAllAsync<Account, Guid>(
+                filter: u => u.UrlName == changeUrlNameDto.UrlName,
+                limit: 1
             );
+            var existUser = _user.FirstOrDefault();
             if (existUser != null && existUser.Id != user.Id)
             {
-                throw new AppException("URLNAME_ALREADY_EXISTS", "Url name already exists.");
+                throw new BadRequestException(
+                    new Error("URLNAME_ALREADY_EXISTS", "Url name already exists.")
+                );
             }
             user.UrlName = changeUrlNameDto.UrlName;
             await _userRepository.UpdateAsync(user);

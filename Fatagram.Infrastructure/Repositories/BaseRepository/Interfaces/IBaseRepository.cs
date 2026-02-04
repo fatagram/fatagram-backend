@@ -18,42 +18,59 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
             Guid id,
             Expression<Func<TEntity, TResult>>? selector = null
         );
-        Task<TResult?> GetByUniqueKeyAsync<TResult, TKey>(
-            Expression<Func<TEntity, TKey?>> keySelector,
-            TKey? key,
-            Expression<Func<TEntity, TResult>>? selector = null
-        );
+
         Task<List<TResult>> GetAllAsync<TResult, TKey>(
+            Expression<Func<TEntity, TResult>> selector,
             Expression<Func<TEntity, bool>>? filter = null,
-            Expression<Func<TEntity, TResult>>? selector = null,
             Expression<Func<TEntity, TKey>>? orderBy = null,
             bool orderDesc = false,
             int? limit = null,
             TKey? lastKey = default,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null // New
-        );
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
+        )
+            where TKey : struct, IComparable<TKey>;
+
+        Task<List<TResult>> GetAllAsync<TResult, TKey>(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<TEntity, TKey>>? orderBy = null,
+            bool orderDesc = false,
+            int? limit = null,
+            TKey? lastKey = default,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
+        )
+            where TKey : struct, IComparable<TKey>;
+
         Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null);
+
         Task<dynamic?> GetDynamicAsync(
             string fields,
             Expression<Func<TEntity, bool>>? filter = null
         );
+
         Task<List<TResult>> GetAllAsync<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<TEntity, TResult>>? selector = null
         );
+
         Task<TEntity> AddAsync(TEntity entity);
+
         Task<TEntity> UpdateAsync(TEntity entity);
+
         Task<List<TEntity>> UpdateAsync(
             Expression<Func<TEntity, bool>>? where,
             Action<TEntity> update
         );
+
         Task<TEntity?> UpdateAsync<TKey>(
             Expression<Func<TEntity, TKey>> keySelector,
             TKey key,
             Action<TEntity> update
         );
+
         Task DeleteAsync(Guid id);
+
         Task DeleteAsync(TEntity entity);
+
         Task SoftDeleteAsync(Guid id);
     }
 }

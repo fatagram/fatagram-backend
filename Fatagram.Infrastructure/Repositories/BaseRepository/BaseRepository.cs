@@ -49,33 +49,37 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
 
         public async Task<List<TResult>> GetAllAsync<TResult, TKey>(
             Expression<Func<TEntity, bool>>? filter = null,
-            Expression<Func<TEntity, TResult>>? selector = null,
             Expression<Func<TEntity, TKey>>? orderBy = null,
             bool orderDesc = false,
             int? limit = null,
             TKey? lastKey = default,
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
         )
+            where TKey : struct, IComparable<TKey>
         {
-            var query = _dbSet.AsQueryable();
+            var query = _dbSet.AsQueryable().AsNoTracking();
 
             if (include != null)
-            {
                 query = include(query);
-            }
 
             if (filter != null)
                 query = query.Where(filter);
 
-            if (lastKey != null && orderBy != null)
+            if (orderBy != null && lastKey.HasValue)
             {
-                var param = orderBy.Parameters[0];
-                var member = orderBy.Body;
+                var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
+                var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
 
+                // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
                 Expression comparison = orderDesc
-                    ? Expression.LessThan(member, Expression.Constant(lastKey))
-                    : Expression.GreaterThan(member, Expression.Constant(lastKey));
-                var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param);
+                    ? Expression.LessThan(member, Expression.Constant(lastKey.Value, typeof(TKey)))
+                    : Expression.GreaterThan(
+                        member,
+                        Expression.Constant(lastKey.Value, typeof(TKey))
+                    );
+
+                // Create the complelte lambda function
+                var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
                 query = query.Where(lambda);
             }
 
@@ -83,39 +87,73 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             {
                 query = orderDesc ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
             }
+
             if (limit != null)
             {
                 query = query.Take(limit.Value);
             }
-            if (selector != null)
+
+            return await query.Select(e => (TResult)(object)e).ToListAsync();
+        }
+
+        public async Task<List<TResult>> GetAllAsync<TResult, TKey>(
+            Expression<Func<TEntity, TResult>> selector,
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<TEntity, TKey>>? orderBy = null,
+            bool orderDesc = false,
+            int? limit = null,
+            TKey? lastKey = default,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
+        )
+            where TKey : struct, IComparable<TKey>
+        {
+            var query = _dbSet.AsQueryable().AsNoTracking();
+
+            if (include != null)
+                query = include(query);
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (orderBy != null && lastKey.HasValue)
             {
-                return await query.Select(selector).ToListAsync();
-            }
-            else
-            {
-                if (typeof(TResult) == typeof(TEntity))
-                {
-                    var entities = await query.ToListAsync();
-                    _logger?.LogInformation("Entities count: {Count}", entities.Count);
-                    return [.. entities.Cast<TResult>()];
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        "Selector must be provided when TResult is not TEntity."
+                var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
+                var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
+
+                // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
+                Expression comparison = orderDesc
+                    ? Expression.LessThan(member, Expression.Constant(lastKey.Value, typeof(TKey)))
+                    : Expression.GreaterThan(
+                        member,
+                        Expression.Constant(lastKey.Value, typeof(TKey))
                     );
-                }
+
+                // Create the complelte lambda function
+                var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
+                query = query.Where(lambda);
             }
+
+            if (orderBy != null)
+            {
+                query = orderDesc ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+            }
+
+            if (limit != null)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            return await query.Select(selector).ToListAsync();
         }
 
         public Task<List<TResult>> GetAllAsync<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<TEntity, TResult>>? selector = null
-        ) => GetAllAsync<TResult, object>(filter, selector);
+        ) => GetAllAsync(filter, selector);
 
         public async Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null)
         {
-            var query = _dbSet.AsQueryable();
+            var query = _dbSet.AsQueryable().AsNoTracking();
             if (filter != null)
             {
                 query = query.Where(filter);
@@ -139,38 +177,6 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 if (typeof(TResult) == typeof(TEntity))
                 {
                     var entity = await query.FirstOrDefaultAsync(e => e.Id == id);
-                    if (entity == null)
-                        return default;
-                    return (TResult)(object)entity;
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        "Selector must be provided when TResult is not TEntity."
-                    );
-                }
-            }
-        }
-
-        public async Task<TResult?> GetByUniqueKeyAsync<TResult, TKey>(
-            Expression<Func<TEntity, TKey?>> keySelector,
-            TKey? key,
-            Expression<Func<TEntity, TResult>>? selector = null
-        )
-        {
-            var parameter = keySelector.Parameters[0];
-            var body = Expression.Equal(keySelector.Body, Expression.Constant(key));
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
-
-            if (selector != null)
-            {
-                return await _dbSet.Where(lambda).Select(selector).FirstOrDefaultAsync();
-            }
-            else
-            {
-                if (typeof(TResult) == typeof(TEntity))
-                {
-                    var entity = await _dbSet.FirstOrDefaultAsync(lambda);
                     if (entity == null)
                         return default;
                     return (TResult)(object)entity;

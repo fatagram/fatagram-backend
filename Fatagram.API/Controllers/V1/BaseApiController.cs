@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Asp.Versioning;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
@@ -11,6 +12,8 @@ namespace Fatagram.API.Controllers.V1
     /// Base controller providing common functionality for all API controllers
     /// </summary>
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public abstract class BaseApiController : ControllerBase
     {
         /// <summary>

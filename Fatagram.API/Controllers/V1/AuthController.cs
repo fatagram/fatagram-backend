@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1
 {
-    [Route("api/[controller]")]
     public class AuthController(
         IAuthService authService,
         ITokenService tokenService,

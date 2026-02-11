@@ -40,6 +40,7 @@ namespace Fatagram.API.Middlewares
 
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
+            _logger.LogError(ex, "An unhandled exception has occurred.");
             context.Response.ContentType = "application/json";
             if (ex is AppException appException)
             {

@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
-    [Route("api/[controller]")]
     public class UserConfigController : BaseApiController
     {
         private readonly IUserConfigService _userConfigService;

@@ -19,6 +19,7 @@ using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
@@ -53,8 +54,10 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
         )
         {
             var user =
-                await _userRepository.GetDynamicAsync(fields, u => u.Id.ToString() == target)
-                ?? throw new UserNotFoundException();
+                await _userRepository.GetDynamicAsync(
+                    fields,
+                    u => u.Id.ToString() == target || u.UrlName == target
+                ) ?? throw new UserNotFoundException();
 
             // Map dynamic object to dictionary
             var infos = new Dictionary<string, string?>();
@@ -140,8 +143,14 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var user =
                 await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
             user.FirstName = changeNameDto.FirstName;
+            user.MiddleName = changeNameDto.MiddleName;
             user.LastName = changeNameDto.LastName;
-            user.FullName = $"{changeNameDto.FirstName} {changeNameDto.LastName}";
+
+            // Build full name with optional middle name
+            user.FullName = string.IsNullOrWhiteSpace(changeNameDto.MiddleName)
+                ? $"{changeNameDto.FirstName} {changeNameDto.LastName}"
+                : $"{changeNameDto.FirstName} {changeNameDto.MiddleName} {changeNameDto.LastName}";
+
             await _userRepository.UpdateAsync(user);
             return Result<ChangeNameDto>.Create(ResponseStatusCode.Success, changeNameDto);
         }
@@ -192,7 +201,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                         u.Gender,
                         u.BirthDay,
                         Email = u
-                            .Accounts.SelectMany(a => a.Emails)
+                            .Emails
                             .Where(e => e.IsPrimary)
                             .Select(e => e.Address)
                             .FirstOrDefault(),
@@ -210,6 +219,35 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 Email = user.Email,
             };
             return Result<OnboardingDefaultDataDto>.Create(ResponseStatusCode.Success, data);
+        }
+
+        public async Task<Result<List<EmailDto>>> GetUserEmailsAsync(Guid userId)
+        {            var user = await _userRepository.GetAllAsync<User, Guid>(
+                filter: u => u.Id == userId,
+                include: q => q.Include(u => u.Emails)
+            );
+
+            var emails = user.FirstOrDefault()?.Emails
+                .Select(e => new EmailDto
+                {
+                    Id = e.Id,
+                    Address = e.Address,
+                    IsPrimary = e.IsPrimary,
+                    IsVerified = e.IsVerified
+                })
+                .ToList() ?? new List<EmailDto>();
+
+            return Result<List<EmailDto>>.Create(ResponseStatusCode.Success, emails);
+        }
+
+        public async Task<Result<PhoneDto>> GetUserPhoneAsync(Guid userId)
+        {
+            var user = await _userRepository.GetAsync(
+                userId,
+                u => new PhoneDto { Phone = u.Phone }
+            ) ?? throw new UserNotFoundException();
+
+            return Result<PhoneDto>.Create(ResponseStatusCode.Success, user);
         }
     }
 }

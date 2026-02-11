@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Linq.Dynamic.Core.Tokenizer;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
@@ -83,17 +84,18 @@ namespace Fatagram.Application.Services.TokenServices
         /// <exception cref="NotImplementedException"></exception>
         async Task<(bool IsValid, Guid? AccountId)> ValidateRefreshTokenAsync(string refreshToken)
         {
-            var tokenInfo = (
-                await _refreshTokenRepository.GetByUniqueKeyAsync(
-                    rt => rt.Token,
-                    refreshToken,
-                    rt => new RefreshTokenInfo()
+            var _tokenInfo = (
+                await _refreshTokenRepository.GetAllAsync<RefreshTokenInfo, Guid>(
+                    filter: rt => rt.Token == refreshToken,
+                    limit: 1,
+                    selector: rt => new RefreshTokenInfo()
                     {
                         AccountId = rt.AccountId,
                         ExpiresAt = rt.ExpiresAt,
                     }
                 )
             );
+            var tokenInfo = _tokenInfo.FirstOrDefault();
             if (tokenInfo is null)
             {
                 return (false, null);
@@ -112,12 +114,12 @@ namespace Fatagram.Application.Services.TokenServices
         /// <returns></returns>
         public async Task DeleteRefreshTokenAsync(string refreshToken)
         {
-            var rt = await _refreshTokenRepository.GetByUniqueKeyAsync(
-                rt => rt.Token,
-                refreshToken,
-                rt => rt.AccountId
+            var rt = await _refreshTokenRepository.GetAllAsync<Guid, Guid>(
+                filter: rt => rt.Token == refreshToken,
+                limit: 1,
+                selector: rt => rt.AccountId
             );
-            await _refreshTokenRepository.DeleteAsync(rt);
+            await _refreshTokenRepository.DeleteAsync(rt.FirstOrDefault());
         }
     }
 }

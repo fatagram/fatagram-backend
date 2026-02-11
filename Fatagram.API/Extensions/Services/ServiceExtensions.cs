@@ -32,6 +32,7 @@ namespace Fatagram.API.Extensions.Services
 
             // Presentation Services
             builder.Services.AddControllerServices();
+            builder.Services.AddApiVersioningServices();
             builder.Services.AddSwaggerServices();
 
             // FluentValidation

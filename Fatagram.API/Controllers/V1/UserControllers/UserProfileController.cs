@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
-    [Route("api/[controller]")]
     public class UserProfileController(
         IUserProfileService userProfileService,
         IImageService imageService,

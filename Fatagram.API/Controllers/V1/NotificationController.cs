@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Fatagram.API.Controllers.V1
 {
-    [Route("api/[controller]")]
     public class NotificationController(INotificationService notificationService)
         : BaseApiController
     {

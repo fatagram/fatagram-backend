@@ -1,4 +1,5 @@
 using System.Xml;
+using Asp.Versioning.ApiExplorer;
 using Fatagram.API.Extensions;
 using Fatagram.API.Extensions.Configuration;
 using Fatagram.API.Extensions.Constrains;
@@ -23,7 +24,18 @@ namespace Fatagram.API
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options =>
+                {
+                    var provider =
+                        app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+                    foreach (var description in provider.ApiVersionDescriptions)
+                    {
+                        options.SwaggerEndpoint(
+                            $"/swagger/{description.GroupName}/swagger.json",
+                            description.GroupName.ToUpperInvariant()
+                        );
+                    }
+                });
             }
 
             app.UseRouting();

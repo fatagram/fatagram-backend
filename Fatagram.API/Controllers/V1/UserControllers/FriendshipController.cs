@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
-    [Route("api/[controller]")]
     public class FriendshipController(
         IFriendshipService friendshipService,
         ILogger<FriendshipController> logger

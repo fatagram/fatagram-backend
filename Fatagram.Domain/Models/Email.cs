@@ -13,7 +13,7 @@ namespace Fatagram.Domain.Models
         public bool IsVerified { get; set; }
 
         //  public AuthProvider AuthProvider { get; set; }
-        public Guid AccountId { get; set; }
+        public Guid UserId { get; set; }
         public Account? Account { get; set; }
     }
 }

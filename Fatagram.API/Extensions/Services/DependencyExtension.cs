@@ -23,7 +23,6 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, LocalImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
-            services.AddScoped<IUserInfoService, UserInfoService>();
             services.AddScoped<GoogleOAuthService>();
 
             // Friendship service dependencies
@@ -40,7 +39,6 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationContentRepository, NotificationContentRepository>();
-            services.AddScoped<IUserInformationRepository, UserInformationRepository>();
 
             // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();

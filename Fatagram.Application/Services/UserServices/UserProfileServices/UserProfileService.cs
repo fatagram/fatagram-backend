@@ -13,24 +13,26 @@ using Fatagram.Application.Services.UserServices.UserProfileServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.UserServices.UserProfileServices
 {
     public class UserProfileService(
         IUserRepository userRepository,
+        IUserEmailRepository userEmailRepository,
         IMapper mapper,
         ILogger<UserProfileService> logger
     ) : IUserProfileService
     {
         private readonly IUserRepository _userRepository = userRepository;
+        private readonly IUserEmailRepository _userEmailRepository = userEmailRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<UserProfileService> _logger = logger;
 
@@ -72,6 +74,10 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 {
                     try
                     {
+                        // Skip indexed properties (like Item[index])
+                        if (prop.GetIndexParameters().Length > 0)
+                            continue;
+
                         var value = prop.GetValue(userObj, null);
                         infos[prop.Name.ToLowerFirstLetter()] = value?.ToString();
                     }
@@ -189,6 +195,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             Guid userId
         )
         {
+            _logger.LogInformation("Fetching onboarding default data for user {UserId}", userId);
             var user =
                 await _userRepository.GetAsync(
                     userId,
@@ -200,13 +207,10 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                         u.Avatar,
                         u.Gender,
                         u.BirthDay,
-                        Email = u
-                            .Emails
-                            .Where(e => e.IsPrimary)
-                            .Select(e => e.Address)
-                            .FirstOrDefault(),
                     }
                 ) ?? throw new UserNotFoundException();
+
+            _logger.LogInformation("Onboarding data retrieved for user {UserId}", userId);
 
             var data = new OnboardingDefaultDataDto
             {
@@ -216,38 +220,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 Avatar = user.Avatar,
                 Gender = user.Gender,
                 BirthDay = user.BirthDay,
-                Email = user.Email,
             };
             return Result<OnboardingDefaultDataDto>.Create(ResponseStatusCode.Success, data);
-        }
-
-        public async Task<Result<List<EmailDto>>> GetUserEmailsAsync(Guid userId)
-        {            var user = await _userRepository.GetAllAsync<User, Guid>(
-                filter: u => u.Id == userId,
-                include: q => q.Include(u => u.Emails)
-            );
-
-            var emails = user.FirstOrDefault()?.Emails
-                .Select(e => new EmailDto
-                {
-                    Id = e.Id,
-                    Address = e.Address,
-                    IsPrimary = e.IsPrimary,
-                    IsVerified = e.IsVerified
-                })
-                .ToList() ?? new List<EmailDto>();
-
-            return Result<List<EmailDto>>.Create(ResponseStatusCode.Success, emails);
-        }
-
-        public async Task<Result<PhoneDto>> GetUserPhoneAsync(Guid userId)
-        {
-            var user = await _userRepository.GetAsync(
-                userId,
-                u => new PhoneDto { Phone = u.Phone }
-            ) ?? throw new UserNotFoundException();
-
-            return Result<PhoneDto>.Create(ResponseStatusCode.Success, user);
         }
     }
 }

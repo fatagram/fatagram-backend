@@ -15,17 +15,16 @@ namespace Fatagram.Infrastructure.Repositories.AccountRepository
         ILogger<AccountRepository>? logger = null
     ) : BaseRepository<Account>(dbContext, logger), IAccountRepository
     {
-        public async Task<Account?> GetByEmailAsync(string email)
+        public async Task<Account?> GetByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _dbSet
-                .Join(
-                    _dbContext.Emails,
-                    a => a.Id,
-                    e => e.AccountId,
-                    (a, e) => new { Account = a, Email = e }
+                .Where(a =>
+                    a.Username == usernameOrEmail
+                    || a.User.UserEmails.Any(ue =>
+                        ue.Email.Address == usernameOrEmail && ue.IsVerified
+                    )
                 )
-                .Where(joined => joined.Email.Address == email)
-                .Select(joined => joined.Account)
+                .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
     }

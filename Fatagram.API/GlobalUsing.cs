@@ -7,6 +7,7 @@ global using Fatagram.Application;
 global using Fatagram.Application.Common;
 global using Fatagram.Application.Services.AuthServices;
 global using Fatagram.Application.Services.AuthServices.Interface;
+global using Fatagram.Application.Services.AuthServices.OAuth;
 global using Fatagram.Application.Services.ImageService;
 global using Fatagram.Application.Services.ImageService.Interface;
 global using Fatagram.Application.Services.JwtServices;

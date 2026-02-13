@@ -113,6 +113,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .WithOne(n => n.User)
                     .HasForeignKey(n => n.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity
+                    .HasMany(u => u.RefreshTokens)
+                    .WithOne(rt => rt.User)
+                    .HasForeignKey(rt => rt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

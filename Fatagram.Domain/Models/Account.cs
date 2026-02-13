@@ -36,16 +36,6 @@ namespace Fatagram.Domain.Models
         /// <summary>
         /// Gets or sets the associated user.
         /// </summary>
-        public User? User { get; set; }
-
-        /// <summary>
-        /// Gets or sets the emails associated with the account.
-        /// </summary>
-        public ICollection<Email> Emails { get; set; } = [];
-
-        /// <summary>
-        /// Gets or sets the refresh token for the account.
-        /// </summary>
-        public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+        public User User { get; set; } = null!;
     }
 }

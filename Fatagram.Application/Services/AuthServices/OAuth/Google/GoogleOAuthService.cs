@@ -1,21 +1,55 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Fatagram.Application.Services.AuthServices
+namespace Fatagram.Application.Services.AuthServices.OAuth.Google
 {
-    public class GoogleOAuthService(IConfiguration config, ILogger<GoogleOAuthService> logger)
+    /// <summary>
+    /// Google OAuth service - handles OAuth flow and user info retrieval
+    /// </summary>
+    public class GoogleOAuthService : IOAuthService
     {
-        private readonly IConfiguration _config = config;
-        private readonly ILogger<GoogleOAuthService> _logger = logger;
+        private readonly IConfiguration _config;
+        private readonly ILogger<GoogleOAuthService> _logger;
 
-        public async Task<GoogleOAuthResponse> ExchangeCodeAsync(string code)
+        public GoogleOAuthService(IConfiguration config, ILogger<GoogleOAuthService> logger)
+        {
+            _config = config;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Get user information from Google OAuth using authorization code
+        /// </summary>
+        public async Task<OAuthUserInfo> GetUserInfoAsync(string code)
+        {
+            var oauthResponse = await ExchangeCodeAsync(code);
+            _logger.LogInformation(
+                "Google OAuth token received, expires in: {ExpiresIn}s",
+                oauthResponse.ExpiresIn
+            );
+
+            var googleUserInfo = await GetGoogleUserInfoAsync(oauthResponse.AccessToken);
+            _logger.LogInformation(
+                "Google user info: {Email}, {Name}, {Picture}",
+                googleUserInfo.Email,
+                googleUserInfo.Name,
+                googleUserInfo.Picture
+            );
+
+            // Step 3: Map to common OAuthUserInfo
+            return new OAuthUserInfo
+            {
+                Email = googleUserInfo.Email,
+                Name = googleUserInfo.Name,
+                GivenName = googleUserInfo.GivenName,
+                FamilyName = googleUserInfo.FamilyName,
+                Picture = googleUserInfo.Picture,
+            };
+        }
+
+        private async Task<GoogleOAuthResponse> ExchangeCodeAsync(string code)
         {
             var client = new HttpClient();
             var dict = new Dictionary<string, string>
@@ -44,7 +78,7 @@ namespace Fatagram.Application.Services.AuthServices
             return JsonSerializer.Deserialize<GoogleOAuthResponse>(json)!;
         }
 
-        public async Task<UserInfoResponse> GetUserInfoAsync(string accessToken)
+        private async Task<UserInfoResponse> GetGoogleUserInfoAsync(string accessToken)
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");

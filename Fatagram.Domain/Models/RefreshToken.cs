@@ -13,7 +13,7 @@
         /// <summary>
         /// Account id
         /// </summary>
-        public Guid AccountId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Expiry date
@@ -23,6 +23,6 @@
         /// <summary>
         /// Account
         /// </summary>
-        public Account Account { get; set; } = null!;
+        public User User { get; set; } = null!;
     }
 }

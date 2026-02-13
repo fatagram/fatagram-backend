@@ -12,6 +12,8 @@ using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
 using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
+using Fatagram.Infrastructure.Repositories.UserRepository;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
@@ -22,14 +24,14 @@ namespace Fatagram.Application.Services.TokenServices
 {
     public class TokenService(
         IJwtService jwtService,
-        IAccountRepository accountRepository,
+        IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IConfiguration configuration,
         ILogger<TokenService> logger
     ) : ITokenService
     {
         private readonly IJwtService _jwtService = jwtService;
-        private readonly IAccountRepository _accountRepository = accountRepository;
+        private readonly IUserRepository _userRepository = userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
         private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<TokenService> _logger = logger;
@@ -37,25 +39,21 @@ namespace Fatagram.Application.Services.TokenServices
         /// <summary>
         /// Generate tokens for a user
         /// </summary>
-        /// <param name="username"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        public async Task<string> GenerateAccessTokenAsync(Guid accountId)
+        public Task<string> GenerateAccessTokenAsync(Guid userId)
         {
-            var userAccount =
-                await _accountRepository.GetAsync<Account>(accountId)
-                ?? throw new AccountNotFoundException();
-            var token =
-                _jwtService.GenerateToken(userAccount.UserId) ?? throw new GenerateTokenException();
-            return token.Data!;
+            var token = _jwtService.GenerateToken(userId) ?? throw new GenerateTokenException();
+            return Task.FromResult(token.Data!);
         }
 
-        public async Task<string> GenerateRefreshTokenAsync(Guid accountId)
+        public async Task<string> GenerateRefreshTokenAsync(Guid userId)
         {
             var newRefreshToken = Guid.NewGuid();
             await _refreshTokenRepository.AddAsync(
                 new RefreshToken
                 {
-                    AccountId = accountId,
+                    UserId = userId,
                     Token = newRefreshToken.ToString(),
                     ExpiresAt = DateTime.UtcNow.AddDays(
                         int.Parse(_configuration["JwtSettings:RefreshTokenExpireInDays"] ?? "7")
@@ -67,22 +65,22 @@ namespace Fatagram.Application.Services.TokenServices
 
         public async Task<string?> GenerateAccessTokenFromRefreshTokenAsync(string refreshToken)
         {
-            var (res, accountId) = await ValidateRefreshTokenAsync(refreshToken);
+            var (res, userId) = await ValidateRefreshTokenAsync(refreshToken);
             _logger.LogInformation("Refresh token is valid: {IsValid}", res);
-            if (!res || accountId is null)
+            if (!res || userId is null)
             {
                 return null;
             }
-            return await GenerateAccessTokenAsync(accountId.Value);
+            return await GenerateAccessTokenAsync(userId.Value);
         }
 
         /// <summary>
         /// Validate a refresh token
         /// </summary>
         /// <param name="refreshToken"></param>
-        /// <returns>(IsValid, AccountId)</returns>
+        /// <returns>(IsValid, UserId)</returns>
         /// <exception cref="NotImplementedException"></exception>
-        async Task<(bool IsValid, Guid? AccountId)> ValidateRefreshTokenAsync(string refreshToken)
+        async Task<(bool IsValid, Guid? UserId)> ValidateRefreshTokenAsync(string refreshToken)
         {
             var _tokenInfo = (
                 await _refreshTokenRepository.GetAllAsync<RefreshTokenInfo, Guid>(
@@ -90,7 +88,7 @@ namespace Fatagram.Application.Services.TokenServices
                     limit: 1,
                     selector: rt => new RefreshTokenInfo()
                     {
-                        AccountId = rt.AccountId,
+                        UserId = rt.UserId,
                         ExpiresAt = rt.ExpiresAt,
                     }
                 )
@@ -104,7 +102,7 @@ namespace Fatagram.Application.Services.TokenServices
             {
                 return (false, null);
             }
-            return (true, tokenInfo.AccountId);
+            return (true, tokenInfo.UserId);
         }
 
         /// <summary>
@@ -117,7 +115,7 @@ namespace Fatagram.Application.Services.TokenServices
             var rt = await _refreshTokenRepository.GetAllAsync<Guid, Guid>(
                 filter: rt => rt.Token == refreshToken,
                 limit: 1,
-                selector: rt => rt.AccountId
+                selector: rt => rt.UserId
             );
             await _refreshTokenRepository.DeleteAsync(rt.FirstOrDefault());
         }

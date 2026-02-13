@@ -9,7 +9,8 @@ namespace Fatagram.Infrastructure.Data.Extensions
 {
     public static class EmailExtension
     {
-        public static void AddEmail(this ModelBuilder modelBuilder) =>
+        public static void AddEmail(this ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Email>(entity =>
             {
                 entity.ConfigureBaseEntity();
@@ -19,18 +20,48 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("address")
                     .HasColumnType("VARCHAR(255)")
                     .IsRequired();
-                entity
-                    .Property(e => e.IsVerified)
-                    .HasColumnName("is_verified")
-                    .HasColumnType("BOOLEAN")
-                    .IsRequired();
-                entity.Property(e => e.AccountId).HasColumnName("account_id").IsRequired();
-                entity
-                    .Property(e => e.IsPrimary)
-                    .HasColumnName("is_primary")
-                    .IsRequired()
-                    .HasDefaultValue(false);
                 entity.HasIndex(e => e.Address).IsUnique();
             });
+
+            modelBuilder.Entity<UserEmail>(entity =>
+            {
+                entity.ConfigureBaseEntity();
+                entity.ToTable("user_emails");
+                entity
+                    .Property(ue => ue.IsPrimary)
+                    .HasColumnName("is_primary")
+                    .HasColumnType("boolean")
+                    .IsRequired();
+                entity
+                    .Property(ue => ue.IsVerified)
+                    .HasColumnName("is_verified")
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(false)
+                    .IsRequired();
+                entity
+                    .Property(ue => ue.UserId)
+                    .HasColumnName("user_id")
+                    .HasColumnType("uuid")
+                    .IsRequired();
+                entity
+                    .Property(ue => ue.EmailId)
+                    .HasColumnName("email_id")
+                    .HasColumnType("uuid")
+                    .IsRequired();
+                entity
+                    .HasOne(ue => ue.User)
+                    .WithMany(u => u.UserEmails)
+                    .HasForeignKey(ue => ue.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(ue => ue.Email)
+                    .WithMany()
+                    .HasForeignKey(ue => ue.EmailId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(ue => ue.UserId).HasFilter("is_primary = true").IsUnique();
+                entity.HasIndex(ue => ue.EmailId).IsUnique();
+            });
+        }
     }
 }

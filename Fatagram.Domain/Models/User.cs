@@ -99,5 +99,9 @@ namespace Fatagram.Domain.Models
 
         public ICollection<UserNotification> UserNotifications { get; set; } =
             new List<UserNotification>();
+
+        public ICollection<UserEmail> UserEmails { get; set; } = new List<UserEmail>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

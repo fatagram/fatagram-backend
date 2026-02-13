@@ -146,10 +146,21 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             return await query.Select(selector).ToListAsync();
         }
 
-        public Task<List<TResult>> GetAllAsync<TResult>(
+        public async Task<List<TResult>> GetAllAsync<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<TEntity, TResult>>? selector = null
-        ) => GetAllAsync(filter, selector);
+        )
+        {
+            var query = _dbSet.AsQueryable().AsNoTracking();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (selector != null)
+                return await query.Select(selector).ToListAsync();
+            else
+                return await query.Select(e => (TResult)(object)e).ToListAsync();
+        }
 
         public async Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null)
         {

@@ -13,16 +13,16 @@ namespace Fatagram.Application.Services.TokenServices.Interface
         /// <summary>
         /// Generate a new access token and refresh token
         /// </summary>
-        /// <param name="username"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        Task<string> GenerateAccessTokenAsync(Guid accountId);
+        Task<string> GenerateAccessTokenAsync(Guid userId);
 
         /// <summary>
         /// Generate a new refresh token
         /// </summary>
-        /// <param name="accountId"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        Task<string> GenerateRefreshTokenAsync(Guid accountId);
+        Task<string> GenerateRefreshTokenAsync(Guid userId);
 
         /// <summary>
         /// Generate a new access token from a refresh token

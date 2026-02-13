@@ -3,6 +3,7 @@ using System;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260211121303_Update_Email")]
+    partial class Update_Email
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -474,7 +477,7 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid?>("AccountId")
+                    b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -500,9 +503,6 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -515,8 +515,6 @@ namespace Fatagram.Infrastructure.Migrations
 
                     b.HasIndex("Token")
                         .IsUnique();
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("refresh_tokens", (string)null);
                 });
@@ -805,17 +803,13 @@ namespace Fatagram.Infrastructure.Migrations
 
             modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
                 {
-                    b.HasOne("Fatagram.Domain.Models.Account", null)
+                    b.HasOne("Fatagram.Domain.Models.Account", "Account")
                         .WithMany("RefreshTokens")
-                        .HasForeignKey("AccountId");
-
-                    b.HasOne("Fatagram.Domain.Models.User", "User")
-                        .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("Fatagram.Domain.Models.User", b =>
@@ -896,8 +890,6 @@ namespace Fatagram.Infrastructure.Migrations
                     b.Navigation("FriendshipAsUser1");
 
                     b.Navigation("FriendshipAsUser2");
-
-                    b.Navigation("RefreshTokens");
 
                     b.Navigation("UserEmails");
 

@@ -17,7 +17,21 @@ namespace Fatagram.Application.Common.Mapper.Profiles
             //     .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()));
 
             CreateMap<RegisterDto, Account>();
-            CreateMap<RegisterDto, User>().ForMember(dest => dest.UrlName, opt => opt.Ignore());
+            CreateMap<RegisterDto, User>()
+                .ForMember(dest => dest.UrlName, opt => opt.Ignore())
+                .ForMember(
+                    dest => dest.UserEmails,
+                    opt =>
+                        opt.MapFrom(src => new List<UserEmail>
+                        {
+                            new UserEmail
+                            {
+                                Email = new Email { Address = src.Email },
+                                IsPrimary = true,
+                                IsVerified = false,
+                            },
+                        })
+                );
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Fatagram.Application.Dtos.Token
 
     public class RefreshTokenInfo
     {
-        public Guid AccountId { get; set; }
+        public Guid UserId { get; set; }
         public DateTime ExpiresAt { get; set; }
     }
 }

@@ -44,7 +44,35 @@ namespace Fatagram.API.Controllers.V1
             return Ok();
         }
 
+        /// <summary>
+        /// OAuth callback - Generic OAuth authentication endpoint
+        /// </summary>
+        /// <param name="provider">OAuth provider (google, facebook, github, microsoft)</param>
+        /// <param name="request">OAuth callback request with authorization code</param>
+        /// <returns></returns>
+        [HttpPost("oauth/{provider}/callback")]
+        public async Task<IActionResult> OAuthCallback(
+            string provider,
+            [FromBody] OAuthCallbackDto request
+        )
+        {
+            if (!Enum.TryParse<OAuthProvider>(provider, ignoreCase: true, out var oauthProvider))
+            {
+                return BadRequest($"Unsupported OAuth provider: {provider}");
+            }
+
+            _logger.LogInformation("{Provider} OAuth callback: {code}", provider, request.Code);
+            var res = await _authService.OAuthCallback(oauthProvider, request.Code);
+            AppendAccessToken(res.Data!.AccessToken);
+            AppendRefreshToken(res.Data!.RefreshToken);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Google OAuth callback (deprecated - use /oauth/google/callback instead)
+        /// </summary>
         [HttpPost("google/callback")]
+        [Obsolete("Use /oauth/google/callback instead")]
         public async Task<IActionResult> GoogleCallback([FromBody] GoogleCallbackDto request)
         {
             _logger.LogInformation("Google callback: {request}", request.Code);

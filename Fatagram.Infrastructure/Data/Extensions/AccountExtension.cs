@@ -35,18 +35,6 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 //     .IsRequired();
 
                 entity.HasIndex(a => a.Username).IsUnique();
-
-                // Relationships
-                entity
-                    .HasMany(a => a.RefreshTokens)
-                    .WithOne(rt => rt.Account)
-                    .HasForeignKey(rt => rt.AccountId)
-                    .OnDelete(DeleteBehavior.Cascade);
-                entity
-                    .HasMany(a => a.Emails)
-                    .WithOne(e => e.Account)
-                    .HasForeignKey(e => e.AccountId)
-                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

@@ -8,6 +8,8 @@ using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.UserEmailRepository;
+using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -23,7 +25,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
             services.AddScoped<IImageService, LocalImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
-            services.AddScoped<GoogleOAuthService>();
+            services.AddScoped<OAuthServiceFactory>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
@@ -39,6 +41,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationContentRepository, NotificationContentRepository>();
+            services.AddScoped<IUserEmailRepository, UserEmailRepository>();
 
             // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();

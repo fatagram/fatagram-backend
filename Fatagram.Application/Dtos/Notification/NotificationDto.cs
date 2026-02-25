@@ -15,16 +15,19 @@ namespace Fatagram.Application.Dtos.Notification
     {
         public string Id { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
+        public string SourceId { get; set; } = string.Empty;
         public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
         public string? ActorId { get; set; }
+        public string ActorType { get; set; } = string.Empty;
         public string? ActorImageUrl { get; set; }
         public string? ActorName { get; set; }
         public string? Link { get; set; }
-        public string? Content { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public NotificationType Type { get; set; } = NotificationType.System;
         public bool IsRead { get; set; } = false;
-        public TimeDistance TimeDistance { get; set; } = new TimeDistance(0, TimeUnit.Miliseconds);
+        public DateTime? CreatedAt { get; set; }
+
+        // public TimeDistance TimeDistance { get; set; } = new TimeDistance(0, TimeUnit.Miliseconds);
     }
 }

@@ -9,7 +9,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices.Interfac
 {
     public interface IFriendRequestManager
     {
-        Task<Result> CreateRequestAsync(Guid senderId, Guid receiverId);
+        Task<Result<Guid>> CreateRequestAsync(Guid senderId, Guid receiverId);
 
         Task<Result> DeleteRequestAsync(Guid receiverId, Guid senderId);
     }

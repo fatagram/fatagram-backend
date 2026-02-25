@@ -12,16 +12,20 @@ namespace Fatagram.Application.Services.NotificationServices
 {
     public static class NotificationFactory
     {
-        public static NotificationDto CreateNewFriendRequestNotification(Guid userId, Guid senderId)
+        public static NotificationDto CreateNewFriendRequestNotification(
+            Guid userId,
+            Guid senderId,
+            Guid sourceId
+        )
         {
             return new NotificationDto
             {
                 UserId = userId.ToString(),
                 ActorId = senderId.ToString(),
+                SourceId = sourceId.ToString(),
                 Link = $"/{senderId}",
                 Type = NotificationType.NewFriendRequest,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
@@ -37,7 +41,6 @@ namespace Fatagram.Application.Services.NotificationServices
                 Link = $"{userId}",
                 Type = NotificationType.FriendRequestAccepted,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
@@ -54,7 +57,6 @@ namespace Fatagram.Application.Services.NotificationServices
                 Link = link,
                 Type = NotificationType.System,
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
@@ -67,9 +69,8 @@ namespace Fatagram.Application.Services.NotificationServices
             {
                 UserId = userId,
                 Type = NotificationType.FriendRequestCanceled,
-                Data = new Dictionary<string, string> { { "noticationId", notificationId } },
+                Data = new Dictionary<string, string> { { "notificationId", notificationId } },
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
 
@@ -81,10 +82,9 @@ namespace Fatagram.Application.Services.NotificationServices
                 Type = NotificationType.CancelNotification,
                 Data = new Dictionary<string, string>
                 {
-                    { "noticationId", notificationId.ToString() },
+                    { "notificationId", notificationId.ToString() },
                 },
                 IsRead = false,
-                TimeDistance = new TimeDistance(0, TimeUnit.Miliseconds),
             };
         }
     }

@@ -8,13 +8,12 @@ namespace Fatagram.Domain.Models
 {
     public class Notification : BaseEntity
     {
-        public Guid? ActorId { get; set; }
-
-        // Set CLR default to match DB default to avoid EF Core default-value warnings
+        public Guid ActorId { get; set; }
+        public ActorType ActorType { get; set; }
         public NotificationType Type { get; set; } = NotificationType.System;
         public NotificationTargetType TargetType { get; set; }
-        public Guid TargetId { get; set; }
         public string? Data { get; set; }
+        public Guid SourceId { get; set; }
         public ICollection<UserNotification> UserNotifications { get; set; } = null!;
     }
 

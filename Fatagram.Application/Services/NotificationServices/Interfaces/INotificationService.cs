@@ -37,6 +37,5 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             Dictionary<string, string>? data = null,
             bool isSendCancel = true
         );
-        // Task<IEnumerable<Notification>> FindNotificationAsync(string userId, NotificationType type, Dictionary<string, string> data);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260213120730_Update_Notification")]
+    partial class Update_Notification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,13 +335,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("ActorId")
+                    b.Property<Guid?>("ActorId")
                         .HasColumnType("uuid")
                         .HasColumnName("actor_id");
-
-                    b.Property<int>("ActorType")
-                        .HasColumnType("integer")
-                        .HasColumnName("actor_type");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -354,8 +353,9 @@ namespace Fatagram.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
-                    b.Property<Guid>("SourceId")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_id");
 
                     b.Property<int>("TargetType")
                         .HasColumnType("integer")
@@ -380,6 +380,93 @@ namespace Fatagram.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("Fatagram.Domain.Models.NotificationContent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(2)")
+                        .HasColumnName("language_code");
+
+                    b.Property<short>("Type")
+                        .HasColumnType("SMALLINT")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageCode");
+
+                    b.ToTable("notification_contents", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            Content = "{actorName} sent you a friend request.",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LanguageCode = "en",
+                            Type = (short)0,
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            Content = "{actorName} accepted your friend request.",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LanguageCode = "en",
+                            Type = (short)1,
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            Content = "{actorName} đã gửi cho bạn một lời mời kết bạn.",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LanguageCode = "vi",
+                            Type = (short)0,
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
+                            Content = "{actorName} đã chấp nhận lời mời kết bạn của bạn.",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LanguageCode = "vi",
+                            Type = (short)1,
+                            Version = 0u
+                        });
                 });
 
             modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
@@ -702,6 +789,18 @@ namespace Fatagram.Infrastructure.Migrations
                     b.Navigation("Language");
                 });
 
+            modelBuilder.Entity("Fatagram.Domain.Models.NotificationContent", b =>
+                {
+                    b.HasOne("Fatagram.Domain.Models.Language", "Language")
+                        .WithMany("NotificationContents")
+                        .HasForeignKey("LanguageCode")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+                });
+
             modelBuilder.Entity("Fatagram.Domain.Models.RefreshToken", b =>
                 {
                     b.HasOne("Fatagram.Domain.Models.User", "User")
@@ -765,6 +864,8 @@ namespace Fatagram.Infrastructure.Migrations
 
             modelBuilder.Entity("Fatagram.Domain.Models.Language", b =>
                 {
+                    b.Navigation("NotificationContents");
+
                     b.Navigation("Users");
                 });
 

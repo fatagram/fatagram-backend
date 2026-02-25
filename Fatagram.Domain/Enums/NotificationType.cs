@@ -5,6 +5,14 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Domain.Enums.NotificationServices
 {
+    public enum ActorType
+    {
+        User,
+        System,
+        Group,
+        Page,
+    }
+
     public enum NotificationType
     {
         NewFriendRequest,

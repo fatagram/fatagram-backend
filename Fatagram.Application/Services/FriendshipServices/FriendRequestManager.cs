@@ -7,6 +7,7 @@ using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
 using Fatagram.Shared.Common;
+using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {
@@ -16,9 +17,9 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         private readonly IFriendRequestRepository _friendRequestRepository =
             friendRequestRepository;
 
-        public async Task<Result> CreateRequestAsync(Guid senderId, Guid receiverId)
+        public async Task<Result<Guid>> CreateRequestAsync(Guid senderId, Guid receiverId)
         {
-            await _friendRequestRepository.AddAsync(
+            var request = await _friendRequestRepository.AddAsync(
                 new Domain.Models.FriendRequest
                 {
                     SenderId = senderId,
@@ -26,7 +27,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
                     CreatedAt = DateTime.UtcNow,
                 }
             );
-            return Result.Create();
+            return Result<Guid>.Create(ResponseStatusCode.Success, request.Id);
         }
 
         public async Task<Result> DeleteRequestAsync(Guid receiverId, Guid senderId)

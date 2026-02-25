@@ -67,20 +67,32 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
 
             if (orderBy != null && lastKey.HasValue)
             {
-                var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
-                var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
+                bool shouldApplyCursor = true;
+                if (typeof(TKey) == typeof(DateTime) && lastKey.Value.Equals(DateTime.MinValue))
+                {
+                    shouldApplyCursor = false;
+                }
 
-                // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
-                Expression comparison = orderDesc
-                    ? Expression.LessThan(member, Expression.Constant(lastKey.Value, typeof(TKey)))
-                    : Expression.GreaterThan(
-                        member,
-                        Expression.Constant(lastKey.Value, typeof(TKey))
-                    );
+                if (shouldApplyCursor)
+                {
+                    var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
+                    var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
 
-                // Create the complelte lambda function
-                var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
-                query = query.Where(lambda);
+                    // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
+                    Expression comparison = orderDesc
+                        ? Expression.LessThan(
+                            member,
+                            Expression.Constant(lastKey.Value, typeof(TKey))
+                        )
+                        : Expression.GreaterThan(
+                            member,
+                            Expression.Constant(lastKey.Value, typeof(TKey))
+                        );
+
+                    // Create the complelte lambda function
+                    var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
+                    query = query.Where(lambda);
+                }
             }
 
             if (orderBy != null)
@@ -117,20 +129,32 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
 
             if (orderBy != null && lastKey.HasValue)
             {
-                var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
-                var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
+                bool shouldApplyCursor = true;
+                if (typeof(TKey) == typeof(DateTime) && lastKey.Value.Equals(DateTime.MinValue))
+                {
+                    shouldApplyCursor = false;
+                }
 
-                // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
-                Expression comparison = orderDesc
-                    ? Expression.LessThan(member, Expression.Constant(lastKey.Value, typeof(TKey)))
-                    : Expression.GreaterThan(
-                        member,
-                        Expression.Constant(lastKey.Value, typeof(TKey))
-                    );
+                if (shouldApplyCursor)
+                {
+                    var param = orderBy.Parameters[0]; // the 'e' in 'e => e.OrderByMember'
+                    var member = orderBy.Body; // the 'e.OrderByMember' in 'e => e.OrderByMember'
 
-                // Create the complelte lambda function
-                var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
-                query = query.Where(lambda);
+                    // Build the expression: e => e.OrderByMember < lastKey  (for desc) or > lastKey (for asc)
+                    Expression comparison = orderDesc
+                        ? Expression.LessThan(
+                            member,
+                            Expression.Constant(lastKey.Value, typeof(TKey))
+                        )
+                        : Expression.GreaterThan(
+                            member,
+                            Expression.Constant(lastKey.Value, typeof(TKey))
+                        );
+
+                    // Create the complelte lambda function
+                    var lambda = Expression.Lambda<Func<TEntity, bool>>(comparison, param); // (e) => e.OrderByMember < lastKey
+                    query = query.Where(lambda);
+                }
             }
 
             if (orderBy != null)

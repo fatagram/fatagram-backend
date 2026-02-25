@@ -21,24 +21,24 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity.ToTable("notifications");
                 entity.Property(e => e.ActorId).HasColumnName("actor_id").HasColumnType("uuid");
                 entity
+                    .Property(e => e.ActorType)
+                    .HasColumnName("actor_type")
+                    .HasConversion<int>()
+                    .IsRequired();
+                entity
                     .Property(e => e.Type)
                     .HasColumnName("notification_type")
                     .HasConversion<int>()
                     .IsRequired()
-                    .HasDefaultValue(NotificationType.System);
+                    .HasDefaultValue(NotificationType.System)
+                    .HasSentinel(NotificationType.System);
                 entity
                     .Property(e => e.TargetType)
                     .HasColumnName("target_type")
                     .HasConversion<int>()
                     .IsRequired();
-                entity
-                    .Property(e => e.TargetId)
-                    .HasColumnName("target_id")
-                    .HasColumnType("uuid")
-                    .IsRequired();
                 entity.Property(e => e.Data).HasColumnName("data").HasColumnType("jsonb");
 
-                // explicit collection navigation to avoid creating shadow foreign keys
                 entity
                     .HasMany(e => e.UserNotifications)
                     .WithOne(un => un.Notification)

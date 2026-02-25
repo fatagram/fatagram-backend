@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Common.Mapper;
+using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
@@ -30,7 +31,6 @@ namespace Fatagram.API.Extensions.Services
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
             services.AddScoped<FriendshipValidator>();
-            services.AddScoped<IFriendshipNotificationStrategy, FriendshipNotificationStrategy>();
 
             // Scoped for repositories
             services.AddScoped<IUserRepository, UserRepository>();
@@ -40,13 +40,16 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IFriendshipRepository, FriendshipRepository>();
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
-            services.AddScoped<INotificationContentRepository, NotificationContentRepository>();
             services.AddScoped<IUserEmailRepository, UserEmailRepository>();
+            services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
 
             // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
+
+            // Transient: each injection gets fresh builder (no shared state)
+            services.AddTransient<NotifyBuilder>();
 
             // Scoped for AutoMapper
             services.AddAutoMapper(typeof(Mapping));

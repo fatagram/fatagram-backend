@@ -5,13 +5,13 @@ using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices;
-using Fatagram.Application.Services.NotificationServices.Interface;
 using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -24,10 +24,10 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         IFriendRequestRepository friendRequestRepository,
         IUserRepository userRepository,
         IMapper mapper,
-        INotificationService notificationService,
         IFriendRequestManager friendRequestManager,
         FriendshipValidator friendshipValidator,
-        IFriendshipNotificationStrategy friendshipNotificationStrategy,
+        NotifyBuilder notifyBuilder,
+        IUserNotificationRepository userNotificationRepository,
         ILogger<FriendshipService> logger
     ) : IFriendshipService
     {
@@ -36,18 +36,24 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             friendRequestRepository;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMapper _mapper = mapper;
-        private readonly INotificationService _notificationService = notificationService;
         private readonly IFriendRequestManager _friendRequestManager = friendRequestManager;
         private readonly FriendshipValidator _validator = friendshipValidator;
-        private readonly IFriendshipNotificationStrategy _notificationStrategy =
-            friendshipNotificationStrategy;
+        private readonly NotifyBuilder _notifyBuilder = notifyBuilder;
+        private readonly IUserNotificationRepository _userNotificationRepository =
+            userNotificationRepository;
         private readonly ILogger<FriendshipService> _logger = logger;
 
         public async Task<Result> SendFriendRequestAsync(Guid senderId, Guid receiverId)
         {
             await _validator.ValidateSendFriendRequestAsync(senderId, receiverId);
-            await _friendRequestManager.CreateRequestAsync(senderId, receiverId);
-            await _notificationStrategy.NotifyFriendRequestSentAsync(receiverId, senderId);
+            var res = await _friendRequestManager.CreateRequestAsync(senderId, receiverId);
+
+            var dto = NotificationFactory.CreateNewFriendRequestNotification(
+                receiverId,
+                senderId,
+                res.Data
+            );
+            await _notifyBuilder.WithPush().NotifyAsync(receiverId, new NotifyOptions(dto));
 
             return Result.Create();
         }
@@ -57,7 +63,16 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             await _validator.ValidateAcceptFriendRequestAsync(acceptorId, requesterId);
             await CreateFriendshipAsync(requesterId, acceptorId);
             await _friendRequestManager.DeleteRequestAsync(acceptorId, requesterId);
-            await _notificationStrategy.NotifyFriendRequestAcceptedAsync(requesterId, acceptorId);
+
+            // Build decorator chain: push + email (khi cần)
+            var dto = NotificationFactory.CreateFriendRequestAcceptedNotification(
+                requesterId,
+                acceptorId
+            );
+            await _notifyBuilder
+                .WithPush()
+                // .WithEmail()  // uncomment khi muốn gửi email
+                .NotifyAsync(requesterId, new NotifyOptions(dto));
 
             return Result.Create();
         }
@@ -70,7 +85,46 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
         public async Task<Result> RevokeFriendRequestAsync(Guid senderId, Guid receiverId)
         {
-            await _friendRequestManager.DeleteRequestAsync(receiverId, senderId);
+            // Lấy friend request để lấy SourceId
+            var friendRequest = (
+                await _friendRequestRepository.GetAllAsync(
+                    fr => fr.SenderId == senderId && fr.ReceiverId == receiverId,
+                    fr => fr
+                )
+            ).FirstOrDefault();
+
+            if (friendRequest != null)
+            {
+                // Query UserNotification theo SourceId thay vì ActorId + Type
+                var userNotifications = await _userNotificationRepository.GetAllAsync<
+                    UserNotification,
+                    DateTime
+                >(
+                    un => un.UserId == receiverId && un.Notification.SourceId == friendRequest.Id,
+                    un => un.Notification.CreatedAt,
+                    false,
+                    1,
+                    null,
+                    un => un.Include(un => un.Notification)
+                );
+
+                var userNotification = userNotifications.FirstOrDefault();
+                if (userNotification != null)
+                {
+                    var cancelDto = NotificationFactory.CreateCancelNotification(
+                        receiverId,
+                        userNotification.Id
+                    );
+                    await _notifyBuilder
+                        .WithPush()
+                        .NotifyAsync(receiverId, new NotifyOptions(cancelDto, IsSave: false));
+
+                    await _userNotificationRepository.DeleteAsync(userNotification);
+                }
+
+                await _friendRequestRepository.DeleteAsync(friendRequest);
+            }
+
             return Result.Create();
         }
 

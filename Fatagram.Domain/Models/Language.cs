@@ -10,7 +10,6 @@ namespace Fatagram.Domain.Models
     {
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public ICollection<NotificationContent>? NotificationContents { get; set; }
         public ICollection<User>? Users { get; set; }
     }
 }

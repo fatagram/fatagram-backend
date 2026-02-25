@@ -15,7 +15,6 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<FriendRequest> FriendRequests { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<Language> Languages { get; set; } = null!;
-        public DbSet<NotificationContent> NotificationContents { get; set; } = null!;
         public DbSet<Localized> Localizeds { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,7 +28,6 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddFriendship();
             modelBuilder.AddNotification();
             modelBuilder.AddLanguage();
-            modelBuilder.AddNotificationContent();
             modelBuilder.AddLocalized();
         }
     }

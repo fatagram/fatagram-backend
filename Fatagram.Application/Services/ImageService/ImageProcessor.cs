@@ -42,12 +42,6 @@ namespace Fatagram.Application.Services.ImageService
             return image;
         }
 
-        public static Task<string> SaveImageOnCloud(ImageRequest request)
-        {
-            //TODO: upload logic
-            return Task.FromResult("https://fatagram.com/image/1234567890");
-        }
-
         private static (int w, int h) ResolveSize(ImageRequest request)
         {
             return request.SizePreset switch

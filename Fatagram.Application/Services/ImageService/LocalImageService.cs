@@ -22,29 +22,42 @@ namespace Fatagram.Application.Services.ImageService
 
         public async Task<Result<string>> SaveImageAsync(ImageRequest request, string folder)
         {
-            var fullFolderPath = Path.Combine(_storagePath, folder);
+            if (request.ImageStream == null || request.ImageStream.Length == 0)
+            {
+                return Result<string>.Create(
+                    ResponseStatusCode.BadRequest,
+                    null,
+                    "Invalid image stream"
+                );
+            }
+
+            var fullfolderPath = Path.Combine(_storagePath, folder);
+            Directory.CreateDirectory(fullfolderPath);
+
             var fileName = GenerateFileName();
             var filePath = Path.Combine(
-                fullFolderPath,
+                fullfolderPath,
                 $"{fileName}.{request.Format.ToString().ToLower()}"
             );
 
-            if (!Directory.Exists(fullFolderPath))
-            {
-                Directory.CreateDirectory(fullFolderPath);
-            }
+            var spec = ImageProcessor.BuildSpec(request);
 
-            var image = await ImageProcessor.ProcessImageAsync(request);
-
+            var image = await ImageSharpAdapter.ProcessAsync(request.ImageStream, spec);
             await image.SaveAsync(filePath);
 
-            var scheme = _httpContextAccessor.HttpContext?.Request.Scheme ?? "http";
-            var host = _httpContextAccessor.HttpContext?.Request.Host.ToString() ?? "localhost";
-            var port = _httpContextAccessor.HttpContext?.Request.Host.Port ?? 5000;
-            var pathBase = filePath.Replace(_storagePath, "");
-
-            var finalUrl = $"{scheme}://{host}:{port}{pathBase}";
+            var finalUrl = BuildPublicUrl(filePath);
             return Result<string>.Create(ResponseStatusCode.Success, finalUrl);
+        }
+
+        private string BuildPublicUrl(string filePath)
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            var scheme = request?.Scheme ?? "http";
+            var host = request?.Host.ToString() ?? "localhost";
+            var port = request?.Host.Port ?? 5000;
+
+            var relativePath = filePath.Replace(_storagePath, "").Replace("\\", "/");
+            return $"{scheme}://{host}:{port}{relativePath}";
         }
 
         private static string GenerateFileName() => Guid.NewGuid().ToString();

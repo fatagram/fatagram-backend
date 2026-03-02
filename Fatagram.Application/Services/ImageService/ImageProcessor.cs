@@ -13,33 +13,18 @@ namespace Fatagram.Application.Services.ImageService
 {
     public static class ImageProcessor
     {
-        public static async Task<Image> ProcessImageAsync(ImageRequest request)
+        public static ImageProcessingSpec BuildSpec(ImageRequest request)
         {
-            var imageEncoder = CreateImageEncoder(request);
             var (w, h) = ResolveSize(request);
 
-            // if (!Directory.Exists(folder))
-            // {
-            //     Directory.CreateDirectory(folder);
-            // }
-
-            // var path = Path.Combine(folder, $"{fileName}.{request.Format.ToString().ToLower()}");
-
-            request.ImageStream.Position = 0;
-            var image = await Image.LoadAsync(request.ImageStream);
-
-            // Resize
-            image.Mutate(x =>
-                x.Resize(
-                    new ResizeOptions
-                    {
-                        Mode = MapResizeMode(request),
-                        Size = new Size(request.Width ?? w, request.Height ?? h),
-                    }
-                )
-            );
-
-            return image;
+            return new ImageProcessingSpec
+            {
+                Width = request.Width ?? w,
+                Height = request.Height ?? h,
+                ResizeMode = request.ResizeMode,
+                Format = request.Format,
+                Quality = (int)request.Quality,
+            };
         }
 
         private static (int w, int h) ResolveSize(ImageRequest request)
@@ -50,39 +35,8 @@ namespace Fatagram.Application.Services.ImageService
                 ImageSizePreset.Small => (320, 240),
                 ImageSizePreset.Medium => (640, 480),
                 ImageSizePreset.Large => (1024, 768),
-                ImageSizePreset.Original => (request.Width ?? 150, request.Height ?? 150),
+                ImageSizePreset.Original => (request.Width ?? 0, request.Height ?? 0),
                 _ => (150, 150),
-            };
-        }
-
-        private static ResizeMode MapResizeMode(ImageRequest request)
-        {
-            return request.ResizeMode switch
-            {
-                ImageResizeMode.Crop => ResizeMode.Crop,
-                ImageResizeMode.Pad => ResizeMode.Pad,
-                ImageResizeMode.BoxPad => ResizeMode.BoxPad,
-                ImageResizeMode.Max => ResizeMode.Max,
-                ImageResizeMode.Min => ResizeMode.Min,
-                _ => ResizeMode.Max,
-            };
-        }
-
-        private static IImageEncoder CreateImageEncoder(ImageRequest request)
-        {
-            return request.Format switch
-            {
-                ImageFormat.Jpeg => new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
-                {
-                    Quality = (int)request.Quality,
-                },
-                ImageFormat.Png => new SixLabors.ImageSharp.Formats.Png.PngEncoder(),
-                ImageFormat.Gif => new SixLabors.ImageSharp.Formats.Gif.GifEncoder(),
-                ImageFormat.Bmp => new SixLabors.ImageSharp.Formats.Bmp.BmpEncoder(),
-                _ => new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
-                {
-                    Quality = (int)request.Quality,
-                },
             };
         }
     }

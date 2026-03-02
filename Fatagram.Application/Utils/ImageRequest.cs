@@ -15,7 +15,5 @@ namespace Fatagram.Application.Utils
         public ImageResizeMode ResizeMode { get; set; } = ImageResizeMode.Max;
         public int? Width { get; set; }
         public int? Height { get; set; }
-        // public string Folder { get; set; } = null!;
-        // public string FileName { get; set; } = Guid.NewGuid().ToString();
     }
 }

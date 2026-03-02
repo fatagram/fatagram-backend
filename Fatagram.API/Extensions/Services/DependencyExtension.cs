@@ -24,7 +24,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IFriendshipService, FriendshipService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
-            services.AddScoped<IImageService, LocalImageService>();
+            services.AddScoped<IImageService, CloudImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<OAuthServiceFactory>();
 

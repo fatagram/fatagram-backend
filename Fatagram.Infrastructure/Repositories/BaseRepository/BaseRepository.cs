@@ -244,6 +244,15 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task SoftDeleteRangeAsync(Expression<Func<TEntity, bool>>? filter = null)
+        {
+            var query = _dbSet.AsQueryable();
+            if (filter != null)
+                query = query.Where(filter);
+            await query.ExecuteUpdateAsync(e => e.SetProperty(p => p.DeletedAt, DateTime.UtcNow));
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<TEntity> UpdateAsync(TEntity entity)
         {
             entity.UpdatedAt = DateTime.UtcNow;
@@ -289,6 +298,17 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 return entity;
             }
             return default;
+        }
+
+        public async Task<IEnumerable<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities)
+        {
+            foreach (var entity in entities)
+            {
+                entity.UpdatedAt = DateTime.UtcNow;
+            }
+            _dbSet.UpdateRange(entities);
+            await _dbContext.SaveChangesAsync();
+            return entities;
         }
     }
 }

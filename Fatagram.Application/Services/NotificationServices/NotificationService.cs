@@ -77,17 +77,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             await _notificationSender.SendNotificationAsync(userId, attachedNotification);
         }
 
-        public Task DeleteAllNotificationsAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteNotificationAsync(Guid notificationId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<CursorResult<DateTime, NotificationDto>> GetNotificationsAsync(
+        public async Task<Result<CursorResult<NotificationDto, DateTime>>> GetNotificationsAsync(
             Guid userId,
             CursorFilter<DateTime> query
         )
@@ -129,37 +119,54 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
                 await _notificationInfoService.AttachInfosToNotificationsAsync(notificationDtos);
 
             var lastNotification = userNotifications.LastOrDefault();
-            return CursorResult<DateTime, NotificationDto>.Create(
-                attachedNotifications!,
-                lastNotification?.Notification.CreatedAt,
-                userNotifications.Count == query.Limit
+            return Result<CursorResult<NotificationDto, DateTime>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<NotificationDto, DateTime>(
+                    attachedNotifications!,
+                    lastNotification?.Notification.CreatedAt,
+                    userNotifications.Count == query.Limit
+                ),
+                "Get notifications successfully"
             );
         }
 
-        public Task<CursorResult<DateTime, NotificationDto>> GetUnreadNotificationsAsync(
+        public async Task MarkNotificationAsReadAsync(Guid notificationId)
+        {
+            var userNotification = await _userNotificationRepository.GetAsync(
+                notificationId,
+                s => s
+            );
+
+            if (userNotification is null)
+            {
+                return;
+            }
+
+            userNotification.IsRead = true;
+            await _userNotificationRepository.UpdateAsync(userNotification);
+        }
+
+        public async Task MarkAllNotificationsAsReadAsync(Guid userId)
+        {
+            await _userNotificationRepository.UpdateAsync(
+                un => un.UserId == userId && !un.IsRead,
+                un => un.IsRead = true
+            );
+        }
+
+        public async Task DeleteAllNotificationsAsync(Guid userId)
+        {
+            await _userNotificationRepository.SoftDeleteRangeAsync(un => un.UserId == userId);
+        }
+
+        public async Task DeleteNotificationAsync(Guid notificationId)
+        {
+            await _userNotificationRepository.SoftDeleteAsync(notificationId);
+        }
+
+        public Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadNotificationsAsync(
             Guid userId,
             CursorFilter<DateTime> query
-        )
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task MarkNotificationAsReadAsync(Guid notificationId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task MarkAllNotificationsAsReadAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteNotificationsAsync(
-            Guid userId,
-            Guid actorId,
-            NotificationType type,
-            Dictionary<string, string>? data = null,
-            bool isSendCancel = true
         )
         {
             throw new NotImplementedException();

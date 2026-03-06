@@ -51,7 +51,7 @@ namespace Fatagram.API.Controllers.V1
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
-        [HttpGet("unread")]
+        [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadNotifications(
             [FromQuery] CursorFilter<DateTime> filter
         )
@@ -68,7 +68,7 @@ namespace Fatagram.API.Controllers.V1
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
-        [HttpPost("read/{notificationId}")]
+        [HttpPost("{notificationId}/read")]
         public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
         {
             await _notificationService.MarkNotificationAsReadAsync(notificationId);
@@ -81,7 +81,7 @@ namespace Fatagram.API.Controllers.V1
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
-        [HttpPost("read/all")]
+        [HttpPost("read-all")]
         public async Task<IActionResult> MarkAllNotificationsAsRead()
         {
             var userId = GetCurrentUserId();
@@ -109,7 +109,7 @@ namespace Fatagram.API.Controllers.V1
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
-        [HttpDelete("all")]
+        [HttpDelete()]
         public async Task<IActionResult> DeleteAllNotifications()
         {
             var userId = GetCurrentUserId();

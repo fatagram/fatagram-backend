@@ -213,7 +213,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             return Result<int>.Create(ResponseStatusCode.Success, count);
         }
 
-        public async Task<CursorResult<DateTime, FriendRequestDto>> GetFriendRequestsAsync(
+        public async Task<Result<CursorResult<FriendRequestDto, DateTime>>> GetFriendRequestsAsync(
             Guid userId,
             CursorFilter<DateTime> filter
         )
@@ -248,16 +248,14 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             var hasNext = result.Count() == filter.Limit;
             var nextCursor = hasNext ? result.Last()?.CreatedAt : null;
 
-            return CursorResult<DateTime, FriendRequestDto>.Create(
-                result,
-                nextCursor,
-                hasNext,
-                null,
-                null
+            return Result<CursorResult<FriendRequestDto, DateTime>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<FriendRequestDto, DateTime>(result, nextCursor, hasNext),
+                "Get friend requests successfully"
             );
         }
 
-        public async Task<CursorResult<DateTime, FriendDto>> GetFriendsAsync(
+        public async Task<Result<CursorResult<FriendDto, DateTime>>> GetFriendsAsync(
             Guid userId,
             Guid targetId,
             CursorFilter<DateTime> filter
@@ -284,12 +282,10 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             var hasNext = result.Count() == filter.Limit;
             var nextCursor = hasNext ? result.Last()?.CreatedAt : null;
 
-            return CursorResult<DateTime, FriendDto>.Create(
-                result,
-                nextCursor,
-                hasNext,
-                null,
-                null
+            return Result<CursorResult<FriendDto, DateTime>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<FriendDto, DateTime>(result, nextCursor, hasNext),
+                "Get friends successfully"
             );
         }
     }

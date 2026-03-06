@@ -22,31 +22,31 @@ namespace Fatagram.API.Utils
             return CreateActionResult(result.Code, data);
         }
 
-        public static IActionResult ToActionResult<TCursor, TItem>(
-            this CursorResult<TCursor, TItem> result
-        )
-            where TCursor : struct
-        {
-            var data = CursorResponse<TCursor, TItem>.Create(
-                result.Data ?? Enumerable.Empty<TItem>(),
-                result.NextCursor,
-                result.HasNext,
-                result.Message
-            );
-            return CreateActionResult(result.Code, data);
-        }
+        // public static IActionResult ToActionResult<TCursor, TItem>(
+        //     this CursorResult<TCursor, TItem> result
+        // )
+        //     where TCursor : struct
+        // {
+        //     var data = CursorResponse<TCursor, TItem>.Create(
+        //         result.Data ?? Enumerable.Empty<TItem>(),
+        //         result.NextCursor,
+        //         result.HasNext,
+        //         result.Message
+        //     );
+        //     return CreateActionResult(result.Code, data);
+        // }
 
-        public static IActionResult ToActionResult<TItem>(this PagedResult<TItem> result)
-        {
-            var data = PaginatedResponse<TItem>.Create(
-                result.Data ?? Enumerable.Empty<TItem>(),
-                result.Page,
-                result.PageSize,
-                result.Total,
-                result.Message
-            );
-            return CreateActionResult(result.Code, data);
-        }
+        // public static IActionResult ToActionResult<TItem>(this PagedResult<TItem> result)
+        // {
+        //     var data = PaginatedResponse<TItem>.Create(
+        //         result.Data ?? Enumerable.Empty<TItem>(),
+        //         result.Page,
+        //         result.PageSize,
+        //         result.Total,
+        //         result.Message
+        //     );
+        //     return CreateActionResult(result.Code, data);
+        // }
 
         private static IActionResult CreateActionResult(ResponseStatusCode code, object? data)
         {

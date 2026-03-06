@@ -18,11 +18,11 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             NotificationDto notificationDto,
             bool isSave = true
         );
-        Task<CursorResult<DateTime, NotificationDto>> GetNotificationsAsync(
+        Task<Result<CursorResult<NotificationDto, DateTime>>> GetNotificationsAsync(
             Guid userId,
             CursorFilter<DateTime> query
         );
-        Task<CursorResult<DateTime, NotificationDto>> GetUnreadNotificationsAsync(
+        Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadNotificationsAsync(
             Guid userId,
             CursorFilter<DateTime> query
         );
@@ -30,12 +30,5 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         Task MarkAllNotificationsAsReadAsync(Guid userId);
         Task DeleteNotificationAsync(Guid notificationId);
         Task DeleteAllNotificationsAsync(Guid userId);
-        Task DeleteNotificationsAsync(
-            Guid userId,
-            Guid actorId,
-            NotificationType type,
-            Dictionary<string, string>? data = null,
-            bool isSendCancel = true
-        );
     }
 }

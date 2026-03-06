@@ -6,37 +6,34 @@ using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Utils
 {
-    public class CursorResult<TCursor, TData> : Result<IEnumerable<TData>>
+    public class CursorResult<TItem, TCursor>
         where TCursor : struct
     {
+        public IEnumerable<TItem> Items { get; set; }
         public TCursor? NextCursor { get; set; }
         public bool HasNext { get; set; }
         public Dictionary<string, object> ExtraInfo { get; set; } =
             new Dictionary<string, object>();
 
-        private CursorResult(
-            IEnumerable<TData> data,
-            TCursor? nextCursor,
-            bool hasNext,
-            Dictionary<string, object>? extraInfo = null,
-            string? message = null
-        )
-            : base(ResponseStatusCode.Success, data, message)
+        public CursorResult()
         {
-            Data = data;
-            NextCursor = nextCursor;
-            HasNext = hasNext;
+            Items = Enumerable.Empty<TItem>();
+            NextCursor = null;
+            HasNext = false;
+            ExtraInfo = new Dictionary<string, object>();
         }
 
-        public static CursorResult<TCursor, TData> Create(
-            IEnumerable<TData> data,
+        public CursorResult(
+            IEnumerable<TItem> items,
             TCursor? nextCursor,
             bool hasNext,
-            Dictionary<string, object>? extraInfo = null,
-            string? message = null
+            Dictionary<string, object>? extraInfo = null
         )
         {
-            return new CursorResult<TCursor, TData>(data, nextCursor, hasNext, extraInfo, message);
+            Items = items;
+            NextCursor = nextCursor;
+            HasNext = hasNext;
+            ExtraInfo = extraInfo ?? new Dictionary<string, object>();
         }
     }
 }

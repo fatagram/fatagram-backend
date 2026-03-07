@@ -13,22 +13,19 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
 {
     public interface INotificationService
     {
-        Task CreateNotificationAsync(
-            Guid userId,
-            NotificationDto notificationDto,
-            bool isSave = true
-        );
-        Task<Result<CursorResult<NotificationDto, DateTime>>> GetNotificationsAsync(
+        Task CreateAsync(Guid userId, NotificationDto notificationDto, bool isSave = true);
+        Task<Result<CursorResult<NotificationDto, DateTime>>> GetAsync(
             Guid userId,
             CursorFilter<DateTime> query
         );
-        Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadNotificationsAsync(
+        Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadAsync(
             Guid userId,
             CursorFilter<DateTime> query
         );
-        Task MarkNotificationAsReadAsync(Guid notificationId);
-        Task MarkAllNotificationsAsReadAsync(Guid userId);
-        Task DeleteNotificationAsync(Guid notificationId);
-        Task DeleteAllNotificationsAsync(Guid userId);
+        Task<Result<int>> GetUnreadCountAsync(Guid userId);
+        Task MarkAsReadAsync(Guid notificationId);
+        Task MarkAllAsReadAsync(Guid userId);
+        Task DeleteAsync(Guid notificationId);
+        Task DeleteAllAsync(Guid userId);
     }
 }

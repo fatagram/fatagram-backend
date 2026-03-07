@@ -39,7 +39,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<NotificationService> _logger = logger;
 
-        public async Task CreateNotificationAsync(
+        public async Task CreateAsync(
             Guid userId,
             NotificationDto notificationDto,
             bool isSave = true
@@ -77,7 +77,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             await _notificationSender.SendNotificationAsync(userId, attachedNotification);
         }
 
-        public async Task<Result<CursorResult<NotificationDto, DateTime>>> GetNotificationsAsync(
+        public async Task<Result<CursorResult<NotificationDto, DateTime>>> GetAsync(
             Guid userId,
             CursorFilter<DateTime> query
         )
@@ -130,7 +130,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             );
         }
 
-        public async Task MarkNotificationAsReadAsync(Guid notificationId)
+        public async Task MarkAsReadAsync(Guid notificationId)
         {
             var userNotification = await _userNotificationRepository.GetAsync(
                 notificationId,
@@ -146,7 +146,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             await _userNotificationRepository.UpdateAsync(userNotification);
         }
 
-        public async Task MarkAllNotificationsAsReadAsync(Guid userId)
+        public async Task MarkAllAsReadAsync(Guid userId)
         {
             await _userNotificationRepository.UpdateAsync(
                 un => un.UserId == userId && !un.IsRead,
@@ -154,22 +154,30 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             );
         }
 
-        public async Task DeleteAllNotificationsAsync(Guid userId)
+        public async Task DeleteAllAsync(Guid userId)
         {
             await _userNotificationRepository.SoftDeleteRangeAsync(un => un.UserId == userId);
         }
 
-        public async Task DeleteNotificationAsync(Guid notificationId)
+        public async Task DeleteAsync(Guid notificationId)
         {
             await _userNotificationRepository.SoftDeleteAsync(notificationId);
         }
 
-        public Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadNotificationsAsync(
+        public Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadAsync(
             Guid userId,
             CursorFilter<DateTime> query
         )
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<Result<int>> GetUnreadCountAsync(Guid userId)
+        {
+            var count = await _userNotificationRepository.CountAsync(un =>
+                un.UserId == userId && !un.IsRead
+            );
+            return Result<int>.Create(ResponseStatusCode.Success, count);
         }
     }
 }

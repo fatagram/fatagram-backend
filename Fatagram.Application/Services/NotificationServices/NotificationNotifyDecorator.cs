@@ -32,7 +32,7 @@ namespace Fatagram.Application.Services.NotificationServices
 
             try
             {
-                await _notificationService.CreateNotificationAsync(
+                await _notificationService.CreateAsync(
                     userId,
                     options.Notification,
                     options.IsSave

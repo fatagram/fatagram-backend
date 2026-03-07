@@ -25,7 +25,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         Task<Result<int>> GetUnreadCountAsync(Guid userId);
         Task MarkAsReadAsync(Guid notificationId);
         Task MarkAllAsReadAsync(Guid userId);
-        Task DeleteAsync(Guid notificationId);
-        Task DeleteAllAsync(Guid userId);
+        Task<Result> DeleteAsync(Guid notificationId);
+        Task<Result> DeleteAllAsync(Guid userId);
     }
 }

@@ -155,6 +155,11 @@ namespace Fatagram.Application.Services.AuthServices
             string code
         )
         {
+            _logger.LogInformation(
+                "{Provider} OAuth callback received with code: {Code}",
+                provider,
+                code
+            );
             // Step 1: Get OAuth service for the provider
             var oauthService = _oauthServiceFactory.CreateService(provider);
 

@@ -56,6 +56,11 @@ namespace Fatagram.API.Controllers.V1
             [FromBody] OAuthCallbackDto request
         )
         {
+            _logger.LogInformation(
+                "Received OAuth callback for provider: {Provider} with code: {Code}",
+                provider,
+                request.Code
+            );
             if (!Enum.TryParse<OAuthProvider>(provider, ignoreCase: true, out var oauthProvider))
             {
                 return BadRequest($"Unsupported OAuth provider: {provider}");
@@ -71,16 +76,16 @@ namespace Fatagram.API.Controllers.V1
         /// <summary>
         /// Google OAuth callback (deprecated - use /oauth/google/callback instead)
         /// </summary>
-        [HttpPost("google/callback")]
-        [Obsolete("Use /oauth/google/callback instead")]
-        public async Task<IActionResult> GoogleCallback([FromBody] GoogleCallbackDto request)
-        {
-            _logger.LogInformation("Google callback: {request}", request.Code);
-            var res = await _authService.GoogleCallback(request);
-            AppendAccessToken(res.Data!.AccessToken);
-            AppendRefreshToken(res.Data!.RefreshToken);
-            return Ok();
-        }
+        // [HttpPost("google/callback")]
+        // [Obsolete("Use /oauth/google/callback instead")]
+        // public async Task<IActionResult> GoogleCallback([FromBody] GoogleCallbackDto request)
+        // {
+        //     _logger.LogInformation("Google callback: {request}", request.Code);
+        //     var res = await _authService.GoogleCallback(request);
+        //     AppendAccessToken(res.Data!.AccessToken);
+        //     AppendRefreshToken(res.Data!.RefreshToken);
+        //     return Ok();
+        // }
 
         /// <summary>
         /// Refresh token

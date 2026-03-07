@@ -93,7 +93,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
                 UserNotification,
                 DateTime
             >(
-                un => un.UserId == userId,
+                un => un.UserId == userId && !un.DeletedAt.HasValue,
                 un => un.Notification.CreatedAt,
                 true, // orderDesc = true để hiển thị notification mới nhất trước
                 query.Limit,
@@ -154,14 +154,17 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             );
         }
 
-        public async Task DeleteAllAsync(Guid userId)
+        public async Task<Result> DeleteAllAsync(Guid userId)
         {
             await _userNotificationRepository.SoftDeleteRangeAsync(un => un.UserId == userId);
+            Console.WriteLine($"Deleted all notifications for user {userId}");
+            return Result.Create();
         }
 
-        public async Task DeleteAsync(Guid notificationId)
+        public async Task<Result> DeleteAsync(Guid notificationId)
         {
             await _userNotificationRepository.SoftDeleteAsync(notificationId);
+            return Result.Create();
         }
 
         public Task<Result<CursorResult<NotificationDto, DateTime>>> GetUnreadAsync(
@@ -175,7 +178,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         public async Task<Result<int>> GetUnreadCountAsync(Guid userId)
         {
             var count = await _userNotificationRepository.CountAsync(un =>
-                un.UserId == userId && !un.IsRead
+                un.UserId == userId && !un.IsRead && un.DeletedAt == null
             );
             return Result<int>.Create(ResponseStatusCode.Success, count);
         }

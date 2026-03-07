@@ -108,8 +108,7 @@ namespace Fatagram.API.Controllers.V1
         [HttpDelete("{notificationId}")]
         public async Task<IActionResult> DeleteNotification(Guid notificationId)
         {
-            await _notificationService.DeleteAsync(notificationId);
-            return Ok();
+            return (await _notificationService.DeleteAsync(notificationId)).ToActionResult();
         }
 
         /// <summary>
@@ -122,8 +121,7 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> DeleteAllNotifications()
         {
             var userId = GetCurrentUserId();
-            await _notificationService.DeleteAllAsync(userId);
-            return Ok();
+            return (await _notificationService.DeleteAllAsync(userId)).ToActionResult();
         }
     }
 }

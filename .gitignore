@@ -368,7 +368,5 @@ FodyWeavers.xsd
 Fatagram.API/wwwroot/
 appsettings.Local.json
 
-docker-compose.yml
-docker-compose.local.yml
 docker
 .env

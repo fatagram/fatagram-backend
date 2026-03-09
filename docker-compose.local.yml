@@ -1,0 +1,12 @@
+services:
+  fatagram-api:
+    build: .
+    container_name: fatagram_api
+    ports:
+      - "5000:8080"
+    env_file:
+      - Fatagram.API/.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Local
+    restart: unless-stopped
+    

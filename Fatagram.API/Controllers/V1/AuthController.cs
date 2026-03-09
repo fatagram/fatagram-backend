@@ -56,7 +56,7 @@ namespace Fatagram.API.Controllers.V1
             [FromBody] OAuthCallbackDto request
         )
         {
-            int x = _logger.LogInformation(
+            _logger.LogInformation(
                 "Received OAuth callback for provider: {Provider} with code: {Code}",
                 provider,
                 request.Code

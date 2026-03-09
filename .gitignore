@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+docker-compose-local.yml
+
 # User-specific files
 *.rsuser
 *.suo
@@ -364,9 +366,9 @@ FodyWeavers.xsd
 
 # wwwroot folder for ASP.NET Core projects
 Fatagram.API/wwwroot/
-Fatagram.Tools/appsettings.json
-Fatagram.API/appsettings.Local.json
+appsettings.Local.json
 
 docker-compose.yml
-docker-compose.override.yml
-docker-compose.prod.yml
+docker-compose.local.yml
+docker
+.env

@@ -1,0 +1,49 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# Published output
+**/publish/
+
+# Git
+.git
+.gitignore
+.gitkeep
+
+# OS & editor files
+.DS_Store
+.vscode/
+.idea/
+.vs/
+
+# User and secret files
+.env
+.env.*
+secrets.json
+secrets/
+UserSecrets/
+*.user
+*.suo
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Upload storage
+wwwroot/avatars/*
+wwwroot/backgrounds/*
+!wwwroot/avatars/.gitkeep
+!wwwroot/backgrounds/.gitkeep
+
+# Node
+node_modules/
+npm-debug.log
+
+# Misc
+dist/
+
+README.md
+LICENSE
+*.yml
+docker-compose.yml

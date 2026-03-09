@@ -5,6 +5,6 @@ ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
 
 # Chỉ cần COPY đống đã build sẵn từ artifact vào
-COPY ./publish .
+COPY . .
 
 ENTRYPOINT [ "dotnet", "Fatagram.API.dll" ]

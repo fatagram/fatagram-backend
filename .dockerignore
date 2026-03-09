@@ -2,8 +2,8 @@
 **/bin/
 **/obj/
 
-# Published output
-**/publish/
+# Published output (commented for CI builds that need ./publish from artifact)
+# **/publish/
 
 # Git
 .git

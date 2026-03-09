@@ -9,6 +9,8 @@ namespace Fatagram.API.Extensions.Configuration
     {
         public static void AddAppConfiguration(this WebApplicationBuilder builder)
         {
+            DotNetEnv.Env.Load();
+
             var env = builder.Environment.EnvironmentName;
 
             builder

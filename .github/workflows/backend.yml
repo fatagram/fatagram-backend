@@ -22,17 +22,17 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build the application
-        run: dotnet publish -c Release -o ./publish --no-restore
+      - name: Run tests
+        run: dotnet test --no-restore --configuration Release
+
+      - name: Build and Publish
+        run: dotnet publish Fatagram.API/Fatagram.API.csproj -c Release -o ./publish --no-restore
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-assets
           path: ./publish
-
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release
 
   docker:
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
           path: ./publish
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}

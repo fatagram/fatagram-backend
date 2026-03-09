@@ -1,0 +1,10 @@
+# Dockerfile.ci dành riêng cho GitHub Actions
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 5000
+
+# Chỉ cần COPY đống đã build sẵn từ artifact vào
+COPY ./publish .
+
+ENTRYPOINT [ "dotnet", "Fatagram.API.dll" ]

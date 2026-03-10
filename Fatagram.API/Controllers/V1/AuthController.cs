@@ -23,12 +23,18 @@ namespace Fatagram.API.Controllers.V1
     public class AuthController(
         IAuthService authService,
         ITokenService tokenService,
-        ILogger<AuthController> logger
+        ILogger<AuthController> logger,
+        IWebHostEnvironment environment,
+        IConfiguration configuration
     ) : BaseApiController
     {
         private readonly IAuthService _authService = authService;
         private readonly ITokenService _tokenService = tokenService;
         private readonly ILogger<AuthController> _logger = logger;
+        private readonly IWebHostEnvironment _environment = environment;
+        private readonly IConfiguration _configuration = configuration;
+
+        private bool IsLocal => !(_environment.IsProduction() || _environment.IsDevelopment());
 
         /// <summary>
         /// Login a user
@@ -179,9 +185,9 @@ namespace Fatagram.API.Controllers.V1
                 new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
-                    Path = "/",
+                    Secure = !IsLocal,
+                    SameSite = IsLocal ? SameSiteMode.Lax : SameSiteMode.None,
+                    Domain = _configuration["Domain"],
                     Expires = DateTime.Now.AddMinutes(30),
                 }
             );
@@ -195,9 +201,10 @@ namespace Fatagram.API.Controllers.V1
                 new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false,
-                    SameSite = SameSiteMode.Lax,
+                    Secure = !IsLocal,
+                    SameSite = IsLocal ? SameSiteMode.Lax : SameSiteMode.None,
                     Path = "/",
+                    Domain = _configuration["Domain"],
                     Expires = DateTime.Now.AddDays(7),
                 }
             );

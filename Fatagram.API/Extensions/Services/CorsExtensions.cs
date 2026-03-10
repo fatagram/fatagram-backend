@@ -16,8 +16,12 @@ namespace Fatagram.API.Extensions.Services
                     name: CorsPolicySettings.MyAllowSpecificOrigins,
                     builder =>
                     {
+                        var domain =
+                            Environment.GetEnvironmentVariable("DOMAIN") ?? "localhost:3000";
+                        var allowedUrl =
+                            domain == "localhost" ? "http://localhost:3000" : $"https://{domain}";
                         builder
-                            .SetIsOriginAllowed(origin => true)
+                            .WithOrigins(allowedUrl)
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials();

@@ -169,12 +169,28 @@ namespace Fatagram.API.Controllers.V1
 
         private void RemoveAccessToken()
         {
-            Response.Cookies.Delete("_accessToken");
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !IsLocal,
+                SameSite = IsLocal ? SameSiteMode.Lax : SameSiteMode.None,
+                Domain = _configuration["Domain"],
+                Expires = DateTime.Now.AddDays(-1),
+            };
+            Response.Cookies.Delete("_accessToken", cookieOptions);
         }
 
         private void RemoveRefreshToken()
         {
-            Response.Cookies.Delete("_refreshToken");
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !IsLocal,
+                SameSite = IsLocal ? SameSiteMode.Lax : SameSiteMode.None,
+                Domain = _configuration["Domain"],
+                Expires = DateTime.Now.AddDays(-1),
+            };
+            Response.Cookies.Delete("_refreshToken", cookieOptions);
         }
 
         private void AppendAccessToken(string value)

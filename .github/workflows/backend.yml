@@ -68,7 +68,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          script:
+          script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/fatagram-backend:latest
             docker compose up -d --no-deps --build backend
             docker system prune -f

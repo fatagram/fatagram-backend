@@ -28,7 +28,7 @@ namespace Fatagram.API.Extensions.Services
 
             // Framework Services
             builder.Services.AddAuthenticationServices();
-            builder.Services.AddCorsServices();
+            builder.AddCorsServices();
             builder.Services.AddSignalRServices();
 
             // Presentation Services

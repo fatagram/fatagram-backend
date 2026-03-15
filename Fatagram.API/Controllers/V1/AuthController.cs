@@ -80,20 +80,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         /// <summary>
-        /// Google OAuth callback (deprecated - use /oauth/google/callback instead)
-        /// </summary>
-        // [HttpPost("google/callback")]
-        // [Obsolete("Use /oauth/google/callback instead")]
-        // public async Task<IActionResult> GoogleCallback([FromBody] GoogleCallbackDto request)
-        // {
-        //     _logger.LogInformation("Google callback: {request}", request.Code);
-        //     var res = await _authService.GoogleCallback(request);
-        //     AppendAccessToken(res.Data!.AccessToken);
-        //     AppendRefreshToken(res.Data!.RefreshToken);
-        //     return Ok();
-        // }
-
-        /// <summary>
         /// Refresh token
         /// </summary>
         /// <param name="request"></param>
@@ -147,7 +133,7 @@ namespace Fatagram.API.Controllers.V1
         /// <param name="request">The change password details.</param>
         /// <returns>An IActionResult indicating the result of the password change.</returns>
         [Authorize]
-        [HttpPut("changePassword")]
+        [HttpPut("password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
             var userId = GetCurrentUserId();

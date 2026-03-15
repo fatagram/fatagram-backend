@@ -74,6 +74,23 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
                 // .WithEmail()  // uncomment khi muốn gửi email
                 .NotifyAsync(requesterId, new NotifyOptions(dto));
 
+            var userNotifications = await _userNotificationRepository.GetAllAsync<
+                UserNotification,
+                DateTime
+            >(
+                un =>
+                    un.UserId == acceptorId
+                    && un.Notification.ActorId == requesterId
+                    && un.Notification.Type == NotificationType.NewFriendRequest,
+                un => un.Notification.CreatedAt,
+                false,
+                1,
+                null,
+                un => un.Include(un => un.Notification)
+            );
+            var userNotification = userNotifications.FirstOrDefault();
+            await _userNotificationRepository.DeleteAsync(userNotification!);
+
             return Result.Create();
         }
 
@@ -131,6 +148,23 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         public async Task<Result> DeclineFriendRequestAsync(Guid declinerId, Guid requesterId)
         {
             await _friendRequestManager.DeleteRequestAsync(declinerId, requesterId);
+            // Delete notification liên quan đến friend request
+            var userNotifications = await _userNotificationRepository.GetAllAsync<
+                UserNotification,
+                DateTime
+            >(
+                un =>
+                    un.UserId == declinerId
+                    && un.Notification.ActorId == requesterId
+                    && un.Notification.Type == NotificationType.NewFriendRequest,
+                un => un.Notification.CreatedAt,
+                false,
+                1,
+                null,
+                un => un.Include(un => un.Notification)
+            );
+            var userNotification = userNotifications.FirstOrDefault();
+            await _userNotificationRepository.DeleteAsync(userNotification!);
             return Result.Create();
         }
 

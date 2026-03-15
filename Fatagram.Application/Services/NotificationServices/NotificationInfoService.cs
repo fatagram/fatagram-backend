@@ -85,6 +85,9 @@ namespace Fatagram.Application.Services.NotificationServices
                 NotificationType.NewFriendRequest => new NewFriendRequestAttachInfo(
                     _userRepository
                 ),
+                NotificationType.FriendRequestAccepted => new FriendRequestAcceptedAttachInfo(
+                    _userRepository
+                ),
                 _ => null,
             };
         }

@@ -3,12 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Common.Mapper;
+using Fatagram.Application.Services.ConversationServices;
+using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.MessageServices;
+using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
+using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.ConversationRepository;
+using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.MessageRepository;
+using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
 
@@ -27,6 +37,8 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IImageService, CloudImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<OAuthServiceFactory>();
+            services.AddScoped<IConversationService, ConversationService>();
+            services.AddScoped<IMessageService, MessageService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
@@ -42,6 +54,12 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IUserEmailRepository, UserEmailRepository>();
             services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<
+                IConversationParticipantRepository,
+                ConversationParticipantRepository
+            >();
+            services.AddScoped<IMessageRepository, MessageRepository>();
 
             // Scoped for SignalR
             services.AddScoped<INotificationSender, NotificationSender>();

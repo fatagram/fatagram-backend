@@ -16,6 +16,9 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<Language> Languages { get; set; } = null!;
         public DbSet<Localized> Localizeds { get; set; } = null!;
+        public DbSet<Conversation> Conversations { get; set; } = null!;
+        public DbSet<ConversationParticipant> ConversationParticipants { get; set; } = null!;
+        public DbSet<Message> Messages { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +32,7 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddNotification();
             modelBuilder.AddLanguage();
             modelBuilder.AddLocalized();
+            modelBuilder.AddConversation();
         }
     }
 }

@@ -103,5 +103,9 @@ namespace Fatagram.Domain.Models
         public ICollection<UserEmail> UserEmails { get; set; } = new List<UserEmail>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<ConversationParticipant> ConversationParticipants { get; set; } =
+            new List<ConversationParticipant>();
+
+        public ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }

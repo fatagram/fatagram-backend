@@ -95,7 +95,7 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
             >(
                 un => un.UserId == userId && !un.DeletedAt.HasValue,
                 un => un.Notification.CreatedAt,
-                true, // orderDesc = true để hiển thị notification mới nhất trước
+                true,
                 query.Limit,
                 query.Cursor,
                 un => un.Include(un => un.Notification)

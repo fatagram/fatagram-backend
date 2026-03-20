@@ -37,38 +37,34 @@ namespace Fatagram.Application.Services.ConversationServices
                 {
                     Items = res,
                     NextCursor = conservations.Count > 0 ? conservations.Last().LastActiveAt : null,
+                    HasNext = conservations.Count == (cursor?.Limit ?? 20),
                 }
             );
         }
 
-        public Task<Result<ConversationDto>> GetAsync(Guid conversationId)
+        public async Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId)
         {
-            throw new NotImplementedException();
+            var conversation = await _conversationRepository.GetConversationById(
+                userId,
+                conversationId
+            );
+            return Result<ConversationDto>.Create(
+                ResponseStatusCode.Success,
+                _mapper.Map<ConversationDto>(conversation)
+            );
         }
 
-        public async Task<Result<ConversationDto>> GetAsync(Guid userId, Guid targetUserId)
+        public async Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId)
         {
-            var conversation = (
-                await _conversationRepository.GetAllAsync(
-                    c =>
-                        c.Participants.Any(p => p.UserId == userId)
-                        && c.Participants.Any(p => p.UserId == targetUserId)
-                        && !c.IsGroup,
-                    c => c
-                )
-            ).FirstOrDefault();
+            var conversation = await _conversationRepository.GetConversationWith(
+                userId,
+                targetUserId
+            );
 
-            if (conversation == null)
-            {
-                return Result<ConversationDto>.Create(
-                    ResponseStatusCode.NotFound,
-                    null,
-                    "Conversation not found"
-                );
-            }
-
-            var res = _mapper.Map<ConversationDto>(conversation);
-            return Result<ConversationDto>.Create(ResponseStatusCode.Success, res);
+            return Result<ConversationDto>.Create(
+                ResponseStatusCode.Success,
+                _mapper.Map<ConversationDto>(conversation)
+            );
         }
 
         public Task<Result<ConversationDto>> CreateAsync(Guid creatorId, string conversationType)

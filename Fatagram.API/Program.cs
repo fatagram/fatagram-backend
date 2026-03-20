@@ -5,6 +5,7 @@ using Fatagram.API.Extensions.Configuration;
 using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Extensions.Middleware;
 using Fatagram.API.Hubs;
+using Fatagram.API.Hubs.Messages;
 using Fatagram.API.Middlewares;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
@@ -56,6 +57,7 @@ namespace Fatagram.API
             app.MapControllers().RequireCors(CorsPolicySettings.MyAllowSpecificOrigins);
             app.MapGet("/hi", () => "Hello World!");
             app.MapHub<NotificationHub>("/hubs/notification");
+            app.MapHub<MessageHub>("/hubs/message");
 
             app.Run();
         }

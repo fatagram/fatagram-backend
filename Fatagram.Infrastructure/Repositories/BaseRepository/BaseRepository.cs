@@ -172,14 +172,16 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
 
         public async Task<List<TResult>> GetAllAsync<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
-            Expression<Func<TEntity, TResult>>? selector = null
+            Expression<Func<TEntity, TResult>>? selector = null,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
         )
         {
             var query = _dbSet.AsQueryable().AsNoTracking();
 
             if (filter != null)
                 query = query.Where(filter);
-
+            if (include != null)
+                query = include(query);
             if (selector != null)
                 return await query.Select(selector).ToListAsync();
             else

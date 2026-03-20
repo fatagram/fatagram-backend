@@ -16,5 +16,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
             DateTime? cursor,
             int limit
         );
+
+        Task<ConversationProjection?> GetConversationWith(Guid userId, Guid targetUserId);
+        Task<ConversationProjection?> GetConversationById(Guid userId, Guid conversationId);
     }
 }

@@ -8,6 +8,7 @@ namespace Fatagram.Domain.Models
     public class Conversation : BaseEntity
     {
         public string? Name { get; set; }
+        public string? AvatarUrl { get; set; }
         public bool IsGroup { get; set; }
 
         public virtual ICollection<ConversationParticipant> Participants { get; set; } =

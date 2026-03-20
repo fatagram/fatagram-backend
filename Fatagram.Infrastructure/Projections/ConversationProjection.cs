@@ -11,5 +11,6 @@ namespace Fatagram.Infrastructure.Projections
         public Message? LastMessage { get; set; }
         public int UnreadMessagesCount { get; set; }
         public DateTime LastActiveAt { get; set; }
+        public List<Guid> ParticipantIds = new List<Guid>();
     }
 }

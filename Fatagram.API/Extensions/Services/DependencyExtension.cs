@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.API.Hubs.Messages;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
@@ -65,6 +66,8 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<INotificationSender, NotificationSender>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
+
+            services.AddScoped<IMessageSender, MessageSender>();
 
             // Transient: each injection gets fresh builder (no shared state)
             services.AddTransient<NotifyBuilder>();

@@ -49,7 +49,8 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
 
         Task<List<TResult>> GetAllAsync<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
-            Expression<Func<TEntity, TResult>>? selector = null
+            Expression<Func<TEntity, TResult>>? selector = null,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
         );
 
         Task<TEntity> AddAsync(TEntity entity);

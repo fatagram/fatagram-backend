@@ -15,8 +15,8 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
             Guid userId,
             CursorFilter<DateTime>? cursor = null
         );
-        Task<Result<ConversationDto>> GetAsync(Guid conversationId);
-        Task<Result<ConversationDto>> GetAsync(Guid userId, Guid targetUserId);
+        Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId);
+        Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId);
         Task<Result<ConversationDto>> CreateAsync(Guid creatorId, Guid otherUserId);
         Task<Result<ConversationDto>> CreateGroupAsync(
             Guid creatorId,

@@ -15,6 +15,7 @@ using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Shared.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.MessageServices
@@ -43,28 +44,26 @@ namespace Fatagram.Application.Services.MessageServices
                 $"Getting messages for conversation {conversationId} with cursor {filter.Cursor} and limit {filter.Limit} and sortDesc {filter.SortDesc}"
             );
             var messages = await _messageRepository.GetAllAsync(
-                m => m,
-                m => m.ConversationId == conversationId,
-                m => m.CreatedAt,
-                filter.SortDesc ?? true,
-                filter.Limit,
-                filter.Cursor
-            );
-            var res = messages
-                .Select(m => new ResponseMessageDto
+                m => new ResponseMessageDto
                 {
                     Id = m.Id,
                     ConversationId = m.ConversationId,
                     SenderId = m.SenderId,
                     Content = m.Content,
                     CreatedAt = m.CreatedAt,
-                })
-                .ToList();
+                    IsGroup = m.Conversation.IsGroup,
+                },
+                m => m.ConversationId == conversationId,
+                m => m.CreatedAt,
+                filter.SortDesc ?? true,
+                filter.Limit,
+                filter.Cursor
+            );
             return Result<CursorResult<ResponseMessageDto, DateTime>>.Create(
                 ResponseStatusCode.Success,
                 new CursorResult<ResponseMessageDto, DateTime>
                 {
-                    Items = res,
+                    Items = messages,
                     NextCursor = messages.Count > 0 ? messages.Last().CreatedAt : null,
                     HasNext = messages.Count == filter.Limit,
                 }
@@ -157,6 +156,7 @@ namespace Fatagram.Application.Services.MessageServices
                         SenderId = senderId,
                         Content = request.Content,
                         CreatedAt = message.CreatedAt,
+                        IsGroup = conversation.IsGroup,
                     }
                 );
             }
@@ -169,6 +169,7 @@ namespace Fatagram.Application.Services.MessageServices
                     SenderId = senderId,
                     Content = request.Content,
                     CreatedAt = message.CreatedAt,
+                    IsGroup = conversation.IsGroup,
                 }
             );
         }

@@ -9,7 +9,7 @@ using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 
-namespace Fatagram.Application.Services.NotificationServices.Interface
+namespace Fatagram.Application.Services.NotificationServices.Interfaces
 {
     public interface INotificationService
     {

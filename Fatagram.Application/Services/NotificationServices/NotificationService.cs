@@ -7,6 +7,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Notification;
 using Fatagram.Application.Services.NotificationServices.Interfaces;
+using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
@@ -24,18 +25,18 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         INotificationRepository notificationRepository,
         NotificationInfoService notificationInfoService,
         IUserRepository userRepository,
+        ISocketSender<NotificationDto> socketSender,
         IMapper mapper,
-        INotificationSender notificationSender,
         IUserNotificationRepository userNotificationRepository,
         ILogger<NotificationService> logger
     ) : INotificationService
     {
         private readonly INotificationRepository _notificationRepository = notificationRepository;
-        private readonly INotificationSender _notificationSender = notificationSender;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly NotificationInfoService _notificationInfoService = notificationInfoService;
         private readonly IUserNotificationRepository _userNotificationRepository =
             userNotificationRepository;
+        private readonly ISocketSender<NotificationDto> _socketSender = socketSender;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<NotificationService> _logger = logger;
 
@@ -74,7 +75,14 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
                 attachedNotification.CreatedAt = savedUserNotification.CreatedAt;
             }
 
-            await _notificationSender.SendNotificationAsync(userId, attachedNotification);
+            await _socketSender.SendAsync(
+                userId,
+                new SocketMessage<NotificationDto>
+                {
+                    Event = "NewNotification",
+                    Payload = attachedNotification,
+                }
+            );
         }
 
         public async Task<Result<CursorResult<NotificationDto, DateTime>>> GetAsync(

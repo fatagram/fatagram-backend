@@ -9,6 +9,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Projections;
@@ -22,14 +23,14 @@ namespace Fatagram.Application.Services.MessageServices
 {
     public class MessageService(
         IMessageRepository messageRepository,
-        IMessageSender messageSender,
+        ISocketSender<ResponseMessageDto> messageSender,
         IConversationRepository conversationRepository,
         IMapper mapper,
         ILogger<MessageService> logger
     ) : IMessageService
     {
         private readonly IMessageRepository _messageRepository = messageRepository;
-        private readonly IMessageSender _messageSender = messageSender;
+        private readonly ISocketSender<ResponseMessageDto> _messageSender = messageSender;
         private readonly IConversationRepository _conversationRepository = conversationRepository;
         private readonly ILogger<MessageService> _logger = logger;
         private readonly IMapper _mapper = mapper;
@@ -147,16 +148,20 @@ namespace Fatagram.Application.Services.MessageServices
 
             foreach (var participantId in conversation.ParticipantIds)
             {
-                await _messageSender.SendMessageAsync(
+                await _messageSender.SendAsync(
                     participantId,
-                    new ResponseMessageDto
+                    new SocketMessage<ResponseMessageDto>
                     {
-                        Id = message.Id,
-                        ConversationId = conversation.Id,
-                        SenderId = senderId,
-                        Content = request.Content,
-                        CreatedAt = message.CreatedAt,
-                        IsGroup = conversation.IsGroup,
+                        Event = "NewMessage",
+                        Payload = new ResponseMessageDto
+                        {
+                            Id = message.Id,
+                            ConversationId = conversation.Id,
+                            SenderId = senderId,
+                            Content = request.Content,
+                            CreatedAt = message.CreatedAt,
+                            IsGroup = conversation.IsGroup,
+                        },
                     }
                 );
             }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Notification;
 using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Application.Services.NotificationServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Microsoft.Extensions.Logging;

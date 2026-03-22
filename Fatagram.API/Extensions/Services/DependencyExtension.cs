@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Fatagram.API.Hubs.Messages;
+using Fatagram.API.Hubs;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
-using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository;
@@ -63,11 +60,9 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IMessageRepository, MessageRepository>();
 
             // Scoped for SignalR
-            services.AddScoped<INotificationSender, NotificationSender>();
+            services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
-
-            services.AddScoped<IMessageSender, MessageSender>();
 
             // Transient: each injection gets fresh builder (no shared state)
             services.AddTransient<NotifyBuilder>();

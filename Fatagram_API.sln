@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.API", "Fatagram.API\Fatagram.API.csproj", "{6328EE45-C355-4415-8B8A-BFD150B35D3A}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.Domain", "Fatagram.Domain\Fatagram.Domain.csproj", "{1A37C19D-4E74-4C60-AA97-401D3355CA14}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.Application", "Fatagram.Application\Fatagram.Application.csproj", "{D5256CAB-2567-47AF-9AF4-1AB1DA5CD84B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.Infrastructure", "Fatagram.Infrastructure\Fatagram.Infrastructure.csproj", "{3C3C5486-828B-4CD3-A00A-BAA55248437A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.API", "Fatagram.API\Fatagram.API.csproj", "{6328EE45-C355-4415-8B8A-BFD150B35D3A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fatagram.Shared", "Fatagram.Shared\Fatagram.Shared.csproj", "{C76AAD79-0DEA-4A2B-AD4E-BF5547E9B3A4}"
 EndProject

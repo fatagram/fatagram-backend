@@ -2,7 +2,6 @@
 
 // Project Usings
 global using Fatagram.API.Authentication;
-global using Fatagram.API.Hubs.Notifications;
 global using Fatagram.Application;
 global using Fatagram.Application.Common;
 global using Fatagram.Application.Services.AuthServices;

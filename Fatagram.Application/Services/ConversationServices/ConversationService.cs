@@ -31,6 +31,9 @@ namespace Fatagram.Application.Services.ConversationServices
                 cursor?.Limit ?? 20
             );
             var res = _mapper.Map<List<ConversationDto>>(conservations);
+            Console.WriteLine(
+                $"[ConversationService] GetAllAsync: {res.Count} conversations retrieved for user {userId}"
+            );
             return Result<CursorResult<ConversationDto, DateTime>>.Create(
                 ResponseStatusCode.Success,
                 new CursorResult<ConversationDto, DateTime>

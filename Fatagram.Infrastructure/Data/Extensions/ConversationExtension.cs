@@ -43,6 +43,10 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("uuid")
                     .IsRequired();
                 entity
+                    .Property(cp => cp.LastSeenMessageId)
+                    .HasColumnName("last_seen_message_id")
+                    .HasColumnType("uuid");
+                entity
                     .HasOne(cp => cp.Conversation)
                     .WithMany(c => c.Participants)
                     .HasForeignKey(cp => cp.ConversationId)
@@ -52,6 +56,11 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .WithMany(u => u.ConversationParticipants)
                     .HasForeignKey(cp => cp.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(cp => cp.LastSeenMessage)
+                    .WithMany()
+                    .HasForeignKey(cp => cp.LastSeenMessageId)
+                    .OnDelete(DeleteBehavior.SetNull);
                 entity.HasIndex(cp => new { cp.ConversationId, cp.UserId }).IsUnique();
             });
 

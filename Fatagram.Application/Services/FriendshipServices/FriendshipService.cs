@@ -296,7 +296,9 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         )
         {
             var result = await _friendshipRepository.GetAllAsync(
-                filter: f => f.User1Id == targetId || f.User2Id == targetId,
+                filter: f =>
+                    (f.User1Id == targetId && f.User2.FullName!.Contains(filter.Keyword ?? ""))
+                    || (f.User2Id == targetId && f.User1.FullName!.Contains(filter.Keyword ?? "")),
                 selector: f => new FriendDto
                 {
                     Id = f.User1Id == targetId ? f.User2Id : f.User1Id,

@@ -103,6 +103,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             int limit
         )
         {
+            Console.WriteLine(
+                $"[ConversationRepository] GetMyConversationsAsync: Fetching conversations for user {userId} with cursor {cursor} and limit {limit}"
+            );
             var query = _dbContext
                 .Conversations.Where(c => c.Participants.Any(p => p.UserId == userId.ToGuid()))
                 .Select(c => new ConversationProjection
@@ -122,9 +125,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Select(m => (DateTime?)m.CreatedAt)
                             .FirstOrDefault()
                         ?? c.CreatedAt,
+                    Name = c.IsGroup
+                        ? c.Name
+                        : c
+                            .Participants.Where(p => p.UserId != userId.ToGuid())
+                            .Select(p => p.User!.FullName)
+                            .FirstOrDefault(),
+                    AvatarUrl = c.IsGroup
+                        ? c.AvatarUrl
+                        : c
+                            .Participants.Where(p => p.UserId != userId.ToGuid())
+                            .Select(p => p.User!.Avatar)
+                            .FirstOrDefault(),
                 });
 
-            if (cursor.HasValue)
+            if (cursor.HasValue && cursor.Value != DateTime.MinValue)
             {
                 query = query.Where(c => c.LastActiveAt < cursor.Value);
             }

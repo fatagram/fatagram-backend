@@ -77,9 +77,10 @@ namespace Fatagram.Application.Services.MessageServices
         )
         {
             _logger.LogInformation(
-                "User {SenderId} is sending a message to conversation {ConversationId}",
+                "User {SenderId} is sending a message to conversation {ConversationId} or {CorrelationId}",
                 senderId,
-                request.ConversationId
+                request.ConversationId,
+                request.CorrelationId
             );
             ConversationProjection? conversation;
             if (request.ConversationId == null || request.ConversationId == Guid.Empty)
@@ -157,6 +158,7 @@ namespace Fatagram.Application.Services.MessageServices
                         {
                             Id = message.Id,
                             ConversationId = conversation.Id,
+                            CorrelationId = request.CorrelationId,
                             SenderId = senderId,
                             Content = request.Content,
                             CreatedAt = message.CreatedAt,
@@ -172,6 +174,7 @@ namespace Fatagram.Application.Services.MessageServices
                     Id = message.Id,
                     ConversationId = conversation.Id,
                     SenderId = senderId,
+                    CorrelationId = request.CorrelationId,
                     Content = request.Content,
                     CreatedAt = message.CreatedAt,
                     IsGroup = conversation.IsGroup,

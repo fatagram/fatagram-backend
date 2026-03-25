@@ -312,5 +312,36 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
             await _dbContext.SaveChangesAsync();
             return entities;
         }
+
+        public async Task<TResult?> GetByUniqueAsync<TResult>(
+            Expression<Func<TEntity, bool>> uniquePredicate,
+            Expression<Func<TEntity, TResult>>? selector = null,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
+        )
+        {
+            var query = _dbSet.AsQueryable();
+            if (include != null)
+                query = include(query);
+            if (selector != null)
+            {
+                return await query.Where(uniquePredicate).Select(selector).FirstOrDefaultAsync();
+            }
+            else
+            {
+                if (typeof(TResult) == typeof(TEntity))
+                {
+                    var entity = await query.FirstOrDefaultAsync(uniquePredicate);
+                    if (entity == null)
+                        return default;
+                    return (TResult)(object)entity;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        "Selector must be provided when TResult is not TEntity."
+                    );
+                }
+            }
+        }
     }
 }

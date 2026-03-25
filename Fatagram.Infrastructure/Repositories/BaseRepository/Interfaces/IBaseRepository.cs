@@ -53,6 +53,12 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
         );
 
+        Task<TResult?> GetByUniqueAsync<TResult>(
+            Expression<Func<TEntity, bool>> uniquePredicate,
+            Expression<Func<TEntity, TResult>>? selector = null,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null
+        );
+
         Task<TEntity> AddAsync(TEntity entity);
 
         Task<TEntity> UpdateAsync(TEntity entity);

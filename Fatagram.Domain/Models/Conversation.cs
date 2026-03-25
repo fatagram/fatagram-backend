@@ -10,6 +10,7 @@ namespace Fatagram.Domain.Models
         public string? Name { get; set; }
         public string? AvatarUrl { get; set; }
         public bool IsGroup { get; set; }
+        public string? UniqueConversationKey { get; set; }
 
         public virtual ICollection<ConversationParticipant> Participants { get; set; } =
             new List<ConversationParticipant>();

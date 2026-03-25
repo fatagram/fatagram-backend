@@ -26,6 +26,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("boolean")
                     .HasDefaultValue(false)
                     .IsRequired();
+                entity
+                    .Property(c => c.UniqueConversationKey)
+                    .HasColumnName("unique_conversation_key")
+                    .HasColumnType("VARCHAR(255)")
+                    .IsRequired(false);
+                entity.HasIndex(c => c.UniqueConversationKey).IsUnique();
             });
 
             modelBuilder.Entity<ConversationParticipant>(entity =>

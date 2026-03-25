@@ -96,22 +96,43 @@ namespace Fatagram.Application.Services.MessageServices
                         "ReceiverId must be provided if ConversationId is not provided"
                     );
                 }
-                var res = await _conversationRepository.AddAsync(
-                    new Conversation
-                    {
-                        IsGroup = false,
-                        Name = string.Empty,
-                        Participants = new List<ConversationParticipant>
-                        {
-                            new ConversationParticipant
-                            {
-                                UserId = request.ReceiverId ?? Guid.Empty,
-                            },
-                            new ConversationParticipant { UserId = senderId },
-                        },
-                    }
+                var uniqueKey = ConversationUtils.GenerateUniqueConversationKey(
+                    senderId,
+                    request.ReceiverId.Value
                 );
-                conversation = _mapper.Map<ConversationProjection>(res);
+                try
+                {
+                    var res = await _conversationRepository.AddAsync(
+                        new Conversation
+                        {
+                            IsGroup = false,
+                            Name = string.Empty,
+                            UniqueConversationKey = uniqueKey,
+                            Participants = new List<ConversationParticipant>
+                            {
+                                new ConversationParticipant
+                                {
+                                    UserId = request.ReceiverId ?? Guid.Empty,
+                                },
+                                new ConversationParticipant { UserId = senderId },
+                            },
+                        }
+                    );
+                    conversation = _mapper.Map<ConversationProjection>(res);
+                }
+                catch (DbUpdateException)
+                {
+                    var existingConv = await _conversationRepository.GetByUniqueAsync(
+                        c => c.UniqueConversationKey == uniqueKey,
+                        c => new ConversationProjection
+                        {
+                            Id = c.Id,
+                            IsGroup = c.IsGroup,
+                            ParticipantIds = c.Participants.Select(p => p.UserId).ToList(),
+                        }
+                    );
+                    conversation = existingConv;
+                }
             }
             else
             {

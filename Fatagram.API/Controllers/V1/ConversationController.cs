@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
+using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
 using Fatagram.Application.Services.MessageServices.Interfaces;
@@ -48,12 +49,13 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateGroupConversation()
+        public async Task<IActionResult> CreateGroupConversation(
+            [FromBody] GroupConversationDto request
+        )
         {
             var res = await _conversationService.CreateGroupAsync(
                 GetCurrentUserId(),
-                new List<Guid>(),
-                "Test Group"
+                request.ParticipantIds.ToList()
             );
             return res.ToActionResult();
         }

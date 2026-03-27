@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,6 +95,13 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("read_at")
                     .HasColumnType("timestamptz")
                     .IsRequired(false);
+                entity
+                    .Property(m => m.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("integer")
+                    .HasConversion<int>()
+                    .HasDefaultValue(MessageType.Text)
+                    .IsRequired();
                 entity
                     .HasOne(m => m.Conversation)
                     .WithMany(c => c.Messages)

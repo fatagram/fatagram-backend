@@ -88,10 +88,9 @@ namespace Fatagram.Application.Services.ConversationServices
             throw new NotImplementedException();
         }
 
-        public Task<Result<ConversationDto>> CreateGroupAsync(
+        public async Task<Result<ConversationDto>> CreateGroupAsync(
             Guid creatorId,
-            IEnumerable<Guid> participantIds,
-            string groupName
+            IEnumerable<Guid> participantIds
         )
         {
             throw new NotImplementedException();

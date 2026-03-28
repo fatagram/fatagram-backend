@@ -1,0 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Fatagram.API.Utils;
+using Fatagram.Application.Dtos.Filter;
+using Fatagram.Application.Services.UserServices.UserServices.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+namespace Fatagram.API.Controllers.V1.UserControllers
+{
+    public class UserController(IUserService userService, ILogger<UserController> logger)
+        : BaseApiController
+    {
+        private readonly ILogger<UserController> _logger = logger;
+        private readonly IUserService _userService = userService;
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] CursorFilter<DateTime> filter)
+        {
+            var res = await _userService.GetAllAsync(filter);
+            return res.ToActionResult();
+        }
+    }
+}

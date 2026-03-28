@@ -55,7 +55,8 @@ namespace Fatagram.API.Controllers.V1
         {
             var res = await _conversationService.CreateGroupAsync(
                 GetCurrentUserId(),
-                request.ParticipantIds.ToList()
+                request.ParticipantIds.ToList(),
+                request.Name
             );
             return res.ToActionResult();
         }

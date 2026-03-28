@@ -7,6 +7,7 @@ namespace Fatagram.Application.Dtos.Conversation
 {
     public class GroupConversationDto
     {
+        public string? Name { get; set; }
         public IEnumerable<Guid> ParticipantIds { get; set; } = new List<Guid>();
     }
 }

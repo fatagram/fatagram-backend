@@ -29,5 +29,6 @@ namespace Fatagram.Application.Dtos.User
         public string? Avatar { get; set; }
 
         public string? Background { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

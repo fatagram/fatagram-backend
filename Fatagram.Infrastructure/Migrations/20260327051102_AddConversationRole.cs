@@ -5,24 +5,25 @@
 namespace Fatagram.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddMessageType : Migration
+    public partial class AddConversationRole : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "type",
-                table: "messages",
+                name: "role",
+                table: "conversation_participants",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0
-            );
+                defaultValue: 2);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(name: "type", table: "messages");
+            migrationBuilder.DropColumn(
+                name: "role",
+                table: "conversation_participants");
         }
     }
 }

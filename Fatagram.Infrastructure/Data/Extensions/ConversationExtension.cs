@@ -20,7 +20,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .Property(c => c.Name)
                     .HasColumnName("name")
                     .HasColumnType("VARCHAR(255)")
-                    .IsRequired();
+                    .IsRequired(false);
                 entity
                     .Property(c => c.IsGroup)
                     .HasColumnName("is_group")
@@ -54,6 +54,18 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("last_seen_message_id")
                     .HasColumnType("uuid");
                 entity
+                    .Property(cp => cp.Role)
+                    .HasColumnName("role")
+                    .HasColumnType("integer")
+                    .HasConversion<int>()
+                    .HasDefaultValue(ConversationRole.Member)
+                    .IsRequired();
+                entity
+                    .Property(cp => cp.Nickname)
+                    .HasColumnName("nickname")
+                    .HasColumnType("VARCHAR(255)")
+                    .IsRequired(false);
+                entity
                     .HasOne(cp => cp.Conversation)
                     .WithMany(c => c.Participants)
                     .HasForeignKey(cp => cp.ConversationId)
@@ -84,7 +96,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .Property(m => m.SenderId)
                     .HasColumnName("sender_id")
                     .HasColumnType("uuid")
-                    .IsRequired();
+                    .IsRequired(false);
                 entity
                     .Property(m => m.Content)
                     .HasColumnName("content")
@@ -102,6 +114,11 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasConversion<int>()
                     .HasDefaultValue(MessageType.Text)
                     .IsRequired();
+                entity
+                    .Property(m => m.Metadata)
+                    .HasColumnName("metadata")
+                    .HasColumnType("jsonb")
+                    .IsRequired(false);
                 entity
                     .HasOne(m => m.Conversation)
                     .WithMany(c => c.Messages)

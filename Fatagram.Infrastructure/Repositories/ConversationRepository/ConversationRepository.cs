@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
@@ -24,38 +25,69 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<ConversationProjection?> GetConversationById(
             Guid userId,
-            Guid conversationId
+            Guid conversationId,
+            Expression<Func<Conversation, ConversationProjection>>? selector = null
         )
         {
-            return await _dbContext
-                .Conversations.Where(c => c.Id == conversationId)
-                .Select(c => new ConversationProjection
-                {
-                    Id = c.Id,
-                    CreatedAt = c.CreatedAt,
-                    UpdatedAt = c.UpdatedAt,
-                    ParticipantIds = c.Participants.Select(p => p.UserId).ToList(),
-                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault(),
-                    UnreadMessagesCount = c.Messages.Count(m => m.ReadAt == DateTime.MinValue),
-                    LastActiveAt =
-                        c.Messages.OrderByDescending(m => m.CreatedAt)
-                            .Select(m => (DateTime?)m.CreatedAt)
-                            .FirstOrDefault()
-                        ?? c.CreatedAt,
-                    Name = c.IsGroup
-                        ? c.Name
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User!.FullName)
+            var query = _dbContext.Conversations.Where(c => c.Id == conversationId);
+
+            if (selector != null)
+            {
+                return await query.Select(selector).FirstOrDefaultAsync();
+            }
+            else
+            {
+                return await query
+                    .Select(c => new ConversationProjection
+                    {
+                        Id = c.Id,
+                        CreatedAt = c.CreatedAt,
+                        UpdatedAt = c.UpdatedAt,
+                        ParticipantIds = c.Participants.Select(p => p.UserId).ToList(),
+                        LastMessage = c
+                            .Messages.OrderByDescending(m => m.CreatedAt)
+                            .Select(m => new LastMessageProjection
+                            {
+                                Id = m.Id,
+                                ConversationId = m.ConversationId,
+                                SenderId = m.SenderId,
+                                Type = m.Type,
+                                Metadata = m.Metadata,
+                                Content = m.Content,
+                                CreatedAt = m.CreatedAt,
+                                SenderFullName = m.Sender.FullName,
+                                SenderNickname = m
+                                    .Sender.ConversationParticipants.Where(cp =>
+                                        cp.ConversationId == c.Id && cp.UserId == m.SenderId
+                                    )
+                                    .Select(cp => cp.Nickname)
+                                    .FirstOrDefault(),
+                            })
                             .FirstOrDefault(),
-                    AvatarUrl = c.IsGroup
-                        ? null
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User!.Avatar)
-                            .FirstOrDefault(),
-                })
-                .FirstOrDefaultAsync();
+                        UnreadMessagesCount = c.Messages.Count(m =>
+                            m.SenderId != userId && m.ReadAt == DateTime.MinValue
+                        ),
+                        IsGroup = c.IsGroup,
+                        LastActiveAt =
+                            c.Messages.OrderByDescending(m => m.CreatedAt)
+                                .Select(m => (DateTime?)m.CreatedAt)
+                                .FirstOrDefault()
+                            ?? c.CreatedAt,
+                        Name = c.IsGroup
+                            ? c.Name
+                            : c
+                                .Participants.Where(p => p.UserId != userId)
+                                .Select(p => p.User!.FullName)
+                                .FirstOrDefault(),
+                        AvatarUrl = c.IsGroup
+                            ? null
+                            : c
+                                .Participants.Where(p => p.UserId != userId)
+                                .Select(p => p.User!.Avatar)
+                                .FirstOrDefault(),
+                    })
+                    .FirstOrDefaultAsync();
+            }
         }
 
         public async Task<ConversationProjection?> GetConversationWith(
@@ -75,7 +107,26 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     CreatedAt = c.CreatedAt,
                     UpdatedAt = c.UpdatedAt,
                     Participants = c.Participants,
-                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault(),
+                    LastMessage = c
+                        .Messages.OrderByDescending(m => m.CreatedAt)
+                        .Select(m => new LastMessageProjection
+                        {
+                            Id = m.Id,
+                            ConversationId = m.ConversationId,
+                            SenderId = m.SenderId,
+                            Type = m.Type,
+                            Metadata = m.Metadata,
+                            Content = m.Content,
+                            CreatedAt = m.CreatedAt,
+                            SenderFullName = m.Sender.FullName,
+                            SenderNickname = m
+                                .Sender.ConversationParticipants.Where(cp =>
+                                    cp.ConversationId == c.Id && cp.UserId == m.SenderId
+                                )
+                                .Select(cp => cp.Nickname)
+                                .FirstOrDefault(),
+                        })
+                        .FirstOrDefault(),
                     UnreadMessagesCount = c.Messages.Count(m =>
                         m.SenderId != userId && m.ReadAt == DateTime.MinValue
                     ),
@@ -113,13 +164,40 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     Id = c.Id,
                     CreatedAt = c.CreatedAt,
                     UpdatedAt = c.UpdatedAt,
-                    Participants = c.Participants,
-                    LastMessage = c.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault(),
+                    LastMessage = c
+                        .Messages.OrderByDescending(m => m.CreatedAt)
+                        .Select(m => new LastMessageProjection
+                        {
+                            Id = m.Id,
+                            ConversationId = m.ConversationId,
+                            SenderId = m.SenderId,
+                            Type = m.Type,
+                            Metadata = m.Metadata,
+                            Content = m.Content,
+                            CreatedAt = m.CreatedAt,
+                            SenderFullName = m.Sender.FullName,
+                            SenderNickname = m
+                                .Sender.ConversationParticipants.Where(cp =>
+                                    cp.ConversationId == c.Id && cp.UserId == m.SenderId
+                                )
+                                .Select(cp => cp.Nickname)
+                                .FirstOrDefault(),
+                        })
+                        .FirstOrDefault(),
                     UnreadMessagesCount = c.Messages.Count(m =>
                         m.CreatedAt > (cursor ?? DateTime.MinValue)
                         && m.SenderId != userId.ToGuid()
                         && m.ReadAt == DateTime.MinValue
                     ),
+                    IsGroup = c.IsGroup,
+                    TopParticipantNames = c.IsGroup
+                        ? c
+                            .Participants.OrderBy(p => p.CreatedAt)
+                            .Select(p => p.User!.FullName!)
+                            .Take(2)
+                            .ToList()
+                        : null,
+                    ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.CreatedAt)
                             .Select(m => (DateTime?)m.CreatedAt)

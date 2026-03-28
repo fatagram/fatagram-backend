@@ -15,5 +15,7 @@ namespace Fatagram.Application.Dtos.Conversation
         public ResponseMessageDto? LastMessage { get; set; }
         public int UnreadMessagesCount { get; set; }
         public DateTime LastActiveAt { get; set; }
+        public List<string>? TopParticipantNames { get; set; }
+        public int? ParticipantCount { get; set; }
     }
 }

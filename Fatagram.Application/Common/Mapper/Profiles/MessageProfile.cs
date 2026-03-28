@@ -15,12 +15,8 @@ namespace Fatagram.Application.Common.Mapper.Profiles
     {
         public MessageProfile()
         {
-            // CreateMap<Conversation, ConversationDto>()
-            //     .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.Participants))
-            //     .ForMember(dest => dest.Messages, opt => opt.MapFrom(src => src.Messages))
-            //     .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()));
-
             CreateMap<Message, ResponseMessageDto>();
+            CreateMap<LastMessageProjection, ResponseMessageDto>();
         }
     }
 }

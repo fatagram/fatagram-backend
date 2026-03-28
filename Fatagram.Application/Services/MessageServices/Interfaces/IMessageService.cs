@@ -10,7 +10,10 @@ namespace Fatagram.Application.Services.MessageServices.Interfaces
 {
     public interface IMessageService
     {
-        Task<Result<ResponseMessageDto>> SendMessageAsync(Guid senderId, SendMessageDto request);
+        Task<Result<ResponseMessageDto>> SendMessageAsync(
+            Guid? senderId,
+            CreateMessageRequest request
+        );
 
         Task<Result<CursorResult<ResponseMessageDto, DateTime>>> GetMessagesAsync(
             Guid conversationId,

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Projections;
@@ -18,6 +19,10 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
         );
 
         Task<ConversationProjection?> GetConversationWith(Guid userId, Guid targetUserId);
-        Task<ConversationProjection?> GetConversationById(Guid userId, Guid conversationId);
+        Task<ConversationProjection?> GetConversationById(
+            Guid userId,
+            Guid conversationId,
+            Expression<Func<Conversation, ConversationProjection>>? selector = null
+        );
     }
 }

@@ -7,6 +7,7 @@ using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,19 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDto request)
         {
-            var res = await _messageService.SendMessageAsync(GetCurrentUserId(), request);
+            var createMessageRequest = new CreateMessageRequest
+            {
+                ConversationId = request.ConversationId,
+                Content = request.Content,
+                CorrelationId = request.CorrelationId,
+                ClientTempId = request.ClientTempId,
+                Type = MessageType.Text,
+                Metadata = request.Metadata,
+            };
+            var res = await _messageService.SendMessageAsync(
+                GetCurrentUserId(),
+                createMessageRequest
+            );
             return res.ToActionResult();
         }
     }

@@ -8,6 +8,8 @@ using Fatagram.Application.Services.ConversationServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Services.SockerServices.Interfaces;
+using Fatagram.Application.Services.UserServices.UserServices;
+using Fatagram.Application.Services.UserServices.UserServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
@@ -37,6 +39,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<OAuthServiceFactory>();
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IUserService, UserService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();

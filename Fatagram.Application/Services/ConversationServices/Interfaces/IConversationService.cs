@@ -18,9 +18,10 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
         Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId);
         Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId);
         Task<Result<ConversationDto>> CreateAsync(Guid creatorId, Guid otherUserId);
-        Task<Result<ConversationDto>> CreateGroupAsync(
+        Task<Result> CreateGroupAsync(
             Guid creatorId,
-            IEnumerable<Guid> participantIds
+            IEnumerable<Guid> participantIds,
+            string? name
         );
     }
 }

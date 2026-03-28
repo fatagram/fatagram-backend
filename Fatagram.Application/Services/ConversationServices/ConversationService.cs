@@ -6,18 +6,32 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
+using Fatagram.Application.Dtos.Message;
+using Fatagram.Application.Exceptions;
+using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.ConversationServices
 {
-    public class ConversationService(IConversationRepository conversationRepository, IMapper mapper)
-        : IConversationService
+    public class ConversationService(
+        IConversationRepository conversationRepository,
+        IUserRepository userRepository,
+        IMessageService messageService,
+        IMapper mapper
+    ) : IConversationService
     {
         private readonly IConversationRepository _conversationRepository = conversationRepository;
+        private readonly IUserRepository _userRepository = userRepository;
+        private readonly IMessageService _messageService = messageService;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Result<CursorResult<ConversationDto, DateTime>>> GetAllAsync(
@@ -31,9 +45,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 cursor?.Limit ?? 20
             );
             var res = _mapper.Map<List<ConversationDto>>(conservations);
-            Console.WriteLine(
-                $"[ConversationService] GetAllAsync: {res.Count} conversations retrieved for user {userId}"
-            );
+
             return Result<CursorResult<ConversationDto, DateTime>>.Create(
                 ResponseStatusCode.Success,
                 new CursorResult<ConversationDto, DateTime>
@@ -49,8 +61,67 @@ namespace Fatagram.Application.Services.ConversationServices
         {
             var conversation = await _conversationRepository.GetConversationById(
                 userId,
-                conversationId
+                conversationId,
+                c => new ConversationProjection
+                {
+                    Id = c.Id,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                    LastMessage = c
+                        .Messages.OrderByDescending(m => m.CreatedAt)
+                        .Select(m => new LastMessageProjection
+                        {
+                            Id = m.Id,
+                            ConversationId = m.ConversationId,
+                            Content = m.Content,
+                            CreatedAt = m.CreatedAt,
+                            SenderFullName = m.Sender.FullName!,
+                            SenderNickname = m
+                                .Sender.ConversationParticipants.Where(cp =>
+                                    cp.ConversationId == c.Id && cp.UserId == m.SenderId
+                                )
+                                .Select(cp => cp.Nickname)
+                                .FirstOrDefault(),
+                        })
+                        .FirstOrDefault(),
+                    UnreadMessagesCount = c.Messages.Count(m =>
+                        m.SenderId != userId && m.ReadAt == DateTime.MinValue
+                    ),
+                    IsGroup = c.IsGroup,
+                    LastActiveAt =
+                        c.Messages.OrderByDescending(m => m.CreatedAt)
+                            .Select(m => (DateTime?)m.CreatedAt)
+                            .FirstOrDefault()
+                        ?? c.CreatedAt,
+                    TopParticipantNames =
+                        c.IsGroup && c.Name == null
+                            ? c
+                                .Participants.OrderBy(p => p.CreatedAt)
+                                .Select(p => p.User!.FullName!)
+                                .Take(2)
+                                .ToList()
+                            : null,
+                    ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
+                    Name = c.IsGroup
+                        ? c.Name
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User.FullName)
+                            .FirstOrDefault(),
+                    AvatarUrl = c.IsGroup
+                        ? c.AvatarUrl
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User.Avatar)
+                            .FirstOrDefault(),
+                }
             );
+            if (conversation == null)
+            {
+                throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+            }
             return Result<ConversationDto>.Create(
                 ResponseStatusCode.Success,
                 _mapper.Map<ConversationDto>(conversation)
@@ -88,12 +159,59 @@ namespace Fatagram.Application.Services.ConversationServices
             throw new NotImplementedException();
         }
 
-        public async Task<Result<ConversationDto>> CreateGroupAsync(
+        public async Task<Result> CreateGroupAsync(
             Guid creatorId,
-            IEnumerable<Guid> participantIds
+            IEnumerable<Guid> participantIds,
+            string? name
         )
         {
-            throw new NotImplementedException();
+            var allUserIds = participantIds.Append(creatorId).ToHashSet();
+            if (allUserIds.Count < 3)
+            {
+                throw new AppException(
+                    new Error(
+                        "INVALID_PARTICIPANTS",
+                        "Group conversation must have at least 3 unique participants (including creator)"
+                    )
+                );
+            }
+            var conversation = new Conversation
+            {
+                IsGroup = true,
+                Name = name,
+                Participants = participantIds
+                    .Select(id => new ConversationParticipant { UserId = id })
+                    .Append(
+                        new ConversationParticipant
+                        {
+                            UserId = creatorId,
+                            Role = ConversationRole.Owner,
+                        }
+                    )
+                    .ToList(),
+            };
+            var res = await _conversationRepository.AddAsync(conversation);
+            var creatorFullName = await _userRepository.GetByUniqueAsync(
+                u => u.Id == creatorId,
+                u => u.FullName
+            );
+            if (creatorFullName == null)
+                throw new AppException(new Error("CREATOR_NOT_FOUND", "Creator user not found"));
+
+            await _messageService.SendMessageAsync(
+                null,
+                new CreateMessageRequest
+                {
+                    ConversationId = res.Id,
+                    Type = MessageType.CreateGroup,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "creatorId", creatorId.ToString() },
+                        { "creatorName", creatorFullName! },
+                    },
+                }
+            );
+            return Result.Create(ResponseStatusCode.Created);
         }
     }
 }

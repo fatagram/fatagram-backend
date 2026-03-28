@@ -1,0 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Fatagram.Application.Dtos.Filter;
+using Fatagram.Application.Dtos.User;
+using Fatagram.Application.Utils;
+
+namespace Fatagram.Application.Services.UserServices.UserServices.Interfaces
+{
+    public interface IUserService
+    {
+        Task<Result<CursorResult<UserDto, DateTime>>> GetAllAsync(CursorFilter<DateTime> filter);
+    }
+}

@@ -159,7 +159,7 @@ namespace Fatagram.Application.Services.ConversationServices
             throw new NotImplementedException();
         }
 
-        public async Task<Result> CreateGroupAsync(
+        public async Task<Result<Guid>> CreateGroupAsync(
             Guid creatorId,
             IEnumerable<Guid> participantIds,
             string? name
@@ -211,7 +211,7 @@ namespace Fatagram.Application.Services.ConversationServices
                     },
                 }
             );
-            return Result.Create(ResponseStatusCode.Created);
+            return Result<Guid>.Create(ResponseStatusCode.Created, res.Id);
         }
     }
 }

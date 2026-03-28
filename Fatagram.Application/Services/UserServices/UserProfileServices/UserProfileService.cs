@@ -61,10 +61,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                     u => u.Id.ToString() == target || u.UrlName == target
                 ) ?? throw new UserNotFoundException();
 
-            // Map dynamic object to dictionary
             var infos = new Dictionary<string, string?>();
 
-            // Convert dynamic to dictionary safely
             if (user != null)
             {
                 var userObj = (object)user;
@@ -74,7 +72,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                 {
                     try
                     {
-                        // Skip indexed properties (like Item[index])
                         if (prop.GetIndexParameters().Length > 0)
                             continue;
 

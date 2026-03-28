@@ -7,12 +7,39 @@ using CloudinaryDotNet.Actions;
 using Fatagram.Application.Services.ImageService.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace Fatagram.Application.Services.ImageService
 {
-    public class CloudImageService(Cloudinary cloudinary) : IImageService
+    public class CloudImageService(Cloudinary cloudinary, IConfiguration config) : IImageService
     {
         private readonly Cloudinary _cloudinary = cloudinary;
+        private readonly IConfiguration _config = config;
+
+        public Task<Result<object>> GetUploadSignatureAsync()
+        {
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var parameters = new Dictionary<string, object>
+            {
+                { "timestamp", timestamp },
+                { "folder", "chat_messages" },
+                { "overwrite", false },
+            };
+
+            string signature = _cloudinary.Api.SignParameters(parameters);
+
+            var result = new
+            {
+                apiKey = _config["CloudStorage:Cloudinary:ApiKey"],
+                cloudName = _config["CloudStorage:Cloudinary:CloudName"],
+                timestamp,
+                folder = "chat_messages",
+                overwrite = false,
+                signature,
+            };
+
+            return Task.FromResult(Result<object>.Create(ResponseStatusCode.Success, result));
+        }
 
         public async Task<Result<string>> SaveImageAsync(ImageRequest request, string folder)
         {

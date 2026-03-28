@@ -28,6 +28,9 @@ namespace Fatagram.API.Controllers.V1
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDto request)
         {
+            Console.WriteLine(
+                $"SendMessage - UserId: {GetCurrentUserId()}, ConversationId: {request.ConversationId}, ReceiverId: {request.ReceiverId}, Content: {request.Content}, CorrelationId: {request.CorrelationId}, ClientTempId: {request.ClientTempId}, Metadata: {request.Metadata}"
+            );
             var createMessageRequest = new CreateMessageRequest
             {
                 ConversationId = request.ConversationId,
@@ -36,6 +39,7 @@ namespace Fatagram.API.Controllers.V1
                 ClientTempId = request.ClientTempId,
                 Type = MessageType.Text,
                 Metadata = request.Metadata,
+                ReceiverId = request.ReceiverId,
             };
             var res = await _messageService.SendMessageAsync(
                 GetCurrentUserId(),

@@ -15,6 +15,7 @@ using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,7 @@ namespace Fatagram.Application.Services.MessageServices
         IMessageRepository messageRepository,
         ISocketSender<ResponseMessageDto> messageSender,
         IConversationRepository conversationRepository,
+        IUserRepository userRepository,
         IMapper mapper,
         ILogger<MessageService> logger
     ) : IMessageService
@@ -32,6 +34,7 @@ namespace Fatagram.Application.Services.MessageServices
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly ISocketSender<ResponseMessageDto> _messageSender = messageSender;
         private readonly IConversationRepository _conversationRepository = conversationRepository;
+        private readonly IUserRepository _userRepository = userRepository;
         private readonly ILogger<MessageService> _logger = logger;
         private readonly IMapper _mapper = mapper;
 
@@ -86,6 +89,11 @@ namespace Fatagram.Application.Services.MessageServices
             ConversationProjection? conversation;
             if (request.ConversationId == null || request.ConversationId == Guid.Empty)
             {
+                Console.WriteLine(
+                    request.ReceiverId == null
+                        ? "No ConversationId provided, but ReceiverId is also null. This will cause an error."
+                        : $"No ConversationId provided, generating unique conversation key for sender {senderId} and receiver {request.ReceiverId}"
+                );
                 if (request.ReceiverId == null)
                 {
                     throw new ArgumentException(
@@ -115,6 +123,23 @@ namespace Fatagram.Application.Services.MessageServices
                         }
                     );
                     conversation = _mapper.Map<ConversationProjection>(res);
+                    var userSender = await _userRepository.GetByUniqueAsync(
+                        u => u.Id == senderId,
+                        u => u
+                    );
+                    if (userSender == null)
+                    {
+                        throw new Exception("Sender user not found");
+                    }
+                    conversation.Participants = new List<ConversationParticipant>
+                    {
+                        new ConversationParticipant { UserId = request.ReceiverId ?? Guid.Empty },
+                        new ConversationParticipant
+                        {
+                            UserId = senderId ?? Guid.Empty,
+                            User = userSender,
+                        },
+                    };
                 }
                 catch (DbUpdateException)
                 {

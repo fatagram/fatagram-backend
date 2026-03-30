@@ -56,6 +56,8 @@ namespace Fatagram.Application.Services.ImageService
                     "Invalid image request"
                 );
             }
+            // Set real size for original preset if width or height is not provided
+
             request.ImageStream.Position = 0;
             var spec = ImageProcessor.BuildSpec(request);
 

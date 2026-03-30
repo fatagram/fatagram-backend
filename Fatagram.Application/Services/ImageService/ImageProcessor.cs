@@ -35,9 +35,37 @@ namespace Fatagram.Application.Services.ImageService
                 ImageSizePreset.Small => (320, 240),
                 ImageSizePreset.Medium => (640, 480),
                 ImageSizePreset.Large => (1024, 768),
-                ImageSizePreset.Original => (request.Width ?? 0, request.Height ?? 0),
+                ImageSizePreset.Original => GetOriginalSize(request.ImageStream),
                 _ => (150, 150),
             };
+        }
+
+        private static (int w, int h) GetOriginalSize(Stream stream)
+        {
+            if (stream == null || stream.Length == 0)
+                return (0, 0);
+
+            long originalPosition = stream.Position;
+            try
+            {
+                var imageInfo = Image.Identify(stream);
+                if (imageInfo != null)
+                {
+                    return (imageInfo.Width, imageInfo.Height);
+                }
+                else
+                {
+                    return (0, 0);
+                }
+            }
+            catch (Exception)
+            {
+                return (0, 0);
+            }
+            finally
+            {
+                stream.Position = originalPosition;
+            }
         }
     }
 }

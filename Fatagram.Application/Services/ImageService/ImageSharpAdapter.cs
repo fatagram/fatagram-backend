@@ -25,6 +25,10 @@ namespace Fatagram.Application.Services.ImageService
                 )
             );
 
+            Console.WriteLine(
+                $"Processed image with spec: Width={spec.Width}, Height={spec.Height}, ResizeMode={spec.ResizeMode}, Format={spec.Format}, Quality={spec.Quality}"
+            );
+
             return image;
         }
 

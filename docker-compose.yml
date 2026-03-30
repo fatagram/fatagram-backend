@@ -11,6 +11,25 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
     restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: redis-server
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server 
+      --requirepass ngocphat 
+      --appendonly yes 
+      --maxmemory 512mb 
+      --maxmemory-policy allkeys-lru
+    networks:
+      - app-network
 
 volumes:
   db_data:
+  redis-data:
+networks:
+  app-network:

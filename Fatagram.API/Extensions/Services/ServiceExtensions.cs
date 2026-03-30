@@ -23,6 +23,7 @@ namespace Fatagram.API.Extensions.Services
 
             // Infrastructure Services
             builder.Services.AddDatabaseServices(builder.Configuration);
+            builder.Services.AddCacheServices(builder.Configuration);
             builder.Services.AddDependencyServices();
             builder.Services.AddCloudStorageServices(builder.Configuration);
 

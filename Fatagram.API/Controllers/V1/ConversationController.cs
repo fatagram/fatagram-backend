@@ -17,12 +17,15 @@ namespace Fatagram.API.Controllers.V1
     [Authorize]
     public class ConversationController(
         IConversationService conversationService,
+        IConversationParticipantService conversationParticipantService,
         IMessageService messageService,
         ILogger<ConversationController> logger
     ) : BaseApiController
     {
         private readonly ILogger<ConversationController> _logger = logger;
         private readonly IConversationService _conversationService = conversationService;
+        private readonly IConversationParticipantService _conversationParticipantService =
+            conversationParticipantService;
         private readonly IMessageService _messageService = messageService;
 
         [HttpGet]
@@ -71,6 +74,17 @@ namespace Fatagram.API.Controllers.V1
                 conversationId,
                 GetCurrentUserId(),
                 filter
+            );
+            return res.ToActionResult();
+        }
+
+        [HttpPost("{conversationId}/messages/markRead/{messageId}")]
+        public async Task<IActionResult> MarkMessagesAsRead(Guid conversationId, Guid messageId)
+        {
+            var res = await _conversationParticipantService.MarkAsReadAsync(
+                conversationId,
+                GetCurrentUserId(),
+                messageId
             );
             return res.ToActionResult();
         }

@@ -43,7 +43,17 @@ namespace Fatagram.Application.Services.ImageService
             var spec = ImageProcessor.BuildSpec(request);
 
             var image = await ImageSharpAdapter.ProcessAsync(request.ImageStream, spec);
-            await image.SaveAsync(filePath);
+
+            // Save with encoder options when using JPEG to preserve quality
+            if (spec.Format == Fatagram.Application.Services.ImageService.Enum.ImageFormat.Jpeg)
+            {
+                var encoder = new JpegEncoder { Quality = spec.Quality };
+                await image.SaveAsync(filePath, encoder);
+            }
+            else
+            {
+                await image.SaveAsync(filePath);
+            }
 
             var finalUrl = BuildPublicUrl(filePath);
             return Result<string>.Create(ResponseStatusCode.Success, finalUrl);

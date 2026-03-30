@@ -78,8 +78,8 @@ namespace Fatagram.API.Controllers.V1.UserControllers
                 {
                     ImageStream = file.OpenReadStream(),
                     Format = ImageFormat.Jpeg,
-                    Quality = ImageQuality.Medium,
-                    SizePreset = ImageSizePreset.Small,
+                    Quality = ImageQuality.High,
+                    SizePreset = ImageSizePreset.Original,
                 },
                 "avatars"
             );

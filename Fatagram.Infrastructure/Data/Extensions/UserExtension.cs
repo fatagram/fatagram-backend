@@ -68,7 +68,8 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("is_on_boarding")
                     .HasColumnType("BOOLEAN")
                     .IsRequired()
-                    .HasDefaultValueSql("FALSE");
+                    .HasDefaultValue(false)
+                    .HasSentinel(true);
 
                 // Relationships
                 entity

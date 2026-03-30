@@ -197,6 +197,12 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Take(2)
                             .ToList()
                         : null,
+                    OtherUserId = c.IsGroup
+                        ? null
+                        : c
+                            .Participants.Where(p => p.UserId != userId.ToGuid())
+                            .Select(p => p.UserId)
+                            .FirstOrDefault(),
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.CreatedAt)

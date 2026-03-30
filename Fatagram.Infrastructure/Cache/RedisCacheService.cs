@@ -1,52 +1,79 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
+using Fatagram.Infrastructure.Cache;
+using StackExchange.Redis;
 
-namespace Fatagram.Infrastructure.Cache
+public class RedisCacheService : ICacheService
 {
-    public class RedisCacheService : ICacheService
+    private readonly IConnectionMultiplexer _redis;
+    private readonly IDatabase _db;
+
+    public RedisCacheService(IConnectionMultiplexer redis)
     {
-        private readonly IDistributedCache _distributedCache;
-        private readonly JsonSerializerOptions _jsonOptions;
+        _redis = redis;
+        _db = redis.GetDatabase();
+    }
 
-        public RedisCacheService(IDistributedCache distributedCache)
-        {
-            _distributedCache = distributedCache;
-            _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        }
+    // --- Basic String/JSON ---
+    public async Task<T?> GetAsync<T>(string key)
+    {
+        var data = await _db.StringGetAsync(key);
+        if (data.IsNullOrEmpty)
+            return default;
+        return JsonSerializer.Deserialize<T>(data!);
+    }
 
-        public async Task<T?> Get<T>(string key)
-        {
-            var jsonData = await _distributedCache.GetStringAsync(key);
-            if (string.IsNullOrEmpty(jsonData))
-                return default;
-            return JsonSerializer.Deserialize<T>(jsonData, _jsonOptions);
-        }
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
+    {
+        var jsonData = JsonSerializer.Serialize(value);
+        await _db.StringSetAsync(key, jsonData, expiration);
+    }
 
-        public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
+    // --- Hash Operations (Sức mạnh cho vụ Seen) ---
+    public async Task HashSetAsync(string key, string field, string value)
+    {
+        await _db.HashSetAsync(key, field, value);
+    }
+
+    public async Task<string?> HashGetAsync(string key, string field)
+    {
+        var result = await _db.HashGetAsync(key, field);
+        return result.HasValue ? result.ToString() : null;
+    }
+
+    public async Task<Dictionary<string, string>> HashGetAllAsync(string key)
+    {
+        var entries = await _db.HashGetAllAsync(key);
+        return entries.ToDictionary(x => x.Name.ToString(), x => x.Value.ToString());
+    }
+
+    // --- Set Operations (Sức mạnh cho Member List) ---
+    public async Task SetAddAsync(string key, string value)
+    {
+        await _db.SetAddAsync(key, value);
+    }
+
+    public async Task<IEnumerable<string>> SetMembersAsync(string key)
+    {
+        var members = await _db.SetMembersAsync(key);
+        return members.Select(x => x.ToString());
+    }
+
+    public async Task RemoveAsync(string key) => await _db.KeyDeleteAsync(key);
+
+    public async Task<bool> ExistsAsync(string key) => await _db.KeyExistsAsync(key);
+
+    public async Task<IEnumerable<string>> GetKeysAsync(string pattern)
+    {
+        var keys = new List<string>();
+
+        foreach (var endpoint in _redis.GetEndPoints())
         {
-            var options = new DistributedCacheEntryOptions
+            var server = _redis.GetServer(endpoint);
+            await foreach (var key in server.KeysAsync(pattern: pattern))
             {
-                AbsoluteExpirationRelativeToNow = expiration ?? TimeSpan.FromHours(1),
-                SlidingExpiration = TimeSpan.FromMinutes(10),
-            };
-
-            var jsonData = JsonSerializer.Serialize(value, _jsonOptions);
-            await _distributedCache.SetStringAsync(key, jsonData, options);
+                keys.Add(key.ToString());
+            }
         }
-
-        public async Task RemoveAsync(string key)
-        {
-            await _distributedCache.RemoveAsync(key);
-        }
-
-        public async Task<bool> ExistsAsync(string key)
-        {
-            var data = await _distributedCache.GetAsync(key);
-            return data != null;
-        }
+        return keys;
     }
 }

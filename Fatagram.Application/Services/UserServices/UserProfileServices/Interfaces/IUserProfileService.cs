@@ -28,6 +28,11 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices.Interfa
             ChangeUrlNameDto changeUrlNameDto
         );
 
+        Task<Result<ChangeNicknameDto>> UpdateNicknameAsync(
+            Guid userId,
+            ChangeNicknameDto changeNicknameDto
+        );
+
         /// <summary>
         /// Update a name
         /// </summary>

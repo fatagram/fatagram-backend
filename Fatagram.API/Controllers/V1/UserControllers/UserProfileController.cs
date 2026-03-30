@@ -138,6 +138,23 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         }
 
         /// <summary>
+        /// Update user's URL name
+        /// </summary>
+        /// <param name="changeUrlNameDto"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedException"></exception>
+        [Authorize]
+        [HttpPatch("nickname")]
+        public async Task<IActionResult> UpdateNicknameAsync(
+            [FromBody] ChangeNicknameDto changeNicknameDto
+        )
+        {
+            var userId = GetCurrentUserId();
+            var res = await _userProfileService.UpdateNicknameAsync(userId, changeNicknameDto);
+            return res.ToActionResult();
+        }
+
+        /// <summary>
         /// Update user's name
         /// </summary>
         /// <param name="updateNameDto"></param>

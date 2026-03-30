@@ -122,13 +122,16 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var user =
                 await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
 
-            var _user = await _userRepository.GetAllAsync<Account, Guid>(
+            var _user = await _userRepository.GetAllAsync<User, Guid>(
                 filter: u => u.UrlName == changeUrlNameDto.UrlName,
                 limit: 1
             );
             var existUser = _user.FirstOrDefault();
             if (existUser != null && existUser.Id != user.Id)
             {
+                Console.WriteLine(
+                    $"Existing user found with URL name: {existUser}, User ID: {existUser.Id}"
+                );
                 throw new BadRequestException(
                     new Error("URLNAME_ALREADY_EXISTS", "Url name already exists.")
                 );
@@ -136,6 +139,18 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             user.UrlName = changeUrlNameDto.UrlName;
             await _userRepository.UpdateAsync(user);
             return Result<ChangeUrlNameDto>.Create(ResponseStatusCode.Success, changeUrlNameDto);
+        }
+
+        public async Task<Result<ChangeNicknameDto>> UpdateNicknameAsync(
+            Guid userId,
+            ChangeNicknameDto changeNicknameDto
+        )
+        {
+            var user =
+                await _userRepository.GetAsync(userId, u => u) ?? throw new UserNotFoundException();
+            user.Nickname = changeNicknameDto.Nickname;
+            await _userRepository.UpdateAsync(user);
+            return Result<ChangeNicknameDto>.Create(ResponseStatusCode.Success, changeNicknameDto);
         }
 
         public async Task<Result<ChangeNameDto>> UpdateNameAsync(

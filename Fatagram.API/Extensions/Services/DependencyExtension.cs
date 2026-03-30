@@ -40,6 +40,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IConversationParticipantService, ConversationParticipantService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Infrastructure.Cache;
+using StackExchange.Redis;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -14,6 +15,9 @@ namespace Fatagram.API.Extensions.Services
         )
         {
             var redisConnectionString = configuration.GetConnectionString("Redis");
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+                ConnectionMultiplexer.Connect(redisConnectionString!)
+            );
 
             services.AddStackExchangeRedisCache(options =>
             {

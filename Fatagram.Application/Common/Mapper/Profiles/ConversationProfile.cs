@@ -7,6 +7,7 @@ using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Projections;
+using SixLabors.ImageSharp.ColorSpaces.Companding;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
 {
@@ -21,6 +22,10 @@ namespace Fatagram.Application.Common.Mapper.Profiles
 
             CreateMap<ConversationProjection, ConversationDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()))
+                .ForMember(
+                    dest => dest.OtherUserId,
+                    opt => opt.MapFrom(src => src.OtherUserId.ToString())
+                )
                 .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src => src.LastMessage));
 
             CreateMap<Conversation, ConversationProjection>()

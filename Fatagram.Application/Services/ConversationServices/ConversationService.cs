@@ -14,24 +14,32 @@ using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Projections;
+using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
+using Fatagram.Shared.Extensions;
 
 namespace Fatagram.Application.Services.ConversationServices
 {
     public class ConversationService(
         IConversationRepository conversationRepository,
+        IConversationParticipantRepository conversationParticipantRepository,
         IUserRepository userRepository,
         IMessageService messageService,
+        ICacheService cacheService,
         IMapper mapper
     ) : IConversationService
     {
         private readonly IConversationRepository _conversationRepository = conversationRepository;
+        private readonly IConversationParticipantRepository _conversationParticipantRepository =
+            conversationParticipantRepository;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMessageService _messageService = messageService;
+        private readonly ICacheService _cacheService = cacheService;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Result<CursorResult<ConversationDto, DateTime>>> GetAllAsync(
@@ -45,6 +53,25 @@ namespace Fatagram.Application.Services.ConversationServices
                 cursor?.Limit ?? 20
             );
             var res = _mapper.Map<List<ConversationDto>>(conservations);
+
+            foreach (var conversation in res)
+            {
+                var seenCacheKey = $"conv:{conversation.Id}:seen";
+                if (!conversation.IsGroup && conversation?.OtherUserId != null)
+                {
+                    var otherLastSeen = await _cacheService.HashGetAsync(
+                        seenCacheKey,
+                        conversation.OtherUserId.ToString() ?? ""
+                    );
+                    conversation.OtherLastSeenMessageId = otherLastSeen.ToGuid();
+                }
+
+                var lastSeen = await _cacheService.HashGetAsync(seenCacheKey, userId.ToString());
+                if (conversation != null && lastSeen != null)
+                {
+                    conversation.MyLastSeenMessageId = lastSeen.ToGuid();
+                }
+            }
 
             return Result<CursorResult<ConversationDto, DateTime>>.Create(
                 ResponseStatusCode.Success,
@@ -210,6 +237,15 @@ namespace Fatagram.Application.Services.ConversationServices
                         { "creatorName", creatorFullName! },
                     },
                 }
+            );
+
+            await _cacheService.SetAsync(
+                $"conversation:{res.Id}:participants",
+                participantIds
+                    .Select(id => new ParticipantDto { UserId = id, CreatedAt = DateTime.UtcNow })
+                    .Append(new ParticipantDto { UserId = creatorId, CreatedAt = DateTime.UtcNow })
+                    .ToList(),
+                TimeSpan.FromDays(2)
             );
             return Result<Guid>.Create(ResponseStatusCode.Created, res.Id);
         }

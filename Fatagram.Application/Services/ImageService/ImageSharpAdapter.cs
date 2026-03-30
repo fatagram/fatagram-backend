@@ -15,19 +15,15 @@ namespace Fatagram.Application.Services.ImageService
             stream.Position = 0;
             var image = await Image.LoadAsync(stream);
 
-            // Only resize when both width and height are provided (> 0).
-            if (spec.Width > 0 && spec.Height > 0)
-            {
-                image.Mutate(x =>
-                    x.Resize(
-                        new ResizeOptions
-                        {
-                            Mode = MapResizeMode(spec.ResizeMode),
-                            Size = new Size(spec.Width, spec.Height),
-                        }
-                    )
-                );
-            }
+            image.Mutate(x =>
+                x.Resize(
+                    new ResizeOptions
+                    {
+                        Mode = MapResizeMode(spec.ResizeMode),
+                        Size = new Size(spec.Width, spec.Height),
+                    }
+                )
+            );
 
             return image;
         }

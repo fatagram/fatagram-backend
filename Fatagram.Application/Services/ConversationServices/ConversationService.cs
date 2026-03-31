@@ -172,6 +172,13 @@ namespace Fatagram.Application.Services.ConversationServices
                 targetUserId
             );
 
+            if (conversation == null)
+            {
+                throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+            }
+
             return Result<ConversationDto>.Create(
                 ResponseStatusCode.Success,
                 _mapper.Map<ConversationDto>(conversation)

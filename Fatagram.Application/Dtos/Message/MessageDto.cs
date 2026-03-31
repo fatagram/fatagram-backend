@@ -11,7 +11,7 @@ namespace Fatagram.Application.Dtos.Message
     {
         public Guid? ConversationId { get; set; }
         public Guid? ReceiverId { get; set; }
-        public Guid? CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
         public Guid? ClientTempId { get; set; }
         public string Content { get; set; } = string.Empty;
         public Dictionary<string, object>? Metadata { get; set; }
@@ -24,7 +24,7 @@ namespace Fatagram.Application.Dtos.Message
     {
         public Guid? ConversationId { get; set; }
         public Guid? ReceiverId { get; set; }
-        public Guid? CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
         public Guid? ClientTempId { get; set; }
         public string Content { get; set; } = string.Empty;
         public MessageType Type { get; set; } = MessageType.Text;
@@ -42,7 +42,7 @@ namespace Fatagram.Application.Dtos.Message
         public string? SenderNickname { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public Guid? CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Guid? ClientTempId { get; set; }

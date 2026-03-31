@@ -67,6 +67,8 @@ namespace Fatagram.API.Middlewares
             {
                 case "Owner":
                     return new OwnerAuthorizationHandler();
+                case "MemberConversation":
+                    return new MemberConversationHandler();
                 default:
                     return null;
             }

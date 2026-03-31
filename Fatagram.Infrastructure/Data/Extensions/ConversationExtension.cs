@@ -50,6 +50,11 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("uuid")
                     .IsRequired();
                 entity
+                    .Property(cp => cp.SeenAt)
+                    .HasColumnName("seen_at")
+                    .HasColumnType("timestamptz")
+                    .IsRequired(false);
+                entity
                     .Property(cp => cp.LastSeenMessageId)
                     .HasColumnName("last_seen_message_id")
                     .HasColumnType("uuid");

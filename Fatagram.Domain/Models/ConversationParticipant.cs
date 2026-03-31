@@ -13,6 +13,7 @@ namespace Fatagram.Domain.Models
         public Guid? LastSeenMessageId { get; set; }
         public ConversationRole Role { get; set; }
         public string? Nickname { get; set; }
+        public DateTime? SeenAt { get; set; }
         public virtual Conversation Conversation { get; set; } = null!;
         public virtual User User { get; set; } = null!;
         public virtual Message? LastSeenMessage { get; set; }

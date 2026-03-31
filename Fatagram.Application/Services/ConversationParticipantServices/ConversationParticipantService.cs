@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
@@ -30,11 +31,16 @@ namespace Fatagram.Application.Services.ConversationServices
             Console.WriteLine(
                 $"MarkAsReadAsync called with conversationId={conversationId}, userId={userId}, messageId={messageId}"
             );
+            var seenAt = DateTime.UtcNow;
+
+            var cacheValue = JsonSerializer.Serialize(
+                new ParticipantSeenInfo { MessageId = messageId, SeenAt = seenAt }
+            );
             // Check user is participant of the conversation
             await _cacheService.HashSetAsync(
                 $"conv:{conversationId}:seen",
                 userId.ToString(),
-                messageId.ToString()
+                cacheValue
             );
             var participants = await GetAllParticipantsAsync(conversationId, userId);
             var seenDto = new SeenDto
@@ -42,6 +48,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 ConversationId = conversationId,
                 UserId = userId,
                 MessageId = messageId,
+                SeenAt = seenAt,
             };
             await _sockerSender.SendAllAsync(
                 participants.Data?.Select(p => p.UserId).ToList() ?? [],
@@ -99,6 +106,63 @@ namespace Fatagram.Application.Services.ConversationServices
             await _cacheService.SetAsync(cacheKey, participants, TimeSpan.FromDays(2));
 
             return Result<List<ParticipantDto>>.Create(ResponseStatusCode.Success, participants);
+        }
+
+        public async Task<Result<ParticipantsSeenDto>> GetParticipantSeenAsync(
+            Guid conversationId,
+            Guid userId
+        )
+        {
+            var participantsSeenInfo = new Dictionary<Guid, ParticipantSeenInfo>();
+
+            var participantsSeenOnDb = await _cpRepo.GetAllAsync(
+                cp => cp.ConversationId == conversationId,
+                cp => new
+                {
+                    cp.UserId,
+                    cp.LastSeenMessageId,
+                    cp.SeenAt,
+                }
+            );
+
+            foreach (var p in participantsSeenOnDb)
+            {
+                if (p.LastSeenMessageId.HasValue)
+                {
+                    participantsSeenInfo[p.UserId] = new ParticipantSeenInfo
+                    {
+                        MessageId = p.LastSeenMessageId.Value,
+                        SeenAt = p.SeenAt ?? DateTime.MinValue,
+                    };
+                }
+            }
+
+            var cacheSeenData = await _cacheService.HashGetAllAsync($"conv:{conversationId}:seen");
+
+            foreach (var entry in cacheSeenData)
+            {
+                if (Guid.TryParse(entry.Key, out var pUserId))
+                {
+                    var cacheJson = entry.Value;
+                    if (string.IsNullOrEmpty(cacheJson))
+                        continue;
+
+                    var cacheSeenInfo = JsonSerializer.Deserialize<ParticipantSeenInfo>(cacheJson);
+                    if (cacheSeenInfo != null)
+                    {
+                        participantsSeenInfo[pUserId] = cacheSeenInfo;
+                    }
+                }
+            }
+
+            return Result<ParticipantsSeenDto>.Create(
+                ResponseStatusCode.Success,
+                new ParticipantsSeenDto
+                {
+                    conversationId = conversationId,
+                    ParticipantsSeenInfo = participantsSeenInfo,
+                }
+            );
         }
     }
 }

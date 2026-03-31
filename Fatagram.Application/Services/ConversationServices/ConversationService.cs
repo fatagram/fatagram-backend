@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.Conversation;
@@ -57,19 +58,28 @@ namespace Fatagram.Application.Services.ConversationServices
             foreach (var conversation in res)
             {
                 var seenCacheKey = $"conv:{conversation.Id}:seen";
-                if (!conversation.IsGroup && conversation?.OtherUserId != null)
+
+                var mySeenJson = await _cacheService.HashGetAsync(seenCacheKey, userId.ToString());
+                if (!string.IsNullOrEmpty(mySeenJson))
                 {
-                    var otherLastSeen = await _cacheService.HashGetAsync(
+                    var mySeenData = JsonSerializer.Deserialize<ParticipantSeenInfo>(mySeenJson);
+                    conversation.MyLastSeenMessageId = mySeenData?.MessageId;
+                }
+
+                if (!conversation.IsGroup && conversation.OtherUserId != null)
+                {
+                    var otherSeenJson = await _cacheService.HashGetAsync(
                         seenCacheKey,
                         conversation.OtherUserId.ToString() ?? ""
                     );
-                    conversation.OtherLastSeenMessageId = otherLastSeen.ToGuid();
-                }
 
-                var lastSeen = await _cacheService.HashGetAsync(seenCacheKey, userId.ToString());
-                if (conversation != null && lastSeen != null)
-                {
-                    conversation.MyLastSeenMessageId = lastSeen.ToGuid();
+                    if (!string.IsNullOrEmpty(otherSeenJson))
+                    {
+                        var otherSeenData = JsonSerializer.Deserialize<ParticipantSeenInfo>(
+                            otherSeenJson
+                        );
+                        conversation.OtherLastSeenMessageId = otherSeenData?.MessageId;
+                    }
                 }
             }
 

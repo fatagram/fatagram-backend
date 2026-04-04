@@ -22,5 +22,6 @@ namespace Fatagram.Infrastructure.Cache
         Task<IEnumerable<string>> GetKeysAsync(string pattern);
         Task<long> IncrementAsync(string key, long value = 1);
         Task<long> HashIncrementAsync(string key, string field, long value = 1);
+        Task<bool> TryAcquireLockAsync(string key, TimeSpan expiration);
     }
 }

@@ -1,0 +1,16 @@
+redis-cli --scan --pattern "user:*:last_read" | xargs -r redis-cli del
+redis-cli --scan --pattern "conv:*:meta" | xargs -r redis-cli del
+redis-cli --scan --pattern "conv:*:seen" | xargs -r redis-cli del
+redis-cli --scan --pattern "conversation:*:participants" | xargs -r redis-cli del
+redis-cli --scan --pattern "msg:seq:*" | xargs -r redis-cli del
+
+redis-cli --scan --pattern "user:*:last_read" | wc -l
+redis-cli --scan --pattern "conv:*:meta" | wc -l
+redis-cli --scan --pattern "conv:*:seen" | wc -l
+redis-cli --scan --pattern "conversation:*:participants" | wc -l
+redis-cli --scan --pattern "msg:seq:*" | wc -l
+
+
+dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-conv-message-count 
+dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-message-sequence-number 
+dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-user-last-message-number

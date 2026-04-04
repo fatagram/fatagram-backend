@@ -42,15 +42,17 @@ namespace Fatagram.Application.Services.ConversationServices
             var seqNumber = await GetSequenceNumberAsync(messageId);
 
             var dedupeKey = $"seen:dedupe:{conversationId}:{userId}:{messageId}";
-            var dedupeHit = await _cacheService.IncrementAsync(dedupeKey);
-            if (dedupeHit > 1)
+            var lockAcquired = await _cacheService.TryAcquireLockAsync(
+                dedupeKey,
+                TimeSpan.FromSeconds(5)
+            );
+            if (!lockAcquired)
             {
                 _logger.LogInformation(
-                    "[BadgeTrace-SeenMessage-Deduped] ConversationId={ConversationId}, UserId={UserId}, MessageId={MessageId}, DedupeHit={DedupeHit}",
+                    "[BadgeTrace-SeenMessage-Deduped] ConversationId={ConversationId}, UserId={UserId}, MessageId={MessageId}",
                     conversationId,
                     userId,
-                    messageId,
-                    dedupeHit
+                    messageId
                 );
                 return Result.Create(ResponseStatusCode.Success);
             }

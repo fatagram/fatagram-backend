@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403165249_AddLastMessageCount")]
+    partial class AddLastMessageCount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,12 +497,6 @@ namespace Fatagram.Infrastructure.Migrations
                     b.Property<Guid?>("SenderId")
                         .HasColumnType("uuid")
                         .HasColumnName("sender_id");
-
-                    b.Property<int>("SequenceNumber")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("sequence_number");
 
                     b.Property<int>("Type")
                         .ValueGeneratedOnAdd()

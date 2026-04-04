@@ -76,4 +76,14 @@ public class RedisCacheService : ICacheService
         }
         return keys;
     }
+
+    public async Task<long> IncrementAsync(string key, long value = 1)
+    {
+        return await _db.StringIncrementAsync(key, value);
+    }
+
+    public async Task<long> HashIncrementAsync(string key, string field, long value = 1)
+    {
+        return await _db.HashIncrementAsync(key, field, value);
+    }
 }

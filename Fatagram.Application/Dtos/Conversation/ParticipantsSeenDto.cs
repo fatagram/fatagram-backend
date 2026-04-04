@@ -9,6 +9,7 @@ namespace Fatagram.Application.Dtos.Conversation
     {
         public Guid MessageId { get; set; }
         public DateTime SeenAt { get; set; }
+        public int SequenceNumber { get; set; }
     }
 
     public class ParticipantsSeenDto

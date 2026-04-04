@@ -12,12 +12,14 @@ using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.MessageServices
@@ -28,6 +30,7 @@ namespace Fatagram.Application.Services.MessageServices
         IConversationRepository conversationRepository,
         IUserRepository userRepository,
         IMapper mapper,
+        ICacheService cacheService,
         ILogger<MessageService> logger
     ) : IMessageService
     {
@@ -36,6 +39,7 @@ namespace Fatagram.Application.Services.MessageServices
         private readonly IConversationRepository _conversationRepository = conversationRepository;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly ILogger<MessageService> _logger = logger;
+        private readonly ICacheService _cacheService = cacheService;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Result<CursorResult<ResponseMessageDto, DateTime>>> GetMessagesAsync(
@@ -86,6 +90,7 @@ namespace Fatagram.Application.Services.MessageServices
             CreateMessageRequest request
         )
         {
+            // Get conversation
             ConversationProjection? conversation;
             if (request.ConversationId == null || request.ConversationId == Guid.Empty)
             {
@@ -117,8 +122,13 @@ namespace Fatagram.Application.Services.MessageServices
                                 new ConversationParticipant
                                 {
                                     UserId = request.ReceiverId ?? Guid.Empty,
+                                    LastSeenNumber = 0,
                                 },
-                                new ConversationParticipant { UserId = senderId ?? Guid.Empty },
+                                new ConversationParticipant
+                                {
+                                    UserId = senderId ?? Guid.Empty,
+                                    LastSeenNumber = 1,
+                                },
                             },
                         }
                     );
@@ -149,18 +159,23 @@ namespace Fatagram.Application.Services.MessageServices
                         {
                             Id = c.Id,
                             IsGroup = c.IsGroup,
+                            LastMessageNumber = c.LastMessageNumber,
                             ParticipantIds = c.Participants.Select(p => p.UserId).ToList(),
                             Participants = c
                                 .Participants.Select(p => new ConversationParticipant
                                 {
                                     Id = p.UserId,
                                     Nickname = p.Nickname,
-                                    User = new User
-                                    {
-                                        Id = p.UserId,
-                                        FullName = p.User.FullName,
-                                        Avatar = p.User.Avatar,
-                                    },
+                                    User =
+                                        p.UserId == senderId
+                                            ? new User
+                                            {
+                                                Id = p.User!.Id,
+                                                FullName = p.User!.FullName,
+                                                Avatar = p.User!.Avatar,
+                                            }
+                                            : null,
+                                    LastSeenNumber = p.LastSeenNumber,
                                 })
                                 .ToList(),
                         }
@@ -180,19 +195,23 @@ namespace Fatagram.Application.Services.MessageServices
                     {
                         Id = c.Id,
                         IsGroup = c.IsGroup,
+                        LastMessageNumber = c.LastMessageNumber,
                         ParticipantIds = c.Participants.Select(p => p.UserId).ToList(),
                         Participants = c
-                            .Participants.Where(p => p.UserId == senderId)
-                            .Select(p => new ConversationParticipant
+                            .Participants.Select(p => new ConversationParticipant
                             {
                                 UserId = p.UserId,
                                 Nickname = p.Nickname,
-                                User = new User
-                                {
-                                    Id = p.User.Id,
-                                    FullName = p.User.FullName,
-                                    Avatar = p.User.Avatar,
-                                },
+                                User =
+                                    p.UserId == senderId
+                                        ? new User
+                                        {
+                                            Id = p.User!.Id,
+                                            FullName = p.User!.FullName,
+                                            Avatar = p.User!.Avatar,
+                                        }
+                                        : null,
+                                LastSeenNumber = p.LastSeenNumber,
                             })
                             .ToList(),
                     }
@@ -204,6 +223,27 @@ namespace Fatagram.Application.Services.MessageServices
                 throw new Exception("Conversation not found");
             }
 
+            var cachedMsgNum = await _cacheService.HashGetAsync(
+                $"conv:{conversation.Id}:meta",
+                "max_seq"
+            );
+
+            if (string.IsNullOrEmpty(cachedMsgNum))
+            {
+                await _cacheService.HashSetAsync(
+                    $"conv:{conversation.Id}:meta",
+                    "max_seq",
+                    conversation.LastMessageNumber.ToString()
+                );
+            }
+
+            var newMsgNum = await _cacheService.HashIncrementAsync(
+                $"conv:{conversation.Id}:meta",
+                "max_seq",
+                1
+            );
+            int currentMaxSeq = (int)newMsgNum - 1;
+
             var message = await _messageRepository.AddAsync(
                 new Message
                 {
@@ -212,7 +252,14 @@ namespace Fatagram.Application.Services.MessageServices
                     Content = request.Content,
                     Type = request.Type,
                     Metadata = request.Metadata,
+                    SequenceNumber = (int)newMsgNum,
                 }
+            );
+
+            await _cacheService.SetAsync(
+                $"msg:seq:{message.Id}",
+                message.SequenceNumber,
+                TimeSpan.FromSeconds(7)
             );
 
             if (message == null)
@@ -233,29 +280,84 @@ namespace Fatagram.Application.Services.MessageServices
                 throw new Exception("No participants found for conversation");
             }
             var sender = conversation.Participants.FirstOrDefault(p => p.UserId == senderId);
-            await _messageSender.SendAllAsync(
-                conversation.ParticipantIds.ToArray(),
-                new SocketMessage<ResponseMessageDto>
-                {
-                    Event = "NewMessage",
-                    Payload = new ResponseMessageDto
-                    {
-                        Id = message.Id,
-                        ConversationId = conversation.Id,
-                        CorrelationId = request.CorrelationId,
-                        ClientTempId = request.ClientTempId,
-                        SenderId = senderId,
-                        SenderFullName = sender?.User.FullName,
-                        SenderAvatarUrl = sender?.User.Avatar,
-                        SenderNickname = sender?.Nickname,
-                        Content = request.Content,
-                        Type = request.Type,
-                        Metadata = request.Metadata,
-                        IsGroup = conversation.IsGroup,
-                        CreatedAt = message.CreatedAt,
-                    },
-                }
+
+            await _cacheService.HashSetAsync(
+                $"user:{senderId}:last_read",
+                conversation.Id.ToString(),
+                newMsgNum.ToString()
             );
+
+            var sendTasks = conversation.Participants.Select(async p =>
+            {
+                bool isStartingFromRead = false;
+
+                var lrStr = await _cacheService.HashGetAsync(
+                    $"user:{p.UserId}:last_read",
+                    conversation.Id.ToString()
+                );
+
+                int lastRead;
+                if (lrStr != null && int.TryParse(lrStr, out var lr))
+                {
+                    lastRead = lr;
+                }
+                else
+                {
+                    lastRead = p.LastSeenNumber;
+                    await _cacheService.HashSetAsync(
+                        $"user:{p.UserId}:last_read",
+                        conversation.Id.ToString(),
+                        lastRead.ToString()
+                    );
+                }
+
+                isStartingFromRead = currentMaxSeq <= lastRead;
+
+                if (p.UserId == senderId)
+                {
+                    isStartingFromRead = false;
+                }
+
+                _logger.LogInformation(
+                    "[BadgeTrace-NewMessage] ConversationId={ConversationId}, RecipientUserId={RecipientUserId}, SenderId={SenderId}, MessageId={MessageId}, MessageSeq={MessageSeq}, CurrentMaxSeqBeforeSend={CurrentMaxSeqBeforeSend}, RecipientLastRead={RecipientLastRead}, IsConversationStartingFromRead={IsConversationStartingFromRead}, CorrelationId={CorrelationId}, ClientTempId={ClientTempId}",
+                    conversation.Id,
+                    p.UserId,
+                    senderId,
+                    message.Id,
+                    message.SequenceNumber,
+                    currentMaxSeq,
+                    lastRead,
+                    isStartingFromRead,
+                    request.CorrelationId,
+                    request.ClientTempId
+                );
+
+                var dto = new ResponseMessageDto
+                {
+                    Id = message.Id,
+                    ConversationId = conversation.Id,
+                    SenderId = senderId,
+                    SenderFullName = sender?.User?.FullName,
+                    SenderAvatarUrl = sender?.User?.Avatar,
+                    SenderNickname = sender?.Nickname,
+                    CorrelationId = request.CorrelationId,
+                    ClientTempId = request.ClientTempId,
+                    Content = request.Content,
+                    Type = request.Type,
+                    IsGroup = conversation.IsGroup,
+                    Metadata = request.Metadata,
+                    CreatedAt = message.CreatedAt,
+                    IsConversationStartingFromRead = isStartingFromRead,
+                };
+
+                await _messageSender.SendAsync(
+                    p.UserId,
+                    new SocketMessage<ResponseMessageDto> { Event = "NewMessage", Payload = dto }
+                );
+            });
+
+            await Task.WhenAll(sendTasks);
+
             return Result<ResponseMessageDto>.Create(
                 ResponseStatusCode.Success,
                 new ResponseMessageDto
@@ -263,8 +365,8 @@ namespace Fatagram.Application.Services.MessageServices
                     Id = message.Id,
                     ConversationId = conversation.Id,
                     SenderId = senderId,
-                    SenderFullName = sender?.User.FullName,
-                    SenderAvatarUrl = sender?.User.Avatar,
+                    SenderFullName = sender?.User?.FullName,
+                    SenderAvatarUrl = sender?.User?.Avatar,
                     SenderNickname = sender?.Nickname,
                     CorrelationId = request.CorrelationId,
                     ClientTempId = request.ClientTempId,

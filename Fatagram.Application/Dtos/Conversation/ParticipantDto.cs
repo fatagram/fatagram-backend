@@ -23,6 +23,9 @@ namespace Fatagram.Application.Dtos.Conversation
         public Guid? LastSeenMessageId { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? LastMessageSequence { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DateTime? CreatedAt { get; set; }
     }
 }

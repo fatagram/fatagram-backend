@@ -14,7 +14,10 @@ namespace Fatagram.Application.Dtos.Conversation
         public string? AvatarUrl { get; set; }
         public bool IsGroup { get; set; }
         public ResponseMessageDto? LastMessage { get; set; }
-        public int UnreadMessagesCount { get; set; }
+
+        [JsonIgnore]
+        public int LastMessageNumber { get; set; }
+        public int UnreadMessageCount { get; set; }
         public DateTime LastActiveAt { get; set; }
         public List<string>? TopParticipantNames { get; set; }
         public Guid? OtherLastSeenMessageId { get; set; }

@@ -6,6 +6,7 @@ using Fatagram.API.Extensions.Constrains;
 using Fatagram.API.Extensions.Middleware;
 using Fatagram.API.Hubs;
 using Fatagram.API.Middlewares;
+using Fatagram.API.Scripts;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,12 +14,19 @@ namespace Fatagram.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.ConfigureAppConfiguration();
 
             var app = builder.Build();
+
+            if (ScriptRunner.IsScriptMode(args))
+            {
+                var exitCode = await ScriptRunner.RunAsync(app.Services, args);
+                Environment.ExitCode = exitCode;
+                return;
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
@@ -57,7 +65,7 @@ namespace Fatagram.API
             app.MapGet("/hi", () => "Hello World!");
             app.MapHub<AppHub>("/hubs/app");
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

@@ -1,0 +1,9 @@
+conv:{conversationId}:meta
+- max_seq: last message number
+
+conv:{conversationId}:seen
+- {userId}: { messageId, seenAt }
+
+user:{userId}:last_read - sequence number of last seen message
+
+msg:seq:{messageId} - sequence number of message

@@ -78,6 +78,13 @@ namespace Fatagram.API.Controllers.V1
             return res.ToActionResult();
         }
 
+        [HttpGet("unread-count")]
+        public async Task<IActionResult> GetUnreadNumberMessage()
+        {
+            var res = await _conversationService.GetUnreadCountAsync(GetCurrentUserId());
+            return res.ToActionResult();
+        }
+
         [HttpGet("{conversationId}/participants/seen")]
         [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetParticipantsSeen(Guid conversationId)

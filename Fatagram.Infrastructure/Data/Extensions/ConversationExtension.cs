@@ -32,6 +32,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("unique_conversation_key")
                     .HasColumnType("VARCHAR(255)")
                     .IsRequired(false);
+                entity
+                    .Property(c => c.LastMessageNumber)
+                    .HasColumnName("last_message_number")
+                    .HasColumnType("integer")
+                    .HasDefaultValue(0)
+                    .IsRequired();
                 entity.HasIndex(c => c.UniqueConversationKey).IsUnique();
             });
 
@@ -70,6 +76,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("nickname")
                     .HasColumnType("VARCHAR(255)")
                     .IsRequired(false);
+                entity
+                    .Property(cp => cp.LastSeenNumber)
+                    .HasColumnName("last_seen_number")
+                    .HasColumnType("integer")
+                    .HasDefaultValue(0)
+                    .IsRequired();
                 entity
                     .HasOne(cp => cp.Conversation)
                     .WithMany(c => c.Participants)
@@ -124,6 +136,12 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("metadata")
                     .HasColumnType("jsonb")
                     .IsRequired(false);
+                entity
+                    .Property(m => m.SequenceNumber)
+                    .HasColumnName("sequence_number")
+                    .HasColumnType("integer")
+                    .HasDefaultValue(0)
+                    .IsRequired();
                 entity
                     .HasOne(m => m.Conversation)
                     .WithMany(c => c.Messages)

@@ -23,5 +23,6 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
             IEnumerable<Guid> participantIds,
             string? name
         );
+        Task<Result<int>> GetUnreadCountAsync(Guid userId);
     }
 }

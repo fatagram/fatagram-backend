@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fatagram.Infrastructure.Workers;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -10,6 +11,8 @@ namespace Fatagram.API.Extensions.Services
         public static void AddWorkerServices(this IServiceCollection services)
         {
             services.AddHostedService<SyncSeenWorker>();
+            // services.AddHostedService<SyncUserLastMessageSequenceNumber>();
+            // services.AddHostedService<SyncConversationLastMessageNumber>();
         }
     }
 }

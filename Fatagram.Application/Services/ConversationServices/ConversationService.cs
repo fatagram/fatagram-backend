@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -32,7 +33,8 @@ namespace Fatagram.Application.Services.ConversationServices
         IUserRepository userRepository,
         IMessageService messageService,
         ICacheService cacheService,
-        IMapper mapper
+        IMapper mapper,
+        Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces.IMessageRepository messageRepository
     ) : IConversationService
     {
         private readonly IConversationRepository _conversationRepository = conversationRepository;
@@ -40,6 +42,8 @@ namespace Fatagram.Application.Services.ConversationServices
             conversationParticipantRepository;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMessageService _messageService = messageService;
+        private readonly Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces.IMessageRepository _messageRepository =
+            messageRepository;
         private readonly ICacheService _cacheService = cacheService;
         private readonly IMapper _mapper = mapper;
 
@@ -53,33 +57,128 @@ namespace Fatagram.Application.Services.ConversationServices
                 cursor?.Cursor,
                 cursor?.Limit ?? 20
             );
+            if (conservations.Count == 0)
+            {
+                return Result<CursorResult<ConversationDto, DateTime>>.Create(
+                    ResponseStatusCode.Success,
+                    new CursorResult<ConversationDto, DateTime>
+                    {
+                        Items = new List<ConversationDto>(),
+                        NextCursor = null,
+                        HasNext = false,
+                    }
+                );
+            }
             var res = _mapper.Map<List<ConversationDto>>(conservations);
+
+            var convIds = res.Select(c => c.Id).ToList();
+            var otherUserIds = res.Where(c => !c.IsGroup && c.OtherUserId != null)
+                .Select(c => c.OtherUserId!.Value)
+                .ToHashSet();
+
+            var userLastReadMapTask = _cacheService.HashGetAllAsync($"user:{userId}:last_read");
+
+            var maxSeqMap = convIds.Select(id =>
+                _cacheService.HashGetAsync($"conv:{id}:meta", "max_seq")
+            );
+            var maxSeqResultsTask = Task.WhenAll(maxSeqMap);
+
+            var seenTasks = convIds.Select(id => _cacheService.HashGetAllAsync($"conv:{id}:seen"));
+            var seenResultsTask = Task.WhenAll(seenTasks);
+
+            var dbParticipantsTask = _conversationParticipantRepository.GetAllAsync(
+                cp => convIds.Contains(cp.ConversationId.ToString()),
+                cp => new
+                {
+                    cp.ConversationId,
+                    cp.UserId,
+                    cp.LastSeenNumber,
+                    cp.LastSeenMessageId,
+                    cp.SeenAt,
+                }
+            );
+
+            await Task.WhenAll(
+                userLastReadMapTask,
+                maxSeqResultsTask,
+                seenResultsTask,
+                dbParticipantsTask
+            );
+
+            var userLastReadMap = await userLastReadMapTask;
+            var maxSeqResults = await maxSeqResultsTask;
+            var seenResults = await seenResultsTask;
+            var dbParticipants = await dbParticipantsTask;
+
+            var redisMaxSeqMap = convIds
+                .Select((id, index) => new { id, val = maxSeqResults[index] })
+                .ToDictionary(x => x.id, x => int.TryParse(x.val, out var n) ? n : (int?)null);
+
+            // Map SeenInfo từ Redis & DB (Redis đè DB)
+            var finalSeenMap = dbParticipants.ToDictionary(
+                p => (p.ConversationId, p.UserId),
+                p => new ParticipantSeenInfo
+                {
+                    MessageId = p.LastSeenMessageId ?? Guid.Empty,
+                    SeenAt = p.SeenAt ?? DateTime.MinValue,
+                    SequenceNumber = p.LastSeenNumber,
+                }
+            );
+
+            for (int i = 0; i < convIds.Count; i++)
+            {
+                var convId = convIds[i];
+                foreach (var entry in seenResults[i]) // entry: userId -> json
+                {
+                    if (Guid.TryParse(entry.Key, out var uId))
+                    {
+                        var redisSeen = JsonSerializer.Deserialize<ParticipantSeenInfo>(
+                            entry.Value
+                        );
+                        if (redisSeen != null)
+                            finalSeenMap[(convId.ToGuid(), uId)] = redisSeen;
+                    }
+                }
+            }
 
             foreach (var conversation in res)
             {
-                var seenCacheKey = $"conv:{conversation.Id}:seen";
-
-                var mySeenJson = await _cacheService.HashGetAsync(seenCacheKey, userId.ToString());
-                if (!string.IsNullOrEmpty(mySeenJson))
+                var cGuid = conversation.Id.ToGuid();
+                int lastRead =
+                    userLastReadMap.TryGetValue(cGuid.ToString(), out var lastReadStr)
+                    && int.TryParse(lastReadStr, out var lr)
+                        ? lr
+                        : 0;
+                if (
+                    lastRead == 0
+                    && finalSeenMap.TryGetValue(
+                        (conversation.Id.ToGuid(), userId),
+                        out var seenInfo
+                    )
+                )
                 {
-                    var mySeenData = JsonSerializer.Deserialize<ParticipantSeenInfo>(mySeenJson);
-                    conversation.MyLastSeenMessageId = mySeenData?.MessageId;
+                    lastRead = seenInfo.SequenceNumber;
                 }
 
-                if (!conversation.IsGroup && conversation.OtherUserId != null)
-                {
-                    var otherSeenJson = await _cacheService.HashGetAsync(
-                        seenCacheKey,
-                        conversation.OtherUserId.ToString() ?? ""
-                    );
+                int maxSeq =
+                    redisMaxSeqMap.TryGetValue(cGuid.ToString(), out var mSeq) && mSeq.HasValue
+                        ? mSeq.Value
+                        : conversation.LastMessageNumber;
 
-                    if (!string.IsNullOrEmpty(otherSeenJson))
-                    {
-                        var otherSeenData = JsonSerializer.Deserialize<ParticipantSeenInfo>(
-                            otherSeenJson
-                        );
-                        conversation.OtherLastSeenMessageId = otherSeenData?.MessageId;
-                    }
+                conversation.UnreadMessageCount = Math.Max(0, maxSeq - lastRead);
+
+                if (finalSeenMap.TryGetValue((cGuid, userId), out var me))
+                    conversation.MyLastSeenMessageId = me.MessageId;
+
+                if (!conversation.IsGroup && conversation.OtherUserId.HasValue)
+                {
+                    if (
+                        finalSeenMap.TryGetValue(
+                            (cGuid, conversation.OtherUserId.Value),
+                            out var other
+                        )
+                    )
+                        conversation.OtherLastSeenMessageId = other.MessageId;
                 }
             }
 
@@ -121,7 +220,7 @@ namespace Fatagram.Application.Services.ConversationServices
                                 .FirstOrDefault(),
                         })
                         .FirstOrDefault(),
-                    UnreadMessagesCount = c.Messages.Count(m =>
+                    UnreadMessageCount = c.Messages.Count(m =>
                         m.SenderId != userId && m.ReadAt == DateTime.MinValue
                     ),
                     IsGroup = c.IsGroup,
@@ -143,13 +242,13 @@ namespace Fatagram.Application.Services.ConversationServices
                         ? c.Name
                         : c
                             .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User.FullName)
+                            .Select(p => p.User!.FullName)
                             .FirstOrDefault(),
                     AvatarUrl = c.IsGroup
                         ? c.AvatarUrl
                         : c
                             .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User.Avatar)
+                            .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
                 }
             );
@@ -265,6 +364,58 @@ namespace Fatagram.Application.Services.ConversationServices
                 TimeSpan.FromDays(2)
             );
             return Result<Guid>.Create(ResponseStatusCode.Created, res.Id);
+        }
+
+        public async Task<Result<int>> GetUnreadCountAsync(Guid userId)
+        {
+            var userLastReadMapTask = _cacheService.HashGetAllAsync($"user:{userId}:last_read");
+
+            var dbConversations = await _conversationRepository.GetConversationsSeenInfoAsync(
+                userId
+            );
+
+            if (!dbConversations.Any())
+                return Result<int>.Create(ResponseStatusCode.Success, 0);
+
+            var convIds = dbConversations.Select(c => c.ConversationId).ToList();
+            var maxSeqTasks = convIds.Select(id =>
+                _cacheService.HashGetAsync($"conv:{id}:meta", "max_seq")
+            );
+
+            await Task.WhenAll(userLastReadMapTask, Task.WhenAll(maxSeqTasks));
+
+            var userLastReadMap = await userLastReadMapTask;
+            var maxSeqResults = await Task.WhenAll(maxSeqTasks);
+
+            int totalUnreadCount = 0;
+
+            for (int i = 0; i < dbConversations.Count; i++)
+            {
+                var conv = dbConversations[i];
+                var convIdStr = conv.ConversationId.ToString();
+
+                var maxSeq = conv.LastMessageNumber;
+                if (int.TryParse(maxSeqResults[i], out var cachedMaxSeq))
+                {
+                    maxSeq = Math.Max(maxSeq, cachedMaxSeq);
+                }
+
+                var lastSeenSeq = conv.UserLastSeenMessageNumber;
+                if (
+                    userLastReadMap.TryGetValue(convIdStr, out var cacheLastReadStr)
+                    && int.TryParse(cacheLastReadStr, out var cacheLastRead)
+                )
+                {
+                    lastSeenSeq = Math.Max(lastSeenSeq, cacheLastRead);
+                }
+
+                if (maxSeq > lastSeenSeq)
+                {
+                    totalUnreadCount++;
+                }
+            }
+
+            return Result<int>.Create(ResponseStatusCode.Success, totalUnreadCount);
         }
     }
 }

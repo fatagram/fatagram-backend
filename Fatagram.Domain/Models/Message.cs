@@ -15,6 +15,7 @@ namespace Fatagram.Domain.Models
         public DateTime? ReadAt { get; set; }
         public MessageType Type { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
+        public int SequenceNumber { get; set; }
         public virtual Conversation Conversation { get; set; } = null!;
         public virtual User Sender { get; set; } = null!;
     }

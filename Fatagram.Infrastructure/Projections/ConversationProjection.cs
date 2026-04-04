@@ -15,11 +15,18 @@ namespace Fatagram.Infrastructure.Projections
     public class ConversationProjection : Conversation
     {
         public LastMessageProjection? LastMessage { get; set; }
-        public int UnreadMessagesCount { get; set; }
+        public int UnreadMessageCount { get; set; }
         public DateTime LastActiveAt { get; set; }
         public List<Guid>? ParticipantIds = new List<Guid>();
         public List<string>? TopParticipantNames = new List<string>();
         public Guid? OtherUserId { get; set; }
         public int? ParticipantCount { get; set; }
+    }
+
+    public class ConversationSeenInfoProjection
+    {
+        public Guid ConversationId { get; set; }
+        public int LastMessageNumber { get; set; }
+        public int UserLastSeenMessageNumber { get; set; }
     }
 }

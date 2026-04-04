@@ -24,5 +24,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
             Guid conversationId,
             Expression<Func<Conversation, ConversationProjection>>? selector = null
         );
+
+        Task<int> GetUnreadCountAsync(Guid userId);
+
+        Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId);
     }
 }

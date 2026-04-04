@@ -52,5 +52,6 @@ namespace Fatagram.Application.Dtos.Message
         public MessageType Type { get; set; } = MessageType.Text;
         public Dictionary<string, object>? Metadata { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsConversationStartingFromRead { get; set; }
     }
 }

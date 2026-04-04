@@ -10,50 +10,195 @@ using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Application.Services.ConversationServices
 {
     public class ConversationParticipantService(
         IConversationParticipantRepository conversationParticipantRepository,
+        IMessageRepository messageRepository,
+        IConversationRepository conversationRepository,
         ICacheService cacheService,
-        ISocketSender<SeenDto> sockerSender
+        ISocketSender<SeenDto> sockerSender,
+        ILogger<ConversationParticipantService> logger
     ) : IConversationParticipantService
     {
         private readonly IConversationParticipantRepository _cpRepo =
             conversationParticipantRepository;
+
+        private readonly IMessageRepository _messageRepository = messageRepository;
+        private readonly IConversationRepository _conversationRepository = conversationRepository;
         private readonly ISocketSender<SeenDto> _sockerSender = sockerSender;
         private readonly ICacheService _cacheService = cacheService;
+        private readonly ILogger<ConversationParticipantService> _logger = logger;
 
         public async Task<Result> MarkAsReadAsync(Guid conversationId, Guid userId, Guid messageId)
         {
-            Console.WriteLine(
-                $"MarkAsReadAsync called with conversationId={conversationId}, userId={userId}, messageId={messageId}"
-            );
             var seenAt = DateTime.UtcNow;
+            var seqNumber = await GetSequenceNumberAsync(messageId);
+
+            var dedupeKey = $"seen:dedupe:{conversationId}:{userId}:{messageId}";
+            var dedupeHit = await _cacheService.IncrementAsync(dedupeKey);
+            if (dedupeHit > 1)
+            {
+                _logger.LogInformation(
+                    "[BadgeTrace-SeenMessage-Deduped] ConversationId={ConversationId}, UserId={UserId}, MessageId={MessageId}, DedupeHit={DedupeHit}",
+                    conversationId,
+                    userId,
+                    messageId,
+                    dedupeHit
+                );
+                return Result.Create(ResponseStatusCode.Success);
+            }
+
+            var maxSeqStr = await _cacheService.HashGetAsync(
+                $"conv:{conversationId}:meta",
+                "max_seq"
+            );
+
+            int maxSeq;
+
+            if (!int.TryParse(maxSeqStr, out maxSeq))
+            {
+                maxSeq = await _conversationRepository.GetByUniqueAsync(
+                    c => c.Id == conversationId,
+                    c => c.LastMessageNumber
+                );
+                await _cacheService.HashSetAsync(
+                    $"conv:{conversationId}:meta",
+                    "max_seq",
+                    maxSeq.ToString()
+                );
+            }
 
             var cacheValue = JsonSerializer.Serialize(
                 new ParticipantSeenInfo { MessageId = messageId, SeenAt = seenAt }
             );
-            // Check user is participant of the conversation
-            await _cacheService.HashSetAsync(
-                $"conv:{conversationId}:seen",
-                userId.ToString(),
-                cacheValue
+            var oldUserLastReadStr = await _cacheService.HashGetAsync(
+                $"user:{userId}:last_read",
+                conversationId.ToString()
             );
+
             var participants = await GetAllParticipantsAsync(conversationId, userId);
-            var seenDto = new SeenDto
+
+            if (!int.TryParse(oldUserLastReadStr, out var oldUserLastRead))
             {
-                ConversationId = conversationId,
-                UserId = userId,
-                MessageId = messageId,
-                SeenAt = seenAt,
-            };
-            await _sockerSender.SendAllAsync(
-                participants.Data?.Select(p => p.UserId).ToList() ?? [],
-                new SocketMessage<SeenDto> { Event = "SeenMessage", Payload = seenDto }
+                oldUserLastRead = participants
+                    .Data!.Where(p => p.UserId == userId)
+                    .Select(p => p.LastMessageSequence ?? 0)
+                    .FirstOrDefault();
+            }
+
+            var nextUserLastRead = Math.Max(oldUserLastRead, seqNumber);
+
+            await Task.WhenAll(
+                _cacheService.HashSetAsync(
+                    $"conv:{conversationId}:seen",
+                    userId.ToString(),
+                    cacheValue
+                ),
+                _cacheService.HashSetAsync(
+                    $"user:{userId}:last_read",
+                    conversationId.ToString(),
+                    nextUserLastRead.ToString()
+                )
             );
+
+            var sendOthersTasks = participants
+                .Data!.Where(p => p.UserId != userId)
+                .Select(async p =>
+                {
+                    // var lrStr = await _cacheService.HashGetAsync(
+                    //     $"user:{p.UserId}:last_read",
+                    //     conversationId.ToString()
+                    // );
+                    // int lastRead;
+
+                    // if (lrStr != null && int.TryParse(lrStr, out var lr))
+                    // {
+                    //     lastRead = lr;
+                    // }
+                    // else
+                    // {
+                    //     lastRead = p.LastMessageSequence ?? 0;
+
+                    //     await _cacheService.HashSetAsync(
+                    //         $"user:{p.UserId}:last_read",
+                    //         conversationId.ToString(),
+                    //         lastRead.ToString()
+                    //     );
+                    // }
+
+                    // bool isThisUserWasUnread = maxSeq > lastRead;
+
+                    await _sockerSender.SendAsync(
+                        p.UserId,
+                        new SocketMessage<SeenDto>
+                        {
+                            Event = "SeenMessage",
+                            Payload = new SeenDto
+                            {
+                                ConversationId = conversationId,
+                                UserId = userId,
+                                MessageId = messageId,
+                                SeenAt = seenAt,
+                            },
+                        }
+                    );
+                });
+
+            var wasUnreadBeforeRead = maxSeq > oldUserLastRead;
+            var isFullyReadAfterRead = nextUserLastRead >= maxSeq;
+            var hadUnreadFromOthersBeforeRead = false;
+
+            if (wasUnreadBeforeRead)
+            {
+                hadUnreadFromOthersBeforeRead =
+                    await _messageRepository.CountAsync(m =>
+                        m.ConversationId == conversationId
+                        && m.SenderId != userId
+                        && m.SequenceNumber > oldUserLastRead
+                    ) > 0;
+            }
+
+            var isPreviousUnread = hadUnreadFromOthersBeforeRead && isFullyReadAfterRead;
+
+            _logger.LogInformation(
+                "[BadgeTrace-SeenMessage] ConversationId={ConversationId}, UserId={UserId}, MessageId={MessageId}, SeqNumber={SeqNumber}, MaxSeq={MaxSeq}, OldUserLastRead={OldUserLastRead}, NextUserLastRead={NextUserLastRead}, WasUnreadBeforeRead={WasUnreadBeforeRead}, HadUnreadFromOthersBeforeRead={HadUnreadFromOthersBeforeRead}, IsFullyReadAfterRead={IsFullyReadAfterRead}, IsPreviousUnread={IsPreviousUnread}",
+                conversationId,
+                userId,
+                messageId,
+                seqNumber,
+                maxSeq,
+                oldUserLastRead,
+                nextUserLastRead,
+                wasUnreadBeforeRead,
+                hadUnreadFromOthersBeforeRead,
+                isFullyReadAfterRead,
+                isPreviousUnread
+            );
+            var sendMeTask = _sockerSender.SendAsync(
+                userId,
+                new SocketMessage<SeenDto>
+                {
+                    Event = "SeenMessage",
+                    Payload = new SeenDto
+                    {
+                        ConversationId = conversationId,
+                        UserId = userId,
+                        MessageId = messageId,
+                        SeenAt = seenAt,
+                        IsPreviousUnread = isPreviousUnread,
+                    },
+                }
+            );
+
+            await Task.WhenAll([.. sendOthersTasks, sendMeTask]);
+
             return Result.Create(ResponseStatusCode.Success);
         }
 
@@ -101,7 +246,12 @@ namespace Fatagram.Application.Services.ConversationServices
 
             var participants = await _cpRepo.GetAllAsync(
                 cp => cp.ConversationId == conversationId,
-                cp => new ParticipantDto { UserId = cp.UserId, CreatedAt = cp.CreatedAt }
+                cp => new ParticipantDto
+                {
+                    UserId = cp.UserId,
+                    CreatedAt = cp.CreatedAt,
+                    LastMessageSequence = cp.LastSeenNumber,
+                }
             );
             await _cacheService.SetAsync(cacheKey, participants, TimeSpan.FromDays(2));
 
@@ -163,6 +313,35 @@ namespace Fatagram.Application.Services.ConversationServices
                     ParticipantsSeenInfo = participantsSeenInfo,
                 }
             );
+        }
+
+        private async Task<int> GetSequenceNumberAsync(Guid messageId)
+        {
+            var cacheKey = $"msg:seq:{messageId}";
+            var cachedSeq = await _cacheService.GetAsync<int?>(cacheKey);
+            _logger.LogDebug(
+                "[BadgeTrace-SeqCache] MessageId={MessageId}, CachedSeq={CachedSeq}",
+                messageId,
+                cachedSeq
+            );
+
+            if (cachedSeq.HasValue)
+            {
+                return cachedSeq.Value;
+            }
+
+            var seqNumber = await _messageRepository.GetByUniqueAsync(
+                m => m.Id == messageId,
+                m => m.SequenceNumber
+            );
+            await _cacheService.SetAsync(cacheKey, seqNumber, TimeSpan.FromSeconds(7));
+            _logger.LogDebug(
+                "[BadgeTrace-SeqDb] MessageId={MessageId}, SeqNumber={SeqNumber}",
+                messageId,
+                seqNumber
+            );
+
+            return seqNumber;
         }
     }
 }

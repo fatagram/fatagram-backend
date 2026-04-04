@@ -11,5 +11,6 @@ namespace Fatagram.Application.Dtos.Conversation
         public Guid UserId { get; set; }
         public Guid MessageId { get; set; }
         public DateTime SeenAt { get; set; }
+        public bool IsPreviousUnread { get; set; }
     }
 }

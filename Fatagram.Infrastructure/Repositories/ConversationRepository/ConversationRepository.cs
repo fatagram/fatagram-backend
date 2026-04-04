@@ -64,9 +64,6 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                                     .FirstOrDefault(),
                             })
                             .FirstOrDefault(),
-                        UnreadMessagesCount = c.Messages.Count(m =>
-                            m.SenderId != userId && m.ReadAt == DateTime.MinValue
-                        ),
                         IsGroup = c.IsGroup,
                         LastActiveAt =
                             c.Messages.OrderByDescending(m => m.CreatedAt)
@@ -88,6 +85,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     })
                     .FirstOrDefaultAsync();
             }
+        }
+
+        public Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId)
+        {
+            return _dbContext
+                .ConversationParticipants.Where(cp => cp.UserId == userId)
+                .Select(cp => new ConversationSeenInfoProjection
+                {
+                    ConversationId = cp.ConversationId,
+                    LastMessageNumber = cp.Conversation.Messages.Any()
+                        ? cp.Conversation.Messages.Max(m => m.SequenceNumber)
+                        : cp.Conversation.LastMessageNumber,
+                    UserLastSeenMessageNumber = cp.LastSeenNumber,
+                })
+                .ToListAsync();
         }
 
         public async Task<ConversationProjection?> GetConversationWith(
@@ -127,9 +139,6 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                                 .FirstOrDefault(),
                         })
                         .FirstOrDefault(),
-                    UnreadMessagesCount = c.Messages.Count(m =>
-                        m.SenderId != userId && m.ReadAt == DateTime.MinValue
-                    ),
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.CreatedAt)
                             .Select(m => (DateTime?)m.CreatedAt)
@@ -184,11 +193,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                                 .FirstOrDefault(),
                         })
                         .FirstOrDefault(),
-                    UnreadMessagesCount = c.Messages.Count(m =>
-                        m.CreatedAt > (cursor ?? DateTime.MinValue)
-                        && m.SenderId != userId.ToGuid()
-                        && m.ReadAt == DateTime.MinValue
-                    ),
+                    LastMessageNumber = c.LastMessageNumber,
                     IsGroup = c.IsGroup,
                     TopParticipantNames = c.IsGroup
                         ? c
@@ -229,6 +234,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             }
 
             return await query.OrderByDescending(c => c.LastActiveAt).Take(limit).ToListAsync();
+        }
+
+        public async Task<int> GetUnreadCountAsync(Guid userId)
+        {
+            var count =
+                await _dbContext
+                    .ConversationParticipants.Where(cp => cp.UserId == userId)
+                    .Select(cp => (int?)(cp.Conversation.LastMessageNumber - cp.LastSeenNumber))
+                    .SumAsync() ?? 0;
+            return count;
         }
     }
 }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Fatagram.API.Hubs;
+using Fatagram.API.Scripts;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
@@ -77,6 +79,19 @@ namespace Fatagram.API.Extensions.Services
             // Singleton
             services.AddSingleton<JwtHmacSha256Service>();
             services.AddSingleton(TimeProvider.System);
+
+            var commandType = typeof(ICommand);
+            var scriptCommandTypes = Assembly
+                .GetExecutingAssembly()
+                .GetTypes()
+                .Where(type =>
+                    commandType.IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract
+                );
+
+            foreach (var scriptCommandType in scriptCommandTypes)
+            {
+                services.AddScoped(commandType, scriptCommandType);
+            }
         }
     }
 }

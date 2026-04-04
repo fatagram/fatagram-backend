@@ -89,11 +89,6 @@ public class RedisCacheService : ICacheService
 
     public async Task<bool> TryAcquireLockAsync(string key, TimeSpan expiration)
     {
-        return await _db.StringSetAsync(
-            key,
-            "1",
-            expiration,
-            when: When.NotExists
-        );
+        return await _db.StringSetAsync(key, "1", expiration, when: When.NotExists);
     }
 }

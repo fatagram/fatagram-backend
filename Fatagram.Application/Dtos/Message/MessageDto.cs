@@ -40,6 +40,7 @@ namespace Fatagram.Application.Dtos.Message
         public string? SenderFullName { get; set; } = string.Empty;
         public string? SenderAvatarUrl { get; set; }
         public string? SenderNickname { get; set; }
+        public int SequenceNumber { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? CorrelationId { get; set; }
@@ -52,6 +53,6 @@ namespace Fatagram.Application.Dtos.Message
         public MessageType Type { get; set; } = MessageType.Text;
         public Dictionary<string, object>? Metadata { get; set; }
         public DateTime CreatedAt { get; set; }
-        public bool IsConversationStartingFromRead { get; set; }
+        public bool shouldIncreaseUnreadCount { get; set; }
     }
 }

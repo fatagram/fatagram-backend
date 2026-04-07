@@ -60,11 +60,8 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
         );
 
         Task<TEntity> AddAsync(TEntity entity);
-
         Task<TEntity> UpdateAsync(TEntity entity);
-
         Task<IEnumerable<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities);
-
         Task<List<TEntity>> UpdateAsync(
             Expression<Func<TEntity, bool>>? where,
             Action<TEntity> update
@@ -77,11 +74,10 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces
         );
 
         Task DeleteAsync(Guid id);
-
         Task DeleteAsync(TEntity entity);
-
         Task SoftDeleteAsync(Guid id);
-
         Task SoftDeleteRangeAsync(Expression<Func<TEntity, bool>>? filter = null);
+        Task<TResult> ExecuteTransactionAction<TResult>(Func<Task<TResult>> action);
+        Task ExecuteTransactionAction(Func<Task> action);
     }
 }

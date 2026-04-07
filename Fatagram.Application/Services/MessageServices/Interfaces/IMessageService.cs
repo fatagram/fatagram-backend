@@ -15,10 +15,9 @@ namespace Fatagram.Application.Services.MessageServices.Interfaces
             CreateMessageRequest request
         );
 
-        Task<Result<CursorResult<ResponseMessageDto, DateTime>>> GetMessagesAsync(
+        Task<Result<CursorResult<ResponseMessageDto, int>>> GetMessagesAsync(
             Guid conversationId,
-            Guid userId,
-            CursorFilter<DateTime> filter
+            CursorFilter<int> filter
         );
     }
 }

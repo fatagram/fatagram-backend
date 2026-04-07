@@ -65,6 +65,14 @@ namespace Fatagram.API.Extensions.Services
             >();
             services.AddScoped<IMessageRepository, MessageRepository>();
 
+            // Scoped for cached repositories
+            services.Decorate<IConversationRepository, CachedConversationRepository>();
+            services.Decorate<IMessageRepository, CachedMessageRepository>();
+            services.Decorate<
+                IConversationParticipantRepository,
+                CachedConvParticipantRepository
+            >();
+
             // Scoped for SignalR
             services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));
             services.AddScoped<INotificationService, NotificationService>();

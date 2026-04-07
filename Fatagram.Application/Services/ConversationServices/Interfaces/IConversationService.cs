@@ -17,12 +17,12 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
         );
         Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId);
         Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId);
-        Task<Result<ConversationDto>> CreateAsync(Guid creatorId, Guid otherUserId);
+        Task<Result<int>> GetUnreadCountAsync(Guid userId);
+
         Task<Result<Guid>> CreateGroupAsync(
             Guid creatorId,
             IEnumerable<Guid> participantIds,
             string? name
         );
-        Task<Result<int>> GetUnreadCountAsync(Guid userId);
     }
 }

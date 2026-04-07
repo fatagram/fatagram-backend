@@ -20,6 +20,7 @@ using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
@@ -31,19 +32,18 @@ namespace Fatagram.Application.Services.ConversationServices
         IConversationRepository conversationRepository,
         IConversationParticipantRepository conversationParticipantRepository,
         IUserRepository userRepository,
+        IMessageRepository messageRepository,
         IMessageService messageService,
         ICacheService cacheService,
-        IMapper mapper,
-        Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces.IMessageRepository messageRepository
+        IMapper mapper
     ) : IConversationService
     {
         private readonly IConversationRepository _conversationRepository = conversationRepository;
-        private readonly IConversationParticipantRepository _conversationParticipantRepository =
+        private readonly IConversationParticipantRepository _cpRepo =
             conversationParticipantRepository;
         private readonly IUserRepository _userRepository = userRepository;
+        private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly IMessageService _messageService = messageService;
-        private readonly Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces.IMessageRepository _messageRepository =
-            messageRepository;
         private readonly ICacheService _cacheService = cacheService;
         private readonly IMapper _mapper = mapper;
 
@@ -63,7 +63,7 @@ namespace Fatagram.Application.Services.ConversationServices
                     ResponseStatusCode.Success,
                     new CursorResult<ConversationDto, DateTime>
                     {
-                        Items = new List<ConversationDto>(),
+                        Items = [],
                         NextCursor = null,
                         HasNext = false,
                     }
@@ -71,115 +71,24 @@ namespace Fatagram.Application.Services.ConversationServices
             }
             var res = _mapper.Map<List<ConversationDto>>(conservations);
 
-            var convIds = res.Select(c => c.Id).ToList();
-            var otherUserIds = res.Where(c => !c.IsGroup && c.OtherUserId != null)
-                .Select(c => c.OtherUserId!.Value)
-                .ToHashSet();
-
-            var userLastReadMapTask = _cacheService.HashGetAllAsync($"user:{userId}:last_read");
-
-            var maxSeqMap = convIds.Select(id =>
-                _cacheService.HashGetAsync($"conv:{id}:meta", "max_seq")
-            );
-            var maxSeqResultsTask = Task.WhenAll(maxSeqMap);
-
-            var seenTasks = convIds.Select(id => _cacheService.HashGetAllAsync($"conv:{id}:seen"));
-            var seenResultsTask = Task.WhenAll(seenTasks);
-
-            var dbParticipantsTask = _conversationParticipantRepository.GetAllAsync(
-                cp => convIds.Contains(cp.ConversationId.ToString()),
-                cp => new
-                {
-                    cp.ConversationId,
-                    cp.UserId,
-                    cp.LastSeenNumber,
-                    cp.LastSeenMessageId,
-                    cp.SeenAt,
-                }
-            );
-
-            await Task.WhenAll(
-                userLastReadMapTask,
-                maxSeqResultsTask,
-                seenResultsTask,
-                dbParticipantsTask
-            );
-
-            var userLastReadMap = await userLastReadMapTask;
-            var maxSeqResults = await maxSeqResultsTask;
-            var seenResults = await seenResultsTask;
-            var dbParticipants = await dbParticipantsTask;
-
-            var redisMaxSeqMap = convIds
-                .Select((id, index) => new { id, val = maxSeqResults[index] })
-                .ToDictionary(x => x.id, x => int.TryParse(x.val, out var n) ? n : (int?)null);
-
-            // Map SeenInfo từ Redis & DB (Redis đè DB)
-            var finalSeenMap = dbParticipants.ToDictionary(
-                p => (p.ConversationId, p.UserId),
-                p => new ParticipantSeenInfo
-                {
-                    MessageId = p.LastSeenMessageId ?? Guid.Empty,
-                    SeenAt = p.SeenAt ?? DateTime.MinValue,
-                    SequenceNumber = p.LastSeenNumber,
-                }
-            );
-
-            for (int i = 0; i < convIds.Count; i++)
+            foreach (var c in res)
             {
-                var convId = convIds[i];
-                foreach (var entry in seenResults[i]) // entry: userId -> json
-                {
-                    if (Guid.TryParse(entry.Key, out var uId))
-                    {
-                        var redisSeen = JsonSerializer.Deserialize<ParticipantSeenInfo>(
-                            entry.Value
-                        );
-                        if (redisSeen != null)
-                            finalSeenMap[(convId.ToGuid(), uId)] = redisSeen;
-                    }
-                }
-            }
+                if (c.IsGroup || c.OtherUserId == null)
+                    continue;
+                var participantSeenInfos = await _cpRepo.GetConversationParticipantsSeenInfoAsync(
+                    c.Id.ToGuid()
+                );
+                c.OtherLastSeenMessageSeq = participantSeenInfos
+                    .ParticipantsSeenInfo[c.OtherUserId ?? Guid.Empty]
+                    .SequenceNumber;
+                c.MyLastSeenMessageSeq = participantSeenInfos
+                    .ParticipantsSeenInfo[userId]
+                    .SequenceNumber;
 
-            foreach (var conversation in res)
-            {
-                var cGuid = conversation.Id.ToGuid();
-                int lastRead =
-                    userLastReadMap.TryGetValue(cGuid.ToString(), out var lastReadStr)
-                    && int.TryParse(lastReadStr, out var lr)
-                        ? lr
-                        : 0;
-                if (
-                    lastRead == 0
-                    && finalSeenMap.TryGetValue(
-                        (conversation.Id.ToGuid(), userId),
-                        out var seenInfo
-                    )
-                )
-                {
-                    lastRead = seenInfo.SequenceNumber;
-                }
-
-                int maxSeq =
-                    redisMaxSeqMap.TryGetValue(cGuid.ToString(), out var mSeq) && mSeq.HasValue
-                        ? mSeq.Value
-                        : conversation.LastMessageNumber;
-
-                conversation.UnreadMessageCount = Math.Max(0, maxSeq - lastRead);
-
-                if (finalSeenMap.TryGetValue((cGuid, userId), out var me))
-                    conversation.MyLastSeenMessageId = me.MessageId;
-
-                if (!conversation.IsGroup && conversation.OtherUserId.HasValue)
-                {
-                    if (
-                        finalSeenMap.TryGetValue(
-                            (cGuid, conversation.OtherUserId.Value),
-                            out var other
-                        )
-                    )
-                        conversation.OtherLastSeenMessageId = other.MessageId;
-                }
+                c.LastMessage = _mapper.Map<ResponseMessageDto>(
+                    await _messageRepository.GetLastMessageOfConversationAsync(c.Id.ToGuid())
+                );
+                c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
             }
 
             return Result<CursorResult<ConversationDto, DateTime>>.Create(
@@ -187,7 +96,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 new CursorResult<ConversationDto, DateTime>
                 {
                     Items = res,
-                    NextCursor = conservations.Count > 0 ? conservations.Last().LastActiveAt : null,
+                    NextCursor = conservations.Last().LastActiveAt,
                     HasNext = conservations.Count == (cursor?.Limit ?? 20),
                 }
             );
@@ -203,26 +112,7 @@ namespace Fatagram.Application.Services.ConversationServices
                     Id = c.Id,
                     CreatedAt = c.CreatedAt,
                     UpdatedAt = c.UpdatedAt,
-                    LastMessage = c
-                        .Messages.OrderByDescending(m => m.CreatedAt)
-                        .Select(m => new LastMessageProjection
-                        {
-                            Id = m.Id,
-                            ConversationId = m.ConversationId,
-                            Content = m.Content,
-                            CreatedAt = m.CreatedAt,
-                            SenderFullName = m.Sender.FullName!,
-                            SenderNickname = m
-                                .Sender.ConversationParticipants.Where(cp =>
-                                    cp.ConversationId == c.Id && cp.UserId == m.SenderId
-                                )
-                                .Select(cp => cp.Nickname)
-                                .FirstOrDefault(),
-                        })
-                        .FirstOrDefault(),
-                    UnreadMessageCount = c.Messages.Count(m =>
-                        m.SenderId != userId && m.ReadAt == DateTime.MinValue
-                    ),
+                    LastMessageNumber = c.LastMessageNumber,
                     IsGroup = c.IsGroup,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.CreatedAt)
@@ -236,7 +126,7 @@ namespace Fatagram.Application.Services.ConversationServices
                                 .Select(p => p.User!.FullName!)
                                 .Take(2)
                                 .ToList()
-                            : null,
+                            : null!,
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     Name = c.IsGroup
                         ? c.Name
@@ -258,6 +148,13 @@ namespace Fatagram.Application.Services.ConversationServices
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
             }
+
+            var convSeq = await _cacheService.GetAsync<int>($"conv:{conversationId}:seq");
+            if (convSeq > conversation.LastMessageNumber)
+            {
+                conversation.LastMessageNumber = convSeq;
+            }
+
             return Result<ConversationDto>.Create(
                 ResponseStatusCode.Success,
                 _mapper.Map<ConversationDto>(conversation)
@@ -282,24 +179,6 @@ namespace Fatagram.Application.Services.ConversationServices
                 ResponseStatusCode.Success,
                 _mapper.Map<ConversationDto>(conversation)
             );
-        }
-
-        public Task<Result<ConversationDto>> CreateAsync(Guid creatorId, string conversationType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Result<ConversationDto>> CreateAsync(Guid creatorId, Guid otherUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Result<ConversationDto>> CreateConversationAsync(
-            Guid creatorId,
-            string conversationType
-        )
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Result<Guid>> CreateGroupAsync(
@@ -355,67 +234,15 @@ namespace Fatagram.Application.Services.ConversationServices
                 }
             );
 
-            await _cacheService.SetAsync(
-                $"conversation:{res.Id}:participants",
-                participantIds
-                    .Select(id => new ParticipantDto { UserId = id, CreatedAt = DateTime.UtcNow })
-                    .Append(new ParticipantDto { UserId = creatorId, CreatedAt = DateTime.UtcNow })
-                    .ToList(),
-                TimeSpan.FromDays(2)
-            );
             return Result<Guid>.Create(ResponseStatusCode.Created, res.Id);
         }
 
         public async Task<Result<int>> GetUnreadCountAsync(Guid userId)
         {
-            var userLastReadMapTask = _cacheService.HashGetAllAsync($"user:{userId}:last_read");
-
-            var dbConversations = await _conversationRepository.GetConversationsSeenInfoAsync(
-                userId
+            return Result<int>.Create(
+                ResponseStatusCode.Success,
+                await _conversationRepository.GetUnreadCountAsync(userId)
             );
-
-            if (!dbConversations.Any())
-                return Result<int>.Create(ResponseStatusCode.Success, 0);
-
-            var convIds = dbConversations.Select(c => c.ConversationId).ToList();
-            var maxSeqTasks = convIds.Select(id =>
-                _cacheService.HashGetAsync($"conv:{id}:meta", "max_seq")
-            );
-
-            await Task.WhenAll(userLastReadMapTask, Task.WhenAll(maxSeqTasks));
-
-            var userLastReadMap = await userLastReadMapTask;
-            var maxSeqResults = await Task.WhenAll(maxSeqTasks);
-
-            int totalUnreadCount = 0;
-
-            for (int i = 0; i < dbConversations.Count; i++)
-            {
-                var conv = dbConversations[i];
-                var convIdStr = conv.ConversationId.ToString();
-
-                var maxSeq = conv.LastMessageNumber;
-                if (int.TryParse(maxSeqResults[i], out var cachedMaxSeq))
-                {
-                    maxSeq = Math.Max(maxSeq, cachedMaxSeq);
-                }
-
-                var lastSeenSeq = conv.UserLastSeenMessageNumber;
-                if (
-                    userLastReadMap.TryGetValue(convIdStr, out var cacheLastReadStr)
-                    && int.TryParse(cacheLastReadStr, out var cacheLastRead)
-                )
-                {
-                    lastSeenSeq = Math.Max(lastSeenSeq, cacheLastRead);
-                }
-
-                if (maxSeq > lastSeenSeq)
-                {
-                    totalUnreadCount++;
-                }
-            }
-
-            return Result<int>.Create(ResponseStatusCode.Success, totalUnreadCount);
         }
     }
 }

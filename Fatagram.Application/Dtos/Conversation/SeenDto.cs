@@ -9,8 +9,8 @@ namespace Fatagram.Application.Dtos.Conversation
     {
         public Guid ConversationId { get; set; }
         public Guid UserId { get; set; }
-        public Guid MessageId { get; set; }
+        public int MessageSeq { get; set; }
         public DateTime SeenAt { get; set; }
-        public bool IsPreviousUnread { get; set; }
+        public bool shouldDecreaseUnreadCount { get; set; }
     }
 }

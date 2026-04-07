@@ -87,21 +87,6 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             }
         }
 
-        public Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId)
-        {
-            return _dbContext
-                .ConversationParticipants.Where(cp => cp.UserId == userId)
-                .Select(cp => new ConversationSeenInfoProjection
-                {
-                    ConversationId = cp.ConversationId,
-                    LastMessageNumber = cp.Conversation.Messages.Any()
-                        ? cp.Conversation.Messages.Max(m => m.SequenceNumber)
-                        : cp.Conversation.LastMessageNumber,
-                    UserLastSeenMessageNumber = cp.LastSeenNumber,
-                })
-                .ToListAsync();
-        }
-
         public async Task<ConversationProjection?> GetConversationWith(
             Guid userId,
             Guid targetUserId
@@ -201,7 +186,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Select(p => p.User!.FullName!)
                             .Take(2)
                             .ToList()
-                        : null,
+                        : null!,
                     OtherUserId = c.IsGroup
                         ? null
                         : c
@@ -210,7 +195,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .FirstOrDefault(),
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
-                        c.Messages.OrderByDescending(m => m.CreatedAt)
+                        c.Messages.OrderByDescending(m => m.SequenceNumber)
                             .Select(m => (DateTime?)m.CreatedAt)
                             .FirstOrDefault()
                         ?? c.CreatedAt,
@@ -238,12 +223,49 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<int> GetUnreadCountAsync(Guid userId)
         {
-            var count =
-                await _dbContext
-                    .ConversationParticipants.Where(cp => cp.UserId == userId)
-                    .Select(cp => (int?)(cp.Conversation.LastMessageNumber - cp.LastSeenNumber))
-                    .SumAsync() ?? 0;
-            return count;
+            return await _dbContext
+                .ConversationParticipants.Where(cp =>
+                    cp.UserId == userId && cp.LastSeenNumber < cp.Conversation.LastMessageNumber
+                )
+                .CountAsync();
+        }
+
+        public async Task<List<ConversationSeenInfoProjection>> GetUnreadConversationsAsync(
+            Guid userId
+        )
+        {
+            var convIds = await _dbContext
+                .ConversationParticipants.Where(cp =>
+                    cp.UserId == userId && cp.LastSeenNumber < cp.Conversation.LastMessageNumber
+                )
+                .Select(cp => new ConversationSeenInfoProjection
+                {
+                    ConversationId = cp.ConversationId,
+                    UnreadCount =
+                        cp.Conversation.Messages.Max(m => m.SequenceNumber) - cp.LastSeenNumber,
+                })
+                .ToListAsync();
+            return convIds;
+        }
+
+        public async Task<int> IncrementNumberOfMessagesAsync(Guid conversationId)
+        {
+            return await _dbContext
+                .Conversations.Where(c => c.Id == conversationId)
+                .ExecuteUpdateAsync(s =>
+                    s.SetProperty(c => c.LastMessageNumber, c => c.LastMessageNumber + 1)
+                );
+        }
+
+        public async Task NotifyNewMessage(
+            Guid conversationId,
+            Guid senderId,
+            List<Guid> participantIds
+        )
+        {
+            throw new NotImplementedException(
+                "This method is not implemented in ConversationRepository. It should be implemented in CachedConversationRepository."
+            );
         }
     }
 }

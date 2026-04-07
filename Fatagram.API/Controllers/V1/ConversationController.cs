@@ -65,16 +65,13 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/messages")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetMessages(
             Guid conversationId,
-            [FromQuery] CursorFilter<DateTime> filter
+            [FromQuery] CursorFilter<int> filter
         )
         {
-            var res = await _messageService.GetMessagesAsync(
-                conversationId,
-                GetCurrentUserId(),
-                filter
-            );
+            var res = await _messageService.GetMessagesAsync(conversationId, filter);
             return res.ToActionResult();
         }
 
@@ -89,21 +86,18 @@ namespace Fatagram.API.Controllers.V1
         [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetParticipantsSeen(Guid conversationId)
         {
-            var res = await _conversationParticipantService.GetParticipantSeenAsync(
-                conversationId,
-                GetCurrentUserId()
-            );
+            var res = await _conversationParticipantService.GetParticipantSeenAsync(conversationId);
             return res.ToActionResult();
         }
 
-        [HttpPost("{conversationId}/messages/markRead/{messageId}")]
+        [HttpPost("{conversationId}/messages/markSeen/{messageSeq}")]
         [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
-        public async Task<IActionResult> MarkMessagesAsRead(Guid conversationId, Guid messageId)
+        public async Task<IActionResult> MarkMessagesAsSeen(Guid conversationId, int messageSeq)
         {
-            var res = await _conversationParticipantService.MarkAsReadAsync(
+            var res = await _conversationParticipantService.MarkAsSeenAsync(
                 conversationId,
                 GetCurrentUserId(),
-                messageId
+                messageSeq
             );
             return res.ToActionResult();
         }

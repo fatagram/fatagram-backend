@@ -11,8 +11,7 @@ namespace Fatagram.API.Extensions.Services
         public static void AddWorkerServices(this IServiceCollection services)
         {
             services.AddHostedService<SyncSeenWorker>();
-            // services.AddHostedService<SyncUserLastMessageSequenceNumber>();
-            // services.AddHostedService<SyncConversationLastMessageNumber>();
+            services.AddHostedService<BatchingMessagesWorker>();
         }
     }
 }

@@ -153,6 +153,7 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasForeignKey(m => m.SenderId)
                     .OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(m => m.ConversationId);
+                entity.HasIndex(m => new { m.ConversationId, m.SequenceNumber }).IsUnique();
             });
         }
     }

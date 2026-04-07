@@ -25,8 +25,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
             Expression<Func<Conversation, ConversationProjection>>? selector = null
         );
 
+        Task<List<ConversationSeenInfoProjection>> GetUnreadConversationsAsync(Guid userId);
         Task<int> GetUnreadCountAsync(Guid userId);
 
-        Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId);
+        // Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId);
+
+        Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds);
     }
 }

@@ -343,5 +343,36 @@ namespace Fatagram.Infrastructure.Repositories.BaseRepository
                 }
             }
         }
+
+        public async Task<TResult> ExecuteTransactionAction<TResult>(Func<Task<TResult>> action)
+        {
+            var strategy = _dbContext.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    var result = await action();
+                    await transaction.CommitAsync();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger?.LogError(ex, "Transaction failed and rolled back.");
+                    throw;
+                }
+            });
+        }
+
+        public async Task ExecuteTransactionAction(Func<Task> action)
+        {
+            await ExecuteTransactionAction(async () =>
+            {
+                await action();
+                return true;
+            });
+        }
     }
 }

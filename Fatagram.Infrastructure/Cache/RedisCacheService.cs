@@ -19,7 +19,33 @@ public class RedisCacheService : ICacheService
         var data = await _db.StringGetAsync(key);
         if (data.IsNullOrEmpty)
             return default;
-        return JsonSerializer.Deserialize<T>(data!);
+        // If caller expects a raw string, return the Redis value as-is to avoid
+        // JSON deserialization errors when the stored value is a JSON number.
+        if (typeof(T) == typeof(string))
+        {
+            object? obj = data.ToString();
+            return (T?)obj;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(data!);
+        }
+        catch (JsonException)
+        {
+            // Fallback: try to convert simple primitive values stored as plain
+            // strings/numbers into the requested type (e.g., int, long, bool).
+            try
+            {
+                var str = data.ToString();
+                var converted = (T?)Convert.ChangeType(str, typeof(T));
+                return converted;
+            }
+            catch
+            {
+                return default;
+            }
+        }
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
@@ -52,6 +78,17 @@ public class RedisCacheService : ICacheService
         await _db.SetAddAsync(key, value);
     }
 
+    public async Task<long> SetRemoveAsync(string key, string value)
+    {
+        await _db.SetRemoveAsync(key, value);
+        return await _db.SetLengthAsync(key);
+    }
+
+    public Task<long> SetLengthAsync(string key)
+    {
+        return _db.SetLengthAsync(key);
+    }
+
     public async Task<IEnumerable<string>> SetMembersAsync(string key)
     {
         var members = await _db.SetMembersAsync(key);
@@ -77,6 +114,11 @@ public class RedisCacheService : ICacheService
         return keys;
     }
 
+    public async Task<bool> KeyExpireAsync(string key, TimeSpan expiration)
+    {
+        return await _db.KeyExpireAsync(key, expiration);
+    }
+
     public async Task<long> IncrementAsync(string key, long value = 1)
     {
         return await _db.StringIncrementAsync(key, value);
@@ -90,5 +132,45 @@ public class RedisCacheService : ICacheService
     public async Task<bool> TryAcquireLockAsync(string key, TimeSpan expiration)
     {
         return await _db.StringSetAsync(key, "1", expiration, when: When.NotExists);
+    }
+
+    public async Task<long> ListRightPushAsync<T>(string key, T value)
+    {
+        var serializedValue = JsonSerializer.Serialize(value);
+        return await _db.ListRightPushAsync(key, serializedValue);
+    }
+
+    public async Task<long> ListLeftPushAsync<T>(string key, T value)
+    {
+        var serializedValue = JsonSerializer.Serialize(value);
+        return await _db.ListLeftPushAsync(key, serializedValue);
+    }
+
+    public async Task<List<T>> ListRangeAsync<T>(string key, long start, long stop)
+    {
+        var values = await _db.ListRangeAsync(key, start, stop);
+        return values.Select(v => JsonSerializer.Deserialize<T>(v!)).ToList()!;
+    }
+
+    public async Task ListTrimAsync(string key, long start, long stop)
+    {
+        await _db.ListTrimAsync(key, start, stop);
+    }
+
+    public async Task<long> ListLengthAsync(string key)
+    {
+        return await _db.ListLengthAsync(key);
+    }
+
+    public async Task HashObjectSetAsync<T>(string key, string field, T value)
+    {
+        var serializedValue = JsonSerializer.Serialize(value);
+        await _db.HashSetAsync(key, field, serializedValue);
+    }
+
+    public async Task<T?> HashObjectGetAsync<T>(string key, string field)
+    {
+        var value = await _db.HashGetAsync(key, field);
+        return value.HasValue ? JsonSerializer.Deserialize<T>(value.ToString()) : default(T);
     }
 }

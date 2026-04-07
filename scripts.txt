@@ -14,3 +14,5 @@ redis-cli --scan --pattern "msg:seq:*" | wc -l
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-conv-message-count 
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-message-sequence-number 
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-user-last-message-number
+
+dotnet run -p Fatagram.API

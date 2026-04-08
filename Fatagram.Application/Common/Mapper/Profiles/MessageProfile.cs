@@ -15,7 +15,11 @@ namespace Fatagram.Application.Common.Mapper.Profiles
     {
         public MessageProfile()
         {
-            CreateMap<Message, ResponseMessageDto>();
+            CreateMap<Message, ResponseMessageDto>()
+                .ForMember(
+                    dest => dest.SenderAvatarUrl,
+                    opt => opt.MapFrom(src => src.Sender.Avatar)
+                );
             CreateMap<LastMessageProjection, ResponseMessageDto>();
         }
     }

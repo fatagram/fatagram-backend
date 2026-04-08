@@ -119,6 +119,13 @@ namespace Fatagram.Application.Services.MessageServices
                 );
             }
 
+            Console.WriteLine(
+                "Sender Avatar: "
+                    + conversation
+                        .Participants.FirstOrDefault(p => p.UserId == senderId)
+                        ?.User?.Avatar
+            );
+
             var message = await _messageRepository.AddAsync(
                 new Message
                 {

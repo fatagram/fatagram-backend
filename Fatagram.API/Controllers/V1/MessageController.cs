@@ -41,7 +41,7 @@ namespace Fatagram.API.Controllers.V1
                 Content = request.Content,
                 CorrelationId = request.CorrelationId,
                 ClientTempId = request.ClientTempId,
-                Type = MessageType.Text,
+                Type = request.Type,
                 Metadata = request.Metadata,
                 ReceiverId = request.ReceiverId,
             };

@@ -25,15 +25,19 @@ namespace Fatagram.API.Controllers.V1
             _messageService = messageService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody] SendMessageDto request)
+        [HttpPost("{conversationId}")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> SendMessage(
+            [FromBody] SendMessageDto request,
+            Guid conversationId
+        )
         {
             Console.WriteLine(
-                $"SendMessage - UserId: {GetCurrentUserId()}, ConversationId: {request.ConversationId}, ReceiverId: {request.ReceiverId}, Content: {request.Content}, CorrelationId: {request.CorrelationId}, ClientTempId: {request.ClientTempId}, Metadata: {request.Metadata}"
+                $"SendMessage - UserId: {GetCurrentUserId()}, ConversationId: {conversationId}, ReceiverId: {request.ReceiverId}, Content: {request.Content}, CorrelationId: {request.CorrelationId}, ClientTempId: {request.ClientTempId}, Metadata: {request.Metadata}"
             );
             var createMessageRequest = new CreateMessageRequest
             {
-                ConversationId = request.ConversationId,
+                ConversationId = conversationId,
                 Content = request.Content,
                 CorrelationId = request.CorrelationId,
                 ClientTempId = request.ClientTempId,

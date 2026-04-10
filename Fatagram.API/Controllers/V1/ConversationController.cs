@@ -38,6 +38,7 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetConversationById(Guid conversationId)
         {
             var res = await _conversationService.GetByIdAsync(GetCurrentUserId(), conversationId);

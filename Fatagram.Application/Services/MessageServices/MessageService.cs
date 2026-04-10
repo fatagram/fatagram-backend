@@ -119,13 +119,6 @@ namespace Fatagram.Application.Services.MessageServices
                 );
             }
 
-            Console.WriteLine(
-                "Sender Avatar: "
-                    + conversation
-                        .Participants.FirstOrDefault(p => p.UserId == senderId)
-                        ?.User?.Avatar
-            );
-
             var message = await _messageRepository.AddAsync(
                 new Message
                 {
@@ -142,11 +135,6 @@ namespace Fatagram.Application.Services.MessageServices
 
             if (message == null)
             {
-                _logger.LogError(
-                    "Failed to save message for conversation {ConversationId} from sender {SenderId}",
-                    conversation.Id,
-                    senderId
-                );
                 throw new Exception("Failed to send message");
             }
 
@@ -159,10 +147,6 @@ namespace Fatagram.Application.Services.MessageServices
                 bool shouldIncreaseUnreadCount = !(
                     await _conversationRepository.GetUnreadConversationsAsync(p)
                 ).Any(c => c.ConversationId == conversation.Id && c.UnreadCount > 0);
-
-                Console.WriteLine(
-                    $"Should increase unread count for user {p} in conversation {conversation.Id}: {shouldIncreaseUnreadCount}"
-                );
 
                 var resp = new ResponseMessageDto
                 {

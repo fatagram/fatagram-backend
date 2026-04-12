@@ -18,5 +18,15 @@ namespace Fatagram.Domain.Models
         public int SequenceNumber { get; set; }
         public virtual Conversation Conversation { get; set; } = null!;
         public virtual User Sender { get; set; } = null!;
+        public virtual ICollection<MessageMedia>? Media { get; set; } = new List<MessageMedia>();
+    }
+
+    public class MessageMedia : BaseEntity
+    {
+        public Guid MessageId { get; set; }
+        public string Url { get; set; } = null!;
+        public MediaType Type { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+        public virtual Message Message { get; set; } = null!;
     }
 }

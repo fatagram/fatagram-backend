@@ -3,8 +3,7 @@ namespace Fatagram.Domain.Enums
     public enum MessageType
     {
         Text = 0,
-        Image = 1,
-        File = 2,
+        Media = 1,
         System = 3,
         LeaveGroup = 4,
         JoinGroup = 5,

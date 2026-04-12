@@ -18,6 +18,7 @@ namespace Fatagram.Application.Dtos.Message
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MessageType Type { get; set; } = MessageType.Text;
+        public IEnumerable<MessageMediaDto>? Media { get; set; }
     }
 
     public class CreateMessageRequest
@@ -28,6 +29,7 @@ namespace Fatagram.Application.Dtos.Message
         public Guid? ClientTempId { get; set; }
         public string Content { get; set; } = string.Empty;
         public MessageType Type { get; set; } = MessageType.Text;
+        public IEnumerable<MessageMediaDto>? Media { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
     }
 
@@ -51,8 +53,22 @@ namespace Fatagram.Application.Dtos.Message
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MessageType Type { get; set; } = MessageType.Text;
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Dictionary<string, object>? Metadata { get; set; }
         public DateTime CreatedAt { get; set; }
-        public bool shouldIncreaseUnreadCount { get; set; }
+        public bool ShouldIncreaseUnreadCount { get; set; }
+        public IEnumerable<MessageMediaDto>? Media { get; set; }
+    }
+
+    public class MessageMediaDto
+    {
+        public string Url { get; set; } = null!;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public MediaType Type { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, object>? Metadata { get; set; }
     }
 }

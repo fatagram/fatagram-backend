@@ -12,6 +12,6 @@ namespace Fatagram.Application.Services.ImageService.Interface
     public interface IImageService
     {
         Task<Result<string>> SaveImageAsync(ImageRequest request, string folder);
-        Task<Result<object>> GetUploadSignatureAsync();
+        Task<Result<object>> GetUploadSignatureAsync(string folder, string resourceType = "auto");
     }
 }

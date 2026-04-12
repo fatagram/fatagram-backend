@@ -34,6 +34,11 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             entity.Id = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
 
+            Console.WriteLine(
+                "MediaType: "
+                    + string.Join(", ", entity.Media?.Select(m => m.Type.ToString()) ?? [])
+            );
+
             var key = $"conv:{entity.ConversationId}:seq";
             var seq = await _cacheService.IncrementAsync(key);
             var num = seq;
@@ -75,6 +80,8 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                     Content = lastMessage.Content,
                     SequenceNumber = lastMessage.SequenceNumber,
                     CreatedAt = lastMessage.CreatedAt,
+                    Type = lastMessage.Type,
+                    Media = lastMessage.Media,
                 };
 
             var inner = (IMessageRepository)_inner;

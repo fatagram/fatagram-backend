@@ -16,7 +16,10 @@ namespace Fatagram.Application.Services.ImageService
         private readonly Cloudinary _cloudinary = cloudinary;
         private readonly IConfiguration _config = config;
 
-        public Task<Result<object>> GetUploadSignatureAsync()
+        public Task<Result<object>> GetUploadSignatureAsync(
+            string folder,
+            string resourceType = "auto"
+        )
         {
             var testSecret = _config["CloudStorage:Cloudinary:ApiSecret"];
             Console.WriteLine($"\n[TEST SECRET] Tui đang đọc cái Secret là: '{testSecret}'\n");
@@ -24,9 +27,10 @@ namespace Fatagram.Application.Services.ImageService
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var parameters = new Dictionary<string, object>
             {
-                { "folder", "chat_messages" },
+                { "folder", folder },
                 { "overwrite", "false" },
                 { "timestamp", timestamp.ToString() },
+                { "resource_type", resourceType },
             };
 
             string signature = _cloudinary.Api.SignParameters(parameters);
@@ -36,8 +40,9 @@ namespace Fatagram.Application.Services.ImageService
                 apiKey = _config["CloudStorage:Cloudinary:ApiKey"],
                 cloudName = _config["CloudStorage:Cloudinary:CloudName"],
                 timestamp,
-                folder = "chat_messages",
+                folder,
                 overwrite = "false",
+                resourceType,
                 signature,
             };
 

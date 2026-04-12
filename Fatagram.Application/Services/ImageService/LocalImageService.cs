@@ -72,7 +72,10 @@ namespace Fatagram.Application.Services.ImageService
 
         private static string GenerateFileName() => Guid.NewGuid().ToString();
 
-        public Task<Result<object>> GetUploadSignatureAsync()
+        public Task<Result<object>> GetUploadSignatureAsync(
+            string folder,
+            string resourceType = "auto"
+        )
         {
             throw new NotImplementedException();
         }

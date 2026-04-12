@@ -21,6 +21,8 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                     opt => opt.MapFrom(src => src.Sender.Avatar)
                 );
             CreateMap<LastMessageProjection, ResponseMessageDto>();
+            CreateMap<MessageMedia, MessageMediaDto>();
+            CreateMap<MessageMediaDto, MessageMedia>();
         }
     }
 }

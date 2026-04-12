@@ -16,3 +16,5 @@ dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-user-last-message-number
 
 dotnet run -p Fatagram.API
+dotnet ef migrations add AddMessageMedia -s Fatagram.API -p Fatagram.Infrastructure
+dotnet ef database update AddMessageMedia -s Fatagram.API -p Fatagram.Infrastructure

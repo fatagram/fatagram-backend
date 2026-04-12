@@ -44,6 +44,7 @@ namespace Fatagram.API.Controllers.V1
                 Type = request.Type,
                 Metadata = request.Metadata,
                 ReceiverId = request.ReceiverId,
+                Media = request.Media,
             };
             var res = await _messageService.SendMessageAsync(
                 GetCurrentUserId(),

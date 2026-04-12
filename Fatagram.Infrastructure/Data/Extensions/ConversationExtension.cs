@@ -155,6 +155,40 @@ namespace Fatagram.Infrastructure.Data.Extensions
                 entity.HasIndex(m => m.ConversationId);
                 entity.HasIndex(m => new { m.ConversationId, m.SequenceNumber }).IsUnique();
             });
+
+            modelBuilder.Entity<MessageMedia>(entity =>
+            {
+                entity.ConfigureBaseEntity();
+                entity.ToTable("message_media");
+                entity
+                    .Property(mm => mm.MessageId)
+                    .HasColumnName("message_id")
+                    .HasColumnType("uuid")
+                    .IsRequired();
+                entity
+                    .Property(mm => mm.Url)
+                    .HasColumnName("url")
+                    .HasColumnType("text")
+                    .IsRequired();
+                entity
+                    .Property(mm => mm.Type)
+                    .HasColumnName("type")
+                    .HasColumnType("integer")
+                    .HasConversion<int>()
+                    .HasDefaultValue(MediaType.Image)
+                    .IsRequired();
+                entity
+                    .Property(mm => mm.Metadata)
+                    .HasColumnName("metadata")
+                    .HasColumnType("jsonb")
+                    .IsRequired(false);
+                entity
+                    .HasOne(mm => mm.Message)
+                    .WithMany(m => m.Media)
+                    .HasForeignKey(mm => mm.MessageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(mm => mm.MessageId);
+            });
         }
     }
 }

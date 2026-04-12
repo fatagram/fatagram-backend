@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
@@ -34,14 +35,17 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                     SequenceNumber = m.SequenceNumber,
                     CreatedAt = m.CreatedAt,
                     SenderFullName = m.Sender.FullName,
+                    Media = m.Media!.Take(3).ToList(),
+                    Sender = m.Sender,
+                    Type = m.Type,
                 },
                 m => m.ConversationId == conversationId,
                 m => m.SequenceNumber,
                 true,
                 1,
-                null,
-                m => m.Include(m => m.Sender)
+                null
             );
+
             return message.FirstOrDefault();
         }
 
@@ -59,7 +63,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 desc,
                 limit,
                 cursor == 0 ? int.MaxValue : cursor,
-                m => m.Include(m => m.Sender)
+                m => m.Include(m => m.Sender).Include(m => m.Media!.Take(3))
             );
         }
     }

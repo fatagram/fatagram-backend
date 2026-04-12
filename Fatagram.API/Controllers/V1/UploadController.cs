@@ -16,9 +16,12 @@ namespace Fatagram.API.Controllers.V1
         private readonly ILogger<UploadController> _logger = logger;
 
         [HttpGet("signature")]
-        public async Task<IActionResult> GetUploadSignature()
+        public async Task<IActionResult> GetUploadSignature(
+            [FromQuery] string folder,
+            [FromQuery] string resourceType = "auto"
+        )
         {
-            var result = await _imageService.GetUploadSignatureAsync();
+            var result = await _imageService.GetUploadSignatureAsync(folder, resourceType);
             return result.ToActionResult();
         }
     }

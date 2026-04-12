@@ -13,6 +13,7 @@ using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Services.SockerServices.Interfaces;
 using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Projections;
@@ -130,6 +131,7 @@ namespace Fatagram.Application.Services.MessageServices
                     Sender = conversation
                         .Participants.FirstOrDefault(p => p.UserId == senderId)
                         ?.User!,
+                    Media = _mapper.Map<List<MessageMedia>>(request.Media),
                 }
             );
 
@@ -139,6 +141,16 @@ namespace Fatagram.Application.Services.MessageServices
             }
 
             var sender = conversation.Participants.FirstOrDefault(p => p.UserId == senderId);
+            IEnumerable<MessageMediaDto>? mediaDtos = null;
+
+            if (request.Media != null && request.Media.Any(m => m.Type == MediaType.Image))
+            {
+                mediaDtos = request.Media.Take(3);
+            }
+            else
+            {
+                mediaDtos = request.Media;
+            }
 
             foreach (var p in conversation.ParticipantIds)
             {
@@ -162,7 +174,8 @@ namespace Fatagram.Application.Services.MessageServices
                     IsGroup = conversation.IsGroup,
                     Metadata = request.Metadata,
                     CreatedAt = message.CreatedAt,
-                    shouldIncreaseUnreadCount = shouldIncreaseUnreadCount,
+                    ShouldIncreaseUnreadCount = shouldIncreaseUnreadCount,
+                    Media = mediaDtos,
                 };
 
                 await _messageSender.SendAsync(
@@ -186,7 +199,8 @@ namespace Fatagram.Application.Services.MessageServices
                 IsGroup = conversation.IsGroup,
                 Metadata = request.Metadata,
                 CreatedAt = message.CreatedAt,
-                shouldIncreaseUnreadCount = false,
+                ShouldIncreaseUnreadCount = false,
+                Media = mediaDtos,
             };
 
             await _messageSender.SendAsync(

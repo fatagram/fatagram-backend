@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412032355_AddMessageMedia")]
+    partial class AddMessageMedia
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -550,10 +553,6 @@ namespace Fatagram.Infrastructure.Migrations
                     b.Property<Guid>("MessageId")
                         .HasColumnType("uuid")
                         .HasColumnName("message_id");
-
-                    b.Property<Dictionary<string, object>>("Metadata")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
 
                     b.Property<int>("Type")
                         .ValueGeneratedOnAdd()

@@ -84,10 +84,11 @@ namespace Fatagram.Application.Services.ConversationServices
                 c.MyLastSeenMessageSeq = participantSeenInfos
                     .ParticipantsSeenInfo[userId]
                     .SequenceNumber;
-
-                c.LastMessage = _mapper.Map<ResponseMessageDto>(
-                    await _messageRepository.GetLastMessageOfConversationAsync(c.Id.ToGuid())
+                var lastM = await _messageRepository.GetLastMessageOfConversationAsync(
+                    c.Id.ToGuid()
                 );
+                Console.WriteLine("CC DUMA MAY", lastM!.Media);
+                c.LastMessage = _mapper.Map<ResponseMessageDto>(lastM);
                 c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
             }
 

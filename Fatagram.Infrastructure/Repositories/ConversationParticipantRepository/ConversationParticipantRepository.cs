@@ -36,6 +36,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
                     seenInfo = new ParticipantSeenInfoProjection
                     {
                         SequenceNumber = cp.LastSeenNumber,
+                        SeenAt = cp.SeenAt ?? DateTime.UnixEpoch,
                     },
                 })
                 .AsQueryable();

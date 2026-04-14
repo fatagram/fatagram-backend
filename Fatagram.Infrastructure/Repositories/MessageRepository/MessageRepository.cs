@@ -36,6 +36,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                     CreatedAt = m.CreatedAt,
                     SenderFullName = m.Sender.FullName,
                     Media = m.Media!.Take(3).ToList(),
+                    Metadata = m.Metadata,
                     Sender = m.Sender,
                     Type = m.Type,
                 },

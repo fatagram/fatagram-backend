@@ -64,12 +64,13 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                     Id = lastMessage.Id,
                     ConversationId = lastMessage.ConversationId,
                     SenderId = lastMessage.SenderId,
-                    SenderFullName = lastMessage.Sender.FullName,
+                    SenderFullName = lastMessage.Sender?.FullName,
                     Content = lastMessage.Content,
                     SequenceNumber = lastMessage.SequenceNumber,
                     CreatedAt = lastMessage.CreatedAt,
                     Type = lastMessage.Type,
                     Media = lastMessage.Media,
+                    Metadata = lastMessage.Metadata,
                 };
 
             var inner = (IMessageRepository)_inner;

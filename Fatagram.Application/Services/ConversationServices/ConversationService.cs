@@ -73,21 +73,21 @@ namespace Fatagram.Application.Services.ConversationServices
 
             foreach (var c in res)
             {
-                if (c.IsGroup || c.OtherUserId == null)
-                    continue;
-                var participantSeenInfos = await _cpRepo.GetConversationParticipantsSeenInfoAsync(
-                    c.Id.ToGuid()
-                );
-                c.OtherLastSeenMessageSeq = participantSeenInfos
-                    .ParticipantsSeenInfo[c.OtherUserId ?? Guid.Empty]
-                    .SequenceNumber;
-                c.MyLastSeenMessageSeq = participantSeenInfos
-                    .ParticipantsSeenInfo[userId]
-                    .SequenceNumber;
+                if (!c.IsGroup && c.OtherUserId != null)
+                {
+                    var participantSeenInfos =
+                        await _cpRepo.GetConversationParticipantsSeenInfoAsync(c.Id.ToGuid());
+                    c.OtherLastSeenMessageSeq = participantSeenInfos
+                        .ParticipantsSeenInfo[c.OtherUserId ?? Guid.Empty]
+                        .SequenceNumber;
+                    c.MyLastSeenMessageSeq = participantSeenInfos
+                        .ParticipantsSeenInfo[userId]
+                        .SequenceNumber;
+                }
+
                 var lastM = await _messageRepository.GetLastMessageOfConversationAsync(
                     c.Id.ToGuid()
                 );
-                Console.WriteLine("CC DUMA MAY", lastM!.Media);
                 c.LastMessage = _mapper.Map<ResponseMessageDto>(lastM);
                 c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
             }

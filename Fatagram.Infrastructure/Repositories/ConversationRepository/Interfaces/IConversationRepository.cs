@@ -15,7 +15,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
         Task<List<ConversationProjection>> GetMyConversationsAsync(
             string userId,
             DateTime? cursor,
-            int limit
+            int limit,
+            List<Guid>? notInConvIds = null
         );
 
         Task<ConversationProjection?> GetConversationWith(Guid userId, Guid targetUserId);
@@ -31,5 +32,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
         // Task<List<ConversationSeenInfoProjection>> GetConversationsSeenInfoAsync(Guid userId);
 
         Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds);
+        Task<int> IncreaseLastMessageNumberAsync(Guid conversationId);
+        Task<int> GetLastMessageNumberAsync(Guid conversationId);
     }
 }

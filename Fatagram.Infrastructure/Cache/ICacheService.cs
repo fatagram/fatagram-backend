@@ -103,5 +103,52 @@ namespace Fatagram.Infrastructure.Cache
 
         /// <summary> Kiểm tra xem hiện có bao nhiêu tin nhắn đang nằm "treo" trong hàng chờ. </summary>
         Task<long> ListLengthAsync(string key);
+
+        // ==========================================
+        // 6. SORTED SET OPERATIONS (Tập hợp CÓ THỨ TỰ)
+        // Phù hợp làm: Bảng xếp hạng, Trending Posts, Lấy tin nhắn theo thời gian.
+        // ==========================================
+
+        /// <summary> Thêm phần tử vào tập hợp kèm điểm số (Score). </summary>
+        Task<bool> SortedSetAddAsync<T>(string key, T value, double score);
+
+        /// <summary> Lấy danh sách phần tử trong khoảng điểm (Ví dụ: Lấy top 10 bài viết nhiều tương tác nhất). </summary>
+        Task<IEnumerable<T>> SortedSetRangeByScoreAsync<T>(
+            string key,
+            double start = double.NegativeInfinity,
+            double stop = double.PositiveInfinity
+        );
+
+        /// <summary> Xóa một phần tử khỏi Sorted Set. </summary>
+        Task<bool> SortedSetRemoveAsync<T>(string key, T value);
+
+        /// <summary> Lấy thứ hạng (Rank) của một phần tử. </summary>
+        Task<long?> SortedSetRankAsync<T>(string key, T value, bool desc = false);
+
+        /// <summary> Lấy phần tử từ Sorted Set theo cursor (score threshold) để hỗ trợ pagination. </summary>
+        Task<List<(T Value, double Score)>> SortedSetRangeByScoreWithCursorAsync<T>(
+            string key,
+            double? cursor = null,
+            int limit = 20,
+            bool desc = true
+        );
+
+        // ==========================================
+        // 7. PUB/SUB OPERATIONS (Thông báo thời gian thực)
+        // Phù hợp: Gửi thông báo giữa các Server (Scaling), Real-time Events.
+        // ==========================================
+
+        /// <summary> Phát tin nhắn đến một Channel cụ thể. </summary>
+        Task<long> PublishAsync<T>(string channel, T message);
+
+        /// <summary> Đăng ký lắng nghe một Channel (Thường dùng trong Background Service). </summary>
+        Task SubscribeAsync<T>(string channel, Action<T> handler);
+
+        // ==========================================
+        // 8. ADVANCED / TRANSACTIONS
+        // ==========================================
+
+        /// <summary> Thực thi nhiều lệnh cùng lúc để giảm Round-trip time (RTT). </summary>
+        Task ExecuteBatchAsync(Action<ICacheService> batchAction);
     }
 }

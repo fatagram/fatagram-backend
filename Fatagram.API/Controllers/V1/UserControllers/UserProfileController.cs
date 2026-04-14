@@ -41,9 +41,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         {
             var userId = GetCurrentUserIdOrNull() ?? Guid.Empty;
             var res = await _userProfileService.GetUserProfileAsync(userId, target, fields);
-            Console.WriteLine(
-                $"GetUserProfile - UserId: {userId}, Target: {target}, Fields: {fields}"
-            );
+
             return res.ToActionResult();
         }
 

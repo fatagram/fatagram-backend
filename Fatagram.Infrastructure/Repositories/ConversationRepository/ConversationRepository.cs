@@ -17,6 +17,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 {
     public class ConversationRepository : BaseRepository<Conversation>, IConversationRepository
     {
+        private static DateTime ToUtcDateTime(DateTime value)
+        {
+            return value.Kind switch
+            {
+                DateTimeKind.Utc => value,
+                DateTimeKind.Local => value.ToUniversalTime(),
+                _ => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+            };
+        }
+
         public ConversationRepository(
             AppDbContext dbContext,
             ILogger<BaseRepository<Conversation>>? logger = null
@@ -145,14 +155,17 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
         public async Task<List<ConversationProjection>> GetMyConversationsAsync(
             string userId,
             DateTime? cursor,
-            int limit
+            int limit,
+            List<Guid>? notInConvIds = null
         )
         {
-            Console.WriteLine(
-                $"[ConversationRepository] GetMyConversationsAsync: Fetching conversations for user {userId} with cursor {cursor} and limit {limit}"
-            );
             var query = _dbContext
-                .Conversations.Where(c => c.Participants.Any(p => p.UserId == userId.ToGuid()))
+                .Conversations.Where(c =>
+                    c.Participants.Any(p =>
+                        p.UserId == userId.ToGuid()
+                        && (notInConvIds == null || !notInConvIds.Contains(c.Id))
+                    )
+                )
                 .Select(c => new ConversationProjection
                 {
                     Id = c.Id,
@@ -215,7 +228,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
             if (cursor.HasValue && cursor.Value != DateTime.MinValue)
             {
-                query = query.Where(c => c.LastActiveAt < cursor.Value);
+                var cursorUtc = ToUtcDateTime(cursor.Value);
+                query = query.Where(c => c.LastActiveAt < cursorUtc);
             }
 
             return await query.OrderByDescending(c => c.LastActiveAt).Take(limit).ToListAsync();
@@ -248,7 +262,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             return convIds;
         }
 
-        public async Task<int> IncrementNumberOfMessagesAsync(Guid conversationId)
+        public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)
         {
             return await _dbContext
                 .Conversations.Where(c => c.Id == conversationId)
@@ -266,6 +280,14 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             throw new NotImplementedException(
                 "This method is not implemented in ConversationRepository. It should be implemented in CachedConversationRepository."
             );
+        }
+
+        public async Task<int> GetLastMessageNumberAsync(Guid conversationId)
+        {
+            return await _dbContext
+                .Conversations.Where(c => c.Id == conversationId)
+                .Select(c => c.LastMessageNumber)
+                .FirstOrDefaultAsync();
         }
     }
 }

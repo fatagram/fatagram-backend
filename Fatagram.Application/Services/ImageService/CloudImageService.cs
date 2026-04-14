@@ -21,9 +21,6 @@ namespace Fatagram.Application.Services.ImageService
             string resourceType = "auto"
         )
         {
-            var testSecret = _config["CloudStorage:Cloudinary:ApiSecret"];
-            Console.WriteLine($"\n[TEST SECRET] Tui đang đọc cái Secret là: '{testSecret}'\n");
-
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var parameters = new Dictionary<string, object>
             {
@@ -51,11 +48,6 @@ namespace Fatagram.Application.Services.ImageService
 
         public async Task<Result<string>> SaveImageAsync(ImageRequest request, string folder)
         {
-            if (_cloudinary == null)
-            {
-                Console.WriteLine("Cloudinary client is not initialized.");
-            }
-            Console.WriteLine($"Received image request: {request}, Folder: {folder}");
             if (request == null || request.ImageStream == null || request.ImageStream.Length == 0)
             {
                 return Result<string>.Create(
@@ -77,11 +69,6 @@ namespace Fatagram.Application.Services.ImageService
             };
 
             var result = await _cloudinary!.UploadAsync(uploadParams);
-
-            // Write message from cloudinary response to console for debugging
-            Console.WriteLine(
-                $"Cloudinary upload result: {result.StatusCode}, Message: {result.Error?.Message}"
-            );
 
             return Result<string>.Create(ResponseStatusCode.Success, result.SecureUrl.ToString());
         }

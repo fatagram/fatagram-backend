@@ -165,7 +165,6 @@ namespace Fatagram.Application.Services.NotificationServices.Interface
         public async Task<Result> DeleteAllAsync(Guid userId)
         {
             await _userNotificationRepository.SoftDeleteRangeAsync(un => un.UserId == userId);
-            Console.WriteLine($"Deleted all notifications for user {userId}");
             return Result.Create();
         }
 

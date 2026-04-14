@@ -13,14 +13,11 @@ public class RedisCacheService : ICacheService
         _db = redis.GetDatabase();
     }
 
-    // --- Basic String/JSON ---
     public async Task<T?> GetAsync<T>(string key)
     {
         var data = await _db.StringGetAsync(key);
         if (data.IsNullOrEmpty)
             return default;
-        // If caller expects a raw string, return the Redis value as-is to avoid
-        // JSON deserialization errors when the stored value is a JSON number.
         if (typeof(T) == typeof(string))
         {
             object? obj = data.ToString();
@@ -33,8 +30,6 @@ public class RedisCacheService : ICacheService
         }
         catch (JsonException)
         {
-            // Fallback: try to convert simple primitive values stored as plain
-            // strings/numbers into the requested type (e.g., int, long, bool).
             try
             {
                 var str = data.ToString();
@@ -54,7 +49,6 @@ public class RedisCacheService : ICacheService
         await _db.StringSetAsync(key, jsonData, expiration);
     }
 
-    // --- Hash Operations (Sức mạnh cho vụ Seen) ---
     public async Task HashSetAsync(string key, string field, string value)
     {
         await _db.HashSetAsync(key, field, value);
@@ -172,5 +166,112 @@ public class RedisCacheService : ICacheService
     {
         var value = await _db.HashGetAsync(key, field);
         return value.HasValue ? JsonSerializer.Deserialize<T>(value.ToString()) : default(T);
+    }
+
+    public async Task<bool> SortedSetAddAsync<T>(string key, T value, double score)
+    {
+        return await _db.SortedSetAddAsync(key, ToRedisValue(value), score);
+    }
+
+    public async Task<IEnumerable<T>> SortedSetRangeByScoreAsync<T>(
+        string key,
+        double start = double.NegativeInfinity,
+        double stop = double.PositiveInfinity
+    )
+    {
+        var members = await _db.SortedSetRangeByScoreAsync(key, start, stop);
+        return members.Select(FromRedisValue<T>);
+    }
+
+    public async Task<bool> SortedSetRemoveAsync<T>(string key, T value)
+    {
+        return await _db.SortedSetRemoveAsync(key, ToRedisValue(value));
+    }
+
+    public async Task<long?> SortedSetRankAsync<T>(string key, T value, bool desc = false)
+    {
+        var order = desc ? Order.Descending : Order.Ascending;
+        return await _db.SortedSetRankAsync(key, ToRedisValue(value), order);
+    }
+
+    public async Task<List<(T Value, double Score)>> SortedSetRangeByScoreWithCursorAsync<T>(
+        string key,
+        double? cursor = null,
+        int limit = 20,
+        bool desc = true
+    )
+    {
+        double start = desc
+            ? (cursor ?? double.PositiveInfinity)
+            : (cursor ?? double.NegativeInfinity);
+
+        double stop = desc ? double.NegativeInfinity : double.PositiveInfinity;
+
+        Exclude exclude = cursor.HasValue ? Exclude.Start : Exclude.None;
+
+        var members = await _db.SortedSetRangeByScoreWithScoresAsync(
+            key,
+            start: start,
+            stop: stop,
+            exclude: exclude,
+            order: desc ? Order.Descending : Order.Ascending,
+            take: limit
+        );
+
+        return members.Select(m => (FromRedisValue<T>(m.Element), m.Score)).ToList();
+    }
+
+    public async Task<long> PublishAsync<T>(string channel, T message)
+    {
+        var subscriber = _redis.GetSubscriber();
+        var json = JsonSerializer.Serialize(message);
+        return await subscriber.PublishAsync(RedisChannel.Literal(channel), json);
+    }
+
+    public async Task SubscribeAsync<T>(string channel, Action<T> handler)
+    {
+        var subscriber = _redis.GetSubscriber();
+        await subscriber.SubscribeAsync(
+            RedisChannel.Literal(channel),
+            (redisChannel, value) =>
+            {
+                var message = JsonSerializer.Deserialize<T>(value!);
+                if (message != null)
+                    handler(message);
+            }
+        );
+    }
+
+    public async Task ExecuteBatchAsync(Action<ICacheService> batchAction)
+    {
+        var tran = _db.CreateTransaction();
+    }
+
+    private RedisValue ToRedisValue<T>(T value)
+    {
+        if (value == null)
+            return RedisValue.Null;
+
+        if (value is string s)
+            return s;
+        if (value is Guid g)
+            return g.ToString();
+        if (value is int || value is long || value is double)
+            return value.ToString();
+
+        return JsonSerializer.Serialize(value);
+    }
+
+    private T FromRedisValue<T>(RedisValue value)
+    {
+        if (value.IsNull)
+            return default!;
+
+        if (typeof(T) == typeof(string))
+            return (T)(object)value.ToString();
+        if (typeof(T) == typeof(Guid))
+            return (T)(object)Guid.Parse(value.ToString());
+
+        return JsonSerializer.Deserialize<T>(value!)!;
     }
 }

@@ -23,9 +23,6 @@ namespace Fatagram.API.Authorization
             {
                 return Task.FromResult(false);
             }
-            Console.WriteLine(
-                $"OwnerAuthorizationHandler - UserId: {userId}, ResourceId: {resourceId}, RouteKey: {metadata.RouteKey}"
-            );
 
             // Compare the userId in param with the userId from the token
             return Task.FromResult(

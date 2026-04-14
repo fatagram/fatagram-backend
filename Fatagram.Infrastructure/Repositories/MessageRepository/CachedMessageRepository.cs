@@ -18,15 +18,18 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
     public class CachedMessageRepository : BaseRepositoryDecorator<Message>, IMessageRepository
     {
         private readonly ICacheService _cacheService;
+        private readonly IConversationRepository _conversationRepository;
 
         public CachedMessageRepository(
             AppDbContext dbContext,
             IBaseRepository<Message> inner,
-            ICacheService cacheService
+            ICacheService cacheService,
+            IConversationRepository conversationRepository
         )
             : base(inner, dbContext)
         {
             _cacheService = cacheService;
+            _conversationRepository = conversationRepository;
         }
 
         public override async Task<Message> AddAsync(Message entity)
@@ -34,26 +37,11 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             entity.Id = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
 
-            Console.WriteLine(
-                "MediaType: "
-                    + string.Join(", ", entity.Media?.Select(m => m.Type.ToString()) ?? [])
+            var lastMessageNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
+                entity.ConversationId
             );
 
-            var key = $"conv:{entity.ConversationId}:seq";
-            var seq = await _cacheService.IncrementAsync(key);
-            var num = seq;
-
-            if (seq == 1)
-            {
-                var dbSeq = await _dbContext
-                    .Conversations.Where(c => c.Id == entity.ConversationId)
-                    .Select(c => c.LastMessageNumber)
-                    .FirstOrDefaultAsync();
-                num = dbSeq + 1;
-                await _cacheService.SetAsync(key, num, TimeSpan.FromHours(1));
-            }
-
-            entity.SequenceNumber = (int)num;
+            entity.SequenceNumber = lastMessageNumber;
 
             await _cacheService.ListRightPushAsync(
                 $"conv:{entity.ConversationId}:messages",
@@ -95,9 +83,9 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             int limit
         )
         {
-            string redisKey = $"conv:{conversationId}:messages";
+            var messagesKey = $"conv:{conversationId}:messages";
 
-            var cachedMessages = await _cacheService.ListRangeAsync<Message>(redisKey, 0, -1);
+            var cachedMessages = await _cacheService.ListRangeAsync<Message>(messagesKey, 0, -1);
 
             var pendingMessages = cachedMessages
                 .Where(m =>

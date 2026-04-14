@@ -129,9 +129,6 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var existUser = _user.FirstOrDefault();
             if (existUser != null && existUser.Id != user.Id)
             {
-                Console.WriteLine(
-                    $"Existing user found with URL name: {existUser}, User ID: {existUser.Id}"
-                );
                 throw new BadRequestException(
                     new Error("URLNAME_ALREADY_EXISTS", "Url name already exists.")
                 );

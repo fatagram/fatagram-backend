@@ -11,6 +11,7 @@ using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using NpgsqlTypes;
 
@@ -21,15 +22,18 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             IConversationParticipantRepository
     {
         private readonly ICacheService _cacheService;
+        private readonly IConversationRepository _conversationRepository;
 
         public CachedConvParticipantRepository(
             ICacheService cacheService,
             IBaseRepository<ConversationParticipant> inner,
+            IConversationRepository conversationRepository,
             AppDbContext dbContext
         )
             : base(inner, dbContext)
         {
             _cacheService = cacheService;
+            _conversationRepository = conversationRepository;
         }
 
         private class SeenCache
@@ -129,23 +133,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             DateTime seenAt
         )
         {
-            var lastSeqKey = $"conv:{conversationId}:seq";
-            var lastSeqRaw = await _cacheService.GetAsync<string>(lastSeqKey);
-            int currentLastSeq;
-
-            if (string.IsNullOrEmpty(lastSeqRaw))
-            {
-                currentLastSeq = await _dbContext
-                    .Conversations.Where(c => c.Id == conversationId)
-                    .Select(c => c.LastMessageNumber)
-                    .FirstOrDefaultAsync();
-
-                await _cacheService.SetAsync(lastSeqKey, currentLastSeq, TimeSpan.FromHours(24));
-            }
-            else
-            {
-                int.TryParse(lastSeqRaw, out currentLastSeq);
-            }
+            var currentLastSeq = await _conversationRepository.GetLastMessageNumberAsync(
+                conversationId
+            );
 
             if (messageSeq > currentLastSeq)
             {

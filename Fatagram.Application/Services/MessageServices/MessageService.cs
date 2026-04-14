@@ -33,6 +33,7 @@ namespace Fatagram.Application.Services.MessageServices
         ISocketSender<ResponseMessageDto> messageSender,
         IConversationRepository conversationRepository,
         IUserRepository userRepository,
+        ICacheService cacheService,
         IMapper mapper,
         ILogger<MessageService> logger
     ) : IMessageService
@@ -41,6 +42,7 @@ namespace Fatagram.Application.Services.MessageServices
         private readonly ISocketSender<ResponseMessageDto> _messageSender = messageSender;
         private readonly IConversationRepository _conversationRepository = conversationRepository;
         private readonly IUserRepository _userRepository = userRepository;
+        private readonly ICacheService _cacheService = cacheService;
         private readonly ILogger<MessageService> _logger = logger;
         private readonly IMapper _mapper = mapper;
 
@@ -80,9 +82,6 @@ namespace Fatagram.Application.Services.MessageServices
             }
             else
             {
-                Console.WriteLine(
-                    $"Fetching conversation with ID {request.ConversationId} for sender {senderId}"
-                );
                 conversation = await _conversationRepository.GetConversationById(
                     senderId ?? Guid.Empty,
                     request.ConversationId.Value,
@@ -152,6 +151,9 @@ namespace Fatagram.Application.Services.MessageServices
                 mediaDtos = request.Media;
             }
 
+            var sendTasks = new List<Task>();
+            var updateTasks = new List<Task>();
+
             foreach (var p in conversation.ParticipantIds)
             {
                 if (p == senderId)
@@ -178,9 +180,25 @@ namespace Fatagram.Application.Services.MessageServices
                     Media = mediaDtos,
                 };
 
-                await _messageSender.SendAsync(
-                    p,
-                    new SocketMessage<ResponseMessageDto> { Event = "NewMessage", Payload = resp }
+                sendTasks.Add(
+                    _messageSender.SendAsync(
+                        p,
+                        new SocketMessage<ResponseMessageDto>
+                        {
+                            Event = "NewMessage",
+                            Payload = resp,
+                        }
+                    )
+                );
+
+                var userConvKeys = $"user:{p}:conversations_rank";
+
+                updateTasks.Add(
+                    _cacheService.SortedSetAddAsync(
+                        userConvKeys,
+                        conversation.Id.ToString(),
+                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    )
                 );
             }
 
@@ -203,10 +221,25 @@ namespace Fatagram.Application.Services.MessageServices
                 Media = mediaDtos,
             };
 
-            await _messageSender.SendAsync(
-                senderId ?? Guid.Empty,
-                new SocketMessage<ResponseMessageDto> { Event = "NewMessage", Payload = response }
+            sendTasks.Add(
+                _messageSender.SendAsync(
+                    senderId ?? Guid.Empty,
+                    new SocketMessage<ResponseMessageDto>
+                    {
+                        Event = "NewMessage",
+                        Payload = response,
+                    }
+                )
             );
+            updateTasks.Add(
+                _cacheService.SortedSetAddAsync(
+                    $"user:{senderId}:conversations_rank",
+                    conversation.Id.ToString(),
+                    DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                )
+            );
+
+            await Task.WhenAll([.. sendTasks, .. updateTasks]);
 
             await _conversationRepository.NotifyNewMessage(
                 conversation.Id,
@@ -222,11 +255,6 @@ namespace Fatagram.Application.Services.MessageServices
             CreateMessageRequest request
         )
         {
-            Console.WriteLine(
-                request.ReceiverId == null
-                    ? "No ConversationId provided, but ReceiverId is also null. This will cause an error."
-                    : $"No ConversationId provided, generating unique conversation key for sender {senderId} and receiver {request.ReceiverId}"
-            );
             if (request.ReceiverId == null)
             {
                 throw new ArgumentException(
@@ -307,6 +335,15 @@ namespace Fatagram.Application.Services.MessageServices
                     conversation.ParticipantIds,
                     new SocketMessage<ResponseMessageDto> { Event = "NewMessage", Payload = resp }
                 );
+
+                foreach (var participantId in conversation.ParticipantIds)
+                {
+                    await _cacheService.SortedSetAddAsync(
+                        $"user:{participantId}:conversations_rank",
+                        conversation.Id.ToString(),
+                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    );
+                }
 
                 return resp;
             });

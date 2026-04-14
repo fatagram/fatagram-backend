@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Data;
+using Fatagram.Infrastructure.Projections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -49,7 +50,9 @@ public class SyncSeenWorker : BackgroundService
 
                         try
                         {
-                            var info = JsonSerializer.Deserialize<SeenInfoCache>(entry.Value);
+                            var info = JsonSerializer.Deserialize<ParticipantSeenInfoProjection>(
+                                entry.Value
+                            );
 
                             if (info != null)
                             {
@@ -59,8 +62,11 @@ public class SyncSeenWorker : BackgroundService
                                     )
                                     .ExecuteUpdateAsync(
                                         s =>
-                                            s.SetProperty(p => p.LastSeenNumber, info.Seq)
-                                                .SetProperty(p => p.SeenAt, info.At),
+                                            s.SetProperty(
+                                                    p => p.LastSeenNumber,
+                                                    info.SequenceNumber
+                                                )
+                                                .SetProperty(p => p.SeenAt, info.SeenAt),
                                         stoppingToken
                                     );
                             }

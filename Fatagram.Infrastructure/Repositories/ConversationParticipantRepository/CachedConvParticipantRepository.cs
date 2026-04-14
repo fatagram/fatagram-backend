@@ -36,12 +36,6 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             _conversationRepository = conversationRepository;
         }
 
-        private class SeenCache
-        {
-            public int Seq { get; set; }
-            public DateTime At { get; set; }
-        }
-
         public async Task<ParticipantsSeenProjection> GetConversationParticipantsSeenInfoAsync(
             Guid conversationId,
             List<Guid>? userIds = null
@@ -61,15 +55,17 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
 
                 if (!string.IsNullOrEmpty(seenData))
                 {
-                    var seenInfo = JsonSerializer.Deserialize<SeenCache>(seenData);
+                    var seenInfo = JsonSerializer.Deserialize<ParticipantSeenInfoProjection>(
+                        seenData
+                    );
                     if (seenInfo != null)
                         return new
                         {
                             p.UserId,
                             SeenInfo = new ParticipantSeenInfoProjection
                             {
-                                SequenceNumber = seenInfo?.Seq ?? 0,
-                                SeenAt = seenInfo?.At ?? DateTime.UnixEpoch,
+                                SequenceNumber = seenInfo?.SequenceNumber ?? 0,
+                                SeenAt = seenInfo?.SeenAt ?? DateTime.UnixEpoch,
                             },
                             IsHit = true,
                         };
@@ -160,8 +156,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             }
             else
             {
-                var oldInfo = JsonSerializer.Deserialize<SeenCache>(oldDataRaw);
-                oldSeenSeq = oldInfo?.Seq ?? 0;
+                var oldInfo = JsonSerializer.Deserialize<ParticipantSeenInfoProjection>(oldDataRaw);
+                oldSeenSeq = oldInfo?.SequenceNumber ?? 0;
             }
 
             if (messageSeq <= oldSeenSeq)
@@ -172,7 +168,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             var unreadConvKey = $"user:{userId}:unread_convs";
             await _cacheService.HashSetAsync(unreadConvKey, conversationId.ToString(), "0");
 
-            var seenData = new SeenCache { Seq = messageSeq, At = seenAt };
+            var seenData = new ParticipantSeenInfoProjection
+            {
+                SequenceNumber = messageSeq,
+                SeenAt = seenAt,
+            };
             await _cacheService.HashSetAsync(
                 lastReadKey,
                 conversationId.ToString(),

@@ -119,6 +119,13 @@ namespace Fatagram.Application.Services.MessageServices
                 );
             }
 
+            if (!conversation.ParticipantIds.Contains(senderId ?? Guid.Empty))
+            {
+                throw new ForbiddenException(
+                    new Error("FORBIDDEN", "You don't have permission to access this resource.")
+                );
+            }
+
             var message = await _messageRepository.AddAsync(
                 new Message
                 {

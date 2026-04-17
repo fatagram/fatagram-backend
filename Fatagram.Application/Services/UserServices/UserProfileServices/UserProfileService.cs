@@ -179,6 +179,12 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
 
         public async Task<Result> OnboardingAsync(Guid userId, OnboardingDto onboardingDto)
         {
+            var fullName =
+                onboardingDto.FirstName.Trim()
+                + " "
+                + onboardingDto.MiddleName.Trim()
+                + (string.IsNullOrWhiteSpace(onboardingDto.MiddleName.Trim()) ? "" : " ")
+                + onboardingDto.LastName.Trim();
             var result = await _userRepository.UpdateAsync(
                 u => u.Id == userId,
                 u =>
@@ -189,12 +195,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                     u.FirstName = onboardingDto.FirstName;
                     u.MiddleName = onboardingDto.MiddleName;
                     u.LastName = onboardingDto.LastName;
-                    u.FullName =
-                        onboardingDto.FirstName
-                        + " "
-                        + onboardingDto.MiddleName
-                        + " "
-                        + onboardingDto.LastName;
+                    u.FullName = fullName;
                 }
             );
             return Result.Create(ResponseStatusCode.Created);

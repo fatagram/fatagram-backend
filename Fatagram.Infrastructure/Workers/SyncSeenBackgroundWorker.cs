@@ -18,12 +18,6 @@ public class SyncSeenWorker : BackgroundService
         _logger = logger;
     }
 
-    private class SeenInfoCache
-    {
-        public int Seq { get; set; }
-        public DateTime At { get; set; }
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -81,7 +75,7 @@ public class SyncSeenWorker : BackgroundService
                 _logger.LogError(ex, "SyncSeenWorker error!");
             }
 
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
         }
     }
 }

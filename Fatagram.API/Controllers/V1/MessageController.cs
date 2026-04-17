@@ -26,7 +26,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPost("{conversationId}")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> SendMessage(
             [FromBody] SendMessageDto request,
             Guid conversationId

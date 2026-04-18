@@ -173,14 +173,27 @@ public class RedisCacheService : ICacheService
         return await _db.SortedSetAddAsync(key, ToRedisValue(value), score);
     }
 
-    public async Task<IEnumerable<T>> SortedSetRangeByScoreAsync<T>(
+    public async Task<List<T>> SortedSetRangeByScoreAsync<T>(
         string key,
         double start = double.NegativeInfinity,
-        double stop = double.PositiveInfinity
+        double stop = double.PositiveInfinity,
+        Exclude exclude = Exclude.None,
+        Order order = Order.Ascending,
+        long skip = 0,
+        long take = -1
     )
     {
-        var members = await _db.SortedSetRangeByScoreAsync(key, start, stop);
-        return members.Select(FromRedisValue<T>);
+        var members = await _db.SortedSetRangeByScoreAsync(
+            key,
+            start,
+            stop,
+            exclude,
+            order,
+            skip,
+            take
+        );
+
+        return members.Select(FromRedisValue<T>).ToList();
     }
 
     public async Task<bool> SortedSetRemoveAsync<T>(string key, T value)
@@ -273,5 +286,16 @@ public class RedisCacheService : ICacheService
             return (T)(object)Guid.Parse(value.ToString());
 
         return JsonSerializer.Deserialize<T>(value!)!;
+    }
+
+    public async Task HashSetAsync(string key, HashEntry[] hashEntries)
+    {
+        await _db.HashSetAsync(key, hashEntries);
+    }
+
+    public async Task<bool> SortedSetAddAsync(string key, SortedSetEntry[] entries)
+    {
+        var count = await _db.SortedSetAddAsync(key, entries);
+        return count > 0;
     }
 }

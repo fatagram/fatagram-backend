@@ -63,6 +63,7 @@ namespace Fatagram.Application.Dtos.Message
 
     public class MessageMediaDto
     {
+        public Guid Id { get; set; }
         public string Url { get; set; } = null!;
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -70,5 +71,11 @@ namespace Fatagram.Application.Dtos.Message
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Dictionary<string, object>? Metadata { get; set; }
+    }
+
+    public class MediaAroundAnchorDto
+    {
+        public List<MessageMediaDto> Left { get; set; } = [];
+        public List<MessageMediaDto> Right { get; set; } = [];
     }
 }

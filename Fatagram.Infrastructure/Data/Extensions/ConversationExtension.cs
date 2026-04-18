@@ -183,6 +183,16 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("jsonb")
                     .IsRequired(false);
                 entity
+                    .Property(mm => mm.MessageSequence)
+                    .HasColumnName("message_sequence")
+                    .HasColumnType("integer")
+                    .IsRequired();
+                entity
+                    .Property(mm => mm.IndexInMessage)
+                    .HasColumnName("index_in_message")
+                    .HasColumnType("integer")
+                    .IsRequired();
+                entity
                     .HasOne(mm => mm.Message)
                     .WithMany(m => m.Media)
                     .HasForeignKey(mm => mm.MessageId)

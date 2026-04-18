@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace Fatagram.Infrastructure.Workers
 {
@@ -43,7 +44,14 @@ namespace Fatagram.Infrastructure.Workers
                     _logger.LogError(ex, "An error occurred while batching messages.");
                 }
 
-                Task.Delay(_batchInterval, stoppingToken).Wait(stoppingToken);
+                try
+                {
+                    await Task.Delay(_batchInterval, stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
 
@@ -60,29 +68,63 @@ namespace Fatagram.Infrastructure.Workers
                 if (cancellationToken.IsCancellationRequested)
                     break;
 
-                var pendingMessages = await cacheService.ListRangeAsync<Message>(
+                var pendingMessages = await cacheService.SortedSetRangeByScoreAsync<Message>(
                     key,
-                    0,
-                    BatchSize - 1
+                    order: Order.Ascending,
+                    take: BatchSize
                 );
 
-                if (pendingMessages == null || pendingMessages.Count == 0)
+                if (pendingMessages.Count == 0)
                     continue;
 
                 var strategy = dbContext.Database.CreateExecutionStrategy();
 
                 await strategy.ExecuteAsync(async () =>
                 {
-                    using var transaction = await dbContext.Database.BeginTransactionAsync();
+                    using var transaction = await dbContext.Database.BeginTransactionAsync(
+                        cancellationToken
+                    );
 
                     try
                     {
-                        foreach (var msg in pendingMessages)
-                        {
-                            msg.Sender = null!;
-                            msg.Conversation = null!;
-                        }
-                        await dbContext.Messages.AddRangeAsync(pendingMessages, cancellationToken);
+                        var messagesToPersist = pendingMessages
+                            .Select(msg => new Message
+                            {
+                                Id = msg.Id,
+                                ConversationId = msg.ConversationId,
+                                SenderId = msg.SenderId,
+                                Content = msg.Content,
+                                ReadAt = msg.ReadAt,
+                                Type = msg.Type,
+                                Metadata = msg.Metadata,
+                                SequenceNumber = msg.SequenceNumber,
+                                CreatedAt = msg.CreatedAt,
+                                UpdatedAt = msg.UpdatedAt,
+                                DeletedAt = msg.DeletedAt,
+                                Version = msg.Version,
+                                Media = msg
+                                    .Media?.Select(media => new MessageMedia
+                                    {
+                                        Id = media.Id,
+                                        MessageId = media.MessageId,
+                                        Url = media.Url,
+                                        Type = media.Type,
+                                        Metadata = media.Metadata,
+                                        CreatedAt = media.CreatedAt,
+                                        UpdatedAt = media.UpdatedAt,
+                                        DeletedAt = media.DeletedAt,
+                                        Version = media.Version,
+                                        IndexInMessage = media.IndexInMessage,
+                                        MessageSequence = media.MessageSequence,
+                                    })
+                                    .ToList(),
+                            })
+                            .ToList();
+
+                        await dbContext.Messages.AddRangeAsync(
+                            messagesToPersist,
+                            cancellationToken
+                        );
                         await dbContext
                             .Conversations.Where(c =>
                                 c.Id == pendingMessages.First().ConversationId
@@ -97,7 +139,10 @@ namespace Fatagram.Infrastructure.Workers
                             );
                         await dbContext.SaveChangesAsync(cancellationToken);
 
-                        await cacheService.ListTrimAsync(key, pendingMessages.Count, -1);
+                        foreach (var message in pendingMessages)
+                        {
+                            await cacheService.SortedSetRemoveAsync(key, message);
+                        }
 
                         await transaction.CommitAsync(cancellationToken);
                     }

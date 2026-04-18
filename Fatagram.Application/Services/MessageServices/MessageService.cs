@@ -119,11 +119,22 @@ namespace Fatagram.Application.Services.MessageServices
                 );
             }
 
-            if (!conversation.ParticipantIds.Contains(senderId ?? Guid.Empty))
+            if (
+                !conversation.ParticipantIds.Contains(senderId ?? Guid.Empty)
+                && !IsSystemMessage(request.Type)
+            )
             {
                 throw new ForbiddenException(
                     new Error("FORBIDDEN", "You don't have permission to access this resource.")
                 );
+            }
+
+            if (request.Type != MessageType.Text && (request.Media == null || !request.Media.Any()))
+            {
+                foreach (var media in request.Media ?? [])
+                {
+                    media.Id = Guid.NewGuid();
+                }
             }
 
             var message = await _messageRepository.AddAsync(
@@ -141,7 +152,7 @@ namespace Fatagram.Application.Services.MessageServices
                 }
             );
 
-            if (message == null)
+            if (message is null)
             {
                 throw new Exception("Failed to send message");
             }
@@ -149,13 +160,13 @@ namespace Fatagram.Application.Services.MessageServices
             var sender = conversation.Participants.FirstOrDefault(p => p.UserId == senderId);
             IEnumerable<MessageMediaDto>? mediaDtos = null;
 
-            if (request.Media != null && request.Media.Any(m => m.Type == MediaType.Image))
+            if (message.Media != null && message.Media.Any(m => m.Type == MediaType.Image))
             {
-                mediaDtos = request.Media.Take(3);
+                mediaDtos = _mapper.Map<List<MessageMediaDto>>(message.Media.Take(3));
             }
             else
             {
-                mediaDtos = request.Media;
+                mediaDtos = _mapper.Map<List<MessageMediaDto>>(message.Media);
             }
 
             var sendTasks = new List<Task>();
@@ -356,6 +367,11 @@ namespace Fatagram.Application.Services.MessageServices
             });
 
             return Result<ResponseMessageDto>.Create(ResponseStatusCode.Success, message);
+        }
+
+        private bool IsSystemMessage(MessageType type)
+        {
+            return type == MessageType.System || type == MessageType.CreateGroup;
         }
     }
 }

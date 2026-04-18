@@ -14,6 +14,7 @@ redis-cli --scan --pattern "msg:seq:*" | wc -l
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-conv-message-count 
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-message-sequence-number 
 dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-user-last-message-number
+dotnet run --project /home/ngocphat/projects/fatagram/fatagram-backend/Fatagram.API/Fatagram.API.csproj -- script sync-message-media-index-in-message-and-message-sequence
 
 dotnet run -p Fatagram.API
 dotnet ef migrations add AddMessageMedia -s Fatagram.API -p Fatagram.Infrastructure

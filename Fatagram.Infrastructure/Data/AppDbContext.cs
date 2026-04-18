@@ -19,6 +19,7 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<Conversation> Conversations { get; set; } = null!;
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; } = null!;
         public DbSet<Message> Messages { get; set; } = null!;
+        public DbSet<MessageMedia> MessageMedias { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

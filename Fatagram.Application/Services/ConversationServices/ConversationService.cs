@@ -202,16 +202,18 @@ namespace Fatagram.Application.Services.ConversationServices
             {
                 IsGroup = true,
                 Name = name,
-                Participants = participantIds
-                    .Select(id => new ConversationParticipant { UserId = id })
-                    .Append(
-                        new ConversationParticipant
-                        {
-                            UserId = creatorId,
-                            Role = ConversationRole.Owner,
-                        }
-                    )
-                    .ToList(),
+                Participants =
+                [
+                    .. participantIds
+                        .Select(id => new ConversationParticipant { UserId = id })
+                        .Append(
+                            new ConversationParticipant
+                            {
+                                UserId = creatorId,
+                                Role = ConversationRole.Owner,
+                            }
+                        ),
+                ],
             };
             var res = await _conversationRepository.AddAsync(conversation);
             var creatorFullName = await _userRepository.GetByUniqueAsync(

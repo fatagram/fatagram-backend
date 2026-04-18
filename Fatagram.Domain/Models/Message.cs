@@ -27,6 +27,8 @@ namespace Fatagram.Domain.Models
         public string Url { get; set; } = null!;
         public MediaType Type { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
+        public int MessageSequence { get; set; }
+        public int IndexInMessage { get; set; }
         public virtual Message Message { get; set; } = null!;
     }
 }

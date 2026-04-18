@@ -12,6 +12,7 @@ using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace Fatagram.Infrastructure.Repositories.MessageRepository
 {
@@ -40,13 +41,56 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             var lastMessageNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
                 entity.ConversationId
             );
-
             entity.SequenceNumber = lastMessageNumber;
 
-            await _cacheService.ListRightPushAsync(
-                $"conv:{entity.ConversationId}:messages",
-                entity
-            );
+            var conversationId = entity.ConversationId;
+
+            var messageZSetKey = $"conv:{conversationId}:messages";
+            var mediaMapKey = $"conv:{conversationId}:media:map";
+            var mediaTimelineKey = $"conv:{conversationId}:media:timeline";
+
+            if (entity.Media != null && entity.Media.Count > 0)
+            {
+                int i = 0;
+                var hashEntries = new List<HashEntry>();
+
+                foreach (var media in entity.Media)
+                {
+                    media.Id = Guid.NewGuid();
+                    media.CreatedAt = entity.CreatedAt;
+                    media.IndexInMessage = i++;
+                    media.MessageSequence = entity.SequenceNumber;
+
+                    await _cacheService.SortedSetAddAsync(
+                        mediaTimelineKey,
+                        media,
+                        entity.SequenceNumber
+                    );
+
+                    hashEntries.Add(
+                        new HashEntry(
+                            media.Id.ToString(),
+                            $"{entity.SequenceNumber}:{media.IndexInMessage}"
+                        )
+                    );
+                }
+
+                await _cacheService.SortedSetAddAsync(
+                    messageZSetKey,
+                    entity,
+                    entity.SequenceNumber
+                );
+
+                await _cacheService.HashSetAsync(mediaMapKey, [.. hashEntries]);
+            }
+            else
+            {
+                await _cacheService.SortedSetAddAsync(
+                    messageZSetKey,
+                    entity,
+                    entity.SequenceNumber
+                );
+            }
 
             return entity;
         }
@@ -56,7 +100,11 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
         )
         {
             string redisKey = $"conv:{conversationId}:messages";
-            var cachedList = await _cacheService.ListRangeAsync<Message>(redisKey, -1, -1);
+            var cachedList = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                redisKey,
+                order: Order.Descending,
+                take: 1
+            );
             var lastMessage = cachedList?.FirstOrDefault();
             if (lastMessage != null)
                 return new LastMessageProjection
@@ -85,18 +133,35 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
         )
         {
             var messagesKey = $"conv:{conversationId}:messages";
+            Order redisOrder = desc ? Order.Descending : Order.Ascending;
 
-            var cachedMessages = await _cacheService.ListRangeAsync<Message>(messagesKey, 0, -1);
+            double start = double.NegativeInfinity;
+            double stop = double.PositiveInfinity;
+            Exclude exclude = Exclude.None;
 
-            var pendingMessages = cachedMessages
-                .Where(m =>
-                    cursor == null
-                    || cursor <= 0
-                    || m.SequenceNumber < (cursor > 0 ? cursor : int.MaxValue)
-                )
-                .OrderByDescending(m => m.SequenceNumber)
-                .Take(limit)
-                .ToList();
+            if (cursor.HasValue && cursor > 0)
+            {
+                if (desc)
+                {
+                    stop = cursor.Value;
+                    exclude = Exclude.Stop;
+                }
+                else
+                {
+                    start = cursor.Value;
+                    exclude = Exclude.Start;
+                }
+            }
+
+            var pendingMessages = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                messagesKey,
+                start,
+                stop,
+                exclude,
+                redisOrder,
+                offset: 0,
+                take: limit
+            );
 
             int remainingLimit = limit - pendingMessages.Count;
 
@@ -106,7 +171,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             }
 
             int? cursorForDb = pendingMessages.Any()
-                ? pendingMessages.Min(m => m.SequenceNumber)
+                ? pendingMessages.Last().SequenceNumber
                 : cursor;
 
             var messageRepo = (IMessageRepository)_inner;

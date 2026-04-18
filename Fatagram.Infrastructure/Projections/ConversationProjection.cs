@@ -41,4 +41,10 @@ namespace Fatagram.Infrastructure.Projections
         public Dictionary<Guid, ParticipantSeenInfoProjection> ParticipantsSeenInfo { get; set; } =
             new Dictionary<Guid, ParticipantSeenInfoProjection>();
     }
+
+    public class MessageMediaAroundAnchorProjection
+    {
+        public List<MessageMedia> Left { get; set; } = [];
+        public List<MessageMedia> Right { get; set; } = [];
+    }
 }

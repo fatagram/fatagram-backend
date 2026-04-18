@@ -7,6 +7,8 @@ using Fatagram.API.Scripts;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.MediaServices;
+using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Services.SockerServices.Interfaces;
@@ -19,10 +21,13 @@ using Fatagram.Infrastructure.Repositories.ConversationRepository;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
+using Fatagram.Infrastructure.Repositories.MediaRepository;
+using Fatagram.Infrastructure.Repositories.MediaRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
+using Scrutor;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -43,6 +48,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IConversationParticipantService, ConversationParticipantService>();
+            services.AddScoped<IMediaService, MediaService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
@@ -64,6 +70,7 @@ namespace Fatagram.API.Extensions.Services
                 ConversationParticipantRepository
             >();
             services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IMediaRepository, MediaRepository>();
 
             // Scoped for cached repositories
             services.Decorate<IConversationRepository, CachedConversationRepository>();
@@ -72,6 +79,7 @@ namespace Fatagram.API.Extensions.Services
                 IConversationParticipantRepository,
                 CachedConvParticipantRepository
             >();
+            services.Decorate<IMediaRepository, CachedMediaRepository>();
 
             // Scoped for SignalR
             services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));

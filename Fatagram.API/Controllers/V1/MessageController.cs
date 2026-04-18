@@ -14,16 +14,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Fatagram.API.Controllers.V1
 {
-    public class MessageController : BaseApiController
+    public class MessageController(
+        ILogger<MessageController> logger,
+        IMessageService messageService
+    ) : BaseApiController
     {
-        private readonly ILogger<MessageController> _logger;
-        private readonly IMessageService _messageService;
-
-        public MessageController(ILogger<MessageController> logger, IMessageService messageService)
-        {
-            _logger = logger;
-            _messageService = messageService;
-        }
+        private readonly ILogger<MessageController> _logger = logger;
+        private readonly IMessageService _messageService = messageService;
 
         [HttpPost("{conversationId}")]
         public async Task<IActionResult> SendMessage(

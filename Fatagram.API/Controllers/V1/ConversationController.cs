@@ -7,6 +7,7 @@ using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ namespace Fatagram.API.Controllers.V1
         IConversationService conversationService,
         IConversationParticipantService conversationParticipantService,
         IMessageService messageService,
+        IMediaService mediaService,
         ILogger<ConversationController> logger
     ) : BaseApiController
     {
@@ -27,6 +29,7 @@ namespace Fatagram.API.Controllers.V1
         private readonly IConversationParticipantService _conversationParticipantService =
             conversationParticipantService;
         private readonly IMessageService _messageService = messageService;
+        private readonly IMediaService _mediaService = mediaService;
 
         [HttpGet]
         public async Task<IActionResult> GetConversations(
@@ -59,7 +62,7 @@ namespace Fatagram.API.Controllers.V1
         {
             var res = await _conversationService.CreateGroupAsync(
                 GetCurrentUserId(),
-                request.ParticipantIds.ToList(),
+                [.. request.ParticipantIds],
                 request.Name
             );
             return res.ToActionResult();
@@ -100,6 +103,36 @@ namespace Fatagram.API.Controllers.V1
                 GetCurrentUserId(),
                 messageSeq
             );
+            return res.ToActionResult();
+        }
+
+        [HttpGet("{conversationId}/media/around/{mediaId}")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> GetMediaAround(
+            Guid conversationId,
+            Guid mediaId,
+            [FromQuery] int limit = 3,
+            [FromQuery] bool before = true
+        )
+        {
+            var res = await _mediaService.GetMediaAroundAsync(
+                conversationId,
+                mediaId,
+                before,
+                limit
+            );
+            return res.ToActionResult();
+        }
+
+        [HttpGet("{conversationId}/media/around-anchor/{mediaId}")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> GetMediaAroundAnchor(
+            Guid conversationId,
+            Guid mediaId,
+            [FromQuery] int count = 5
+        )
+        {
+            var res = await _mediaService.GetMediaAroundAnchorAsync(conversationId, mediaId, count);
             return res.ToActionResult();
         }
     }

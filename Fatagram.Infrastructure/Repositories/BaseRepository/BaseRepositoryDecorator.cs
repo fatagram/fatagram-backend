@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
+using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
 

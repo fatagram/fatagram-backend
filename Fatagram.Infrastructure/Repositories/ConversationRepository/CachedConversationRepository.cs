@@ -21,21 +21,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 {
-    public class CachedConversationRepository
-        : BaseRepositoryDecorator<Conversation>,
+    public class CachedConversationRepository(
+        AppDbContext dbContext,
+        IConversationRepository conversationRepository,
+        ICacheService cacheService
+    )
+        : BaseRepositoryDecorator<Conversation>(conversationRepository, dbContext),
             IConversationRepository
     {
-        private readonly ICacheService _cacheService;
-
-        public CachedConversationRepository(
-            AppDbContext dbContext,
-            IConversationRepository conversationRepository,
-            ICacheService cacheService
-        )
-            : base(conversationRepository, dbContext)
-        {
-            _cacheService = cacheService;
-        }
+        private readonly ICacheService _cacheService = cacheService;
 
         public async Task<ConversationProjection?> GetConversationById(
             Guid userId,
@@ -108,11 +102,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             );
 
             Console.WriteLine(
-                $"Cache returned {redisResults?.Count() ?? 0} conversations for user {userId} with cursor {cursor}"
+                $"Cache returned {redisResults?.Count ?? 0} conversations for user {userId} with cursor {cursor}"
             );
 
             if (redisResults == null || redisResults.Count == 0)
-                return new List<ConversationProjection>();
+                return [];
 
             var convIds = redisResults.Select(r => r.Value).ToList();
 
@@ -229,7 +223,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 userId,
                 cursorForDb,
                 remainingLimit,
-                topConvsFromCache.Select(c => c.Id).ToList()
+                [.. topConvsFromCache.Select(c => c.Id)]
             );
 
             var unreadConvs = await GetUnreadConversationsAsync(userId.ToGuid());
@@ -282,14 +276,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
             var allUnreadEntries = await _cacheService.HashGetAllAsync(dataKey);
 
-            return allUnreadEntries
-                .Where(entry => int.Parse(entry.Value) > 0)
-                .Select(entry => new ConversationSeenInfoProjection
-                {
-                    ConversationId = Guid.Parse(entry.Key),
-                    UnreadCount = int.Parse(entry.Value),
-                })
-                .ToList();
+            return
+            [
+                .. allUnreadEntries
+                    .Where(entry => int.Parse(entry.Value) > 0)
+                    .Select(entry => new ConversationSeenInfoProjection
+                    {
+                        ConversationId = Guid.Parse(entry.Key),
+                        UnreadCount = int.Parse(entry.Value),
+                    }),
+            ];
         }
 
         public async Task<int> GetUnreadCountAsync(Guid userId)

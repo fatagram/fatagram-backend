@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace Fatagram.Infrastructure.Cache
 {
@@ -35,6 +36,7 @@ namespace Fatagram.Infrastructure.Cache
 
         /// <summary> Lưu một trường (field) vào trong một Key dạng bảng (Hash). </summary>
         Task HashSetAsync(string key, string field, string value);
+        Task HashSetAsync(string key, HashEntry[] hashEntries);
 
         /// <summary> Lấy giá trị của một trường cụ thể trong bảng. </summary>
         Task<string?> HashGetAsync(string key, string field);
@@ -111,12 +113,17 @@ namespace Fatagram.Infrastructure.Cache
 
         /// <summary> Thêm phần tử vào tập hợp kèm điểm số (Score). </summary>
         Task<bool> SortedSetAddAsync<T>(string key, T value, double score);
+        Task<bool> SortedSetAddAsync(string key, SortedSetEntry[] entries);
 
         /// <summary> Lấy danh sách phần tử trong khoảng điểm (Ví dụ: Lấy top 10 bài viết nhiều tương tác nhất). </summary>
-        Task<IEnumerable<T>> SortedSetRangeByScoreAsync<T>(
+        Task<List<T>> SortedSetRangeByScoreAsync<T>(
             string key,
             double start = double.NegativeInfinity,
-            double stop = double.PositiveInfinity
+            double stop = double.PositiveInfinity,
+            Exclude exclude = Exclude.None,
+            Order order = Order.Ascending,
+            long offset = 0,
+            long take = -1
         );
 
         /// <summary> Xóa một phần tử khỏi Sorted Set. </summary>

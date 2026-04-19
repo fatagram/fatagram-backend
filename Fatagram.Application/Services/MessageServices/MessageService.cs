@@ -69,6 +69,22 @@ namespace Fatagram.Application.Services.MessageServices
             );
         }
 
+        public async Task<Result<List<ResponseMessageDto>>> GetDeltaMessagesAsync(
+            Guid conversationId,
+            int sinceSequenceNumber
+        )
+        {
+            var messages = await _messageRepository.GetDeltaMessagesAsync(
+                conversationId,
+                sinceSequenceNumber
+            );
+
+            return Result<List<ResponseMessageDto>>.Create(
+                ResponseStatusCode.Success,
+                _mapper.Map<List<ResponseMessageDto>>(messages)
+            );
+        }
+
         public async Task<Result<ResponseMessageDto>> SendMessageAsync(
             Guid? senderId,
             CreateMessageRequest request

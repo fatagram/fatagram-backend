@@ -19,5 +19,10 @@ namespace Fatagram.Application.Services.MessageServices.Interfaces
             Guid conversationId,
             CursorFilter<int> filter
         );
+
+        Task<Result<List<ResponseMessageDto>>> GetDeltaMessagesAsync(
+            Guid conversationId,
+            int sinceSequenceNumber
+        );
     }
 }

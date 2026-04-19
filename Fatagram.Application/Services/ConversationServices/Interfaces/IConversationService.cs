@@ -18,6 +18,7 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
         Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId);
         Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId);
         Task<Result<int>> GetUnreadCountAsync(Guid userId);
+        Task<Result<List<ConversationDto>>> GetDeltaAsync(Guid userId, DateTime since);
 
         Task<Result<Guid>> CreateGroupAsync(
             Guid creatorId,

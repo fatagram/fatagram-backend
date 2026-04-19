@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -82,8 +83,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         private async Task<List<ConversationProjection>> GetMyTopConversationsFromCacheAsync(
             Guid userId,
-            int limit,
-            DateTime cursor
+            int? limit,
+            DateTime cursor,
+            bool desc = true
         )
         {
             var key = $"user:{userId}:conversations_rank";
@@ -98,7 +100,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 key,
                 cursorTimestamp,
                 limit,
-                desc: true
+                desc
             );
 
             Console.WriteLine(
@@ -183,8 +185,13 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     }
                     return c;
                 })
-                .OrderByDescending(c => c.LastActiveAt)
+                .OrderBy(c => c.LastActiveAt)
                 .ToList();
+
+            if (desc)
+            {
+                result.Reverse();
+            }
 
             return result;
         }
@@ -192,7 +199,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
         public async Task<List<ConversationProjection>> GetMyConversationsAsync(
             string userId,
             DateTime? cursor,
-            int limit,
+            int limit = 20,
             List<Guid>? notInConvIds = null
         )
         {
@@ -335,6 +342,46 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     );
                 }
             }
+        }
+
+        public async Task<List<ConversationProjection>> GetDeltaAsync(Guid userId, DateTime since)
+        {
+            var sinceUtc = ToUtcDateTime(since);
+
+            var topConversationsFromCache = await GetMyTopConversationsFromCacheAsync(
+                userId,
+                null,
+                sinceUtc,
+                desc: false
+            );
+
+            var inner = (IConversationRepository)_inner;
+            var dbConversations = await inner.GetDeltaAsync(userId, sinceUtc);
+
+            HashSet<Guid> cacheConversationIds = [.. topConversationsFromCache.Select(c => c.Id)];
+
+            List<ConversationProjection> mergedConversations =
+            [
+                .. topConversationsFromCache,
+                .. dbConversations.Where(c => !cacheConversationIds.Contains(c.Id)),
+            ];
+
+            var unreadConvs = await GetUnreadConversationsAsync(userId);
+            var unreadDict = unreadConvs.ToDictionary(u => u.ConversationId, u => u.UnreadCount);
+
+            foreach (var conv in mergedConversations)
+            {
+                if (unreadDict.TryGetValue(conv.Id, out int count))
+                {
+                    conv.UnreadMessageCount = count;
+                }
+                else
+                {
+                    conv.UnreadMessageCount = 0;
+                }
+            }
+
+            return mergedConversations.OrderBy(c => c.LastActiveAt).ToList();
         }
     }
 }

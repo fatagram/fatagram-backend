@@ -136,7 +136,7 @@ namespace Fatagram.Infrastructure.Cache
         Task<List<(T Value, double Score)>> SortedSetRangeByScoreWithCursorAsync<T>(
             string key,
             double? cursor = null,
-            int limit = 20,
+            int? limit = null,
             bool desc = true
         );
 

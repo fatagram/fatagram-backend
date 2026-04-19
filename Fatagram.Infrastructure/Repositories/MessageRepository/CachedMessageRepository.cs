@@ -185,5 +185,35 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
 
             return [.. pendingMessages, .. messagesFromDb];
         }
+
+        public async Task<List<Message>> GetDeltaMessagesAsync(
+            Guid conversationId,
+            int sinceSequenceNumber
+        )
+        {
+            var messagesKey = $"conv:{conversationId}:messages";
+
+            var pendingMessages = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                messagesKey,
+                start: sinceSequenceNumber,
+                stop: double.PositiveInfinity,
+                exclude: Exclude.Start,
+                order: Order.Ascending
+            );
+
+            var messageRepo = (IMessageRepository)_inner;
+            var messagesFromDb = await messageRepo.GetDeltaMessagesAsync(
+                conversationId,
+                sinceSequenceNumber
+            );
+
+            var pendingSeqs = pendingMessages.Select(m => m.SequenceNumber).ToHashSet();
+
+            return
+            [
+                .. pendingMessages,
+                .. messagesFromDb.Where(m => !pendingSeqs.Contains(m.SequenceNumber)),
+            ];
+        }
     }
 }

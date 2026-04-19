@@ -11,6 +11,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces
     public interface IMessageRepository : IBaseRepository<Message>
     {
         Task<List<Message>> GetMessages(Guid conversationId, int? cursor, bool desc, int limit);
+        Task<List<Message>> GetDeltaMessagesAsync(Guid conversationId, int sinceSequenceNumber);
 
         Task<LastMessageProjection?> GetLastMessageOfConversationAsync(Guid conversationId);
     }

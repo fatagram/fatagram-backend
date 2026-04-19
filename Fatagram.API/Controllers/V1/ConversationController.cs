@@ -40,6 +40,13 @@ namespace Fatagram.API.Controllers.V1
             return res.ToActionResult();
         }
 
+        [HttpGet("delta")]
+        public async Task<IActionResult> GetDeltaConversations([FromQuery] DateTime since)
+        {
+            var res = await _conversationService.GetDeltaAsync(GetCurrentUserId(), since);
+            return res.ToActionResult();
+        }
+
         [HttpGet("{conversationId}")]
         [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetConversationById(Guid conversationId)
@@ -76,6 +83,20 @@ namespace Fatagram.API.Controllers.V1
         )
         {
             var res = await _messageService.GetMessagesAsync(conversationId, filter);
+            return res.ToActionResult();
+        }
+
+        [HttpGet("{conversationId}/messages/delta")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> GetDeltaMessages(
+            Guid conversationId,
+            [FromQuery] int sinceSequenceNumber = 0
+        )
+        {
+            var res = await _messageService.GetDeltaMessagesAsync(
+                conversationId,
+                sinceSequenceNumber
+            );
             return res.ToActionResult();
         }
 

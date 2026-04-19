@@ -103,6 +103,41 @@ namespace Fatagram.Application.Services.ConversationServices
             );
         }
 
+        public async Task<Result<List<ConversationDto>>> GetDeltaAsync(Guid userId, DateTime since)
+        {
+            var conversations = await _conversationRepository.GetDeltaAsync(userId, since);
+
+            if (conversations.Count == 0)
+            {
+                return Result<List<ConversationDto>>.Create(ResponseStatusCode.Success, []);
+            }
+
+            var res = _mapper.Map<List<ConversationDto>>(conversations);
+
+            foreach (var c in res)
+            {
+                if (!c.IsGroup && c.OtherUserId != null)
+                {
+                    var participantSeenInfos =
+                        await _cpRepo.GetConversationParticipantsSeenInfoAsync(c.Id.ToGuid());
+                    c.OtherLastSeenMessageSeq = participantSeenInfos
+                        .ParticipantsSeenInfo[c.OtherUserId ?? Guid.Empty]
+                        .SequenceNumber;
+                    c.MyLastSeenMessageSeq = participantSeenInfos
+                        .ParticipantsSeenInfo[userId]
+                        .SequenceNumber;
+                }
+
+                var lastM = await _messageRepository.GetLastMessageOfConversationAsync(
+                    c.Id.ToGuid()
+                );
+                c.LastMessage = _mapper.Map<ResponseMessageDto>(lastM);
+                c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
+            }
+
+            return Result<List<ConversationDto>>.Create(ResponseStatusCode.Success, res);
+        }
+
         public async Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId)
         {
             var conversation = await _conversationRepository.GetConversationById(

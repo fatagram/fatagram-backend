@@ -67,5 +67,20 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 m => m.Include(m => m.Sender).Include(m => m.Media!.Take(3))
             );
         }
+
+        public async Task<List<Message>> GetDeltaMessagesAsync(
+            Guid conversationId,
+            int sinceSequenceNumber
+        )
+        {
+            return await _dbContext
+                .Messages.Where(m =>
+                    m.ConversationId == conversationId && m.SequenceNumber > sinceSequenceNumber
+                )
+                .Include(m => m.Sender)
+                .Include(m => m.Media!.Take(3))
+                .OrderBy(m => m.SequenceNumber)
+                .ToListAsync();
+        }
     }
 }

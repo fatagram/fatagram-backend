@@ -235,6 +235,76 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             return await query.OrderByDescending(c => c.LastActiveAt).Take(limit).ToListAsync();
         }
 
+        public async Task<List<ConversationProjection>> GetDeltaAsync(Guid userId, DateTime since)
+        {
+            var sinceUtc = ToUtcDateTime(since);
+
+            var query = _dbContext
+                .Conversations.Where(c => c.Participants.Any(p => p.UserId == userId))
+                .Select(c => new ConversationProjection
+                {
+                    Id = c.Id,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                    LastMessage = c
+                        .Messages.OrderByDescending(m => m.CreatedAt)
+                        .Select(m => new LastMessageProjection
+                        {
+                            Id = m.Id,
+                            ConversationId = m.ConversationId,
+                            SenderId = m.SenderId,
+                            Type = m.Type,
+                            Metadata = m.Metadata,
+                            Content = m.Content,
+                            CreatedAt = m.CreatedAt,
+                            SenderFullName = m.Sender.FullName,
+                            SenderNickname = m
+                                .Sender.ConversationParticipants.Where(cp =>
+                                    cp.ConversationId == c.Id && cp.UserId == m.SenderId
+                                )
+                                .Select(cp => cp.Nickname)
+                                .FirstOrDefault(),
+                        })
+                        .FirstOrDefault(),
+                    LastMessageNumber = c.LastMessageNumber,
+                    IsGroup = c.IsGroup,
+                    TopParticipantNames = c.IsGroup
+                        ? c
+                            .Participants.OrderBy(p => p.CreatedAt)
+                            .Select(p => p.User!.FullName!)
+                            .Take(2)
+                            .ToList()
+                        : null!,
+                    OtherUserId = c.IsGroup
+                        ? null
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.UserId)
+                            .FirstOrDefault(),
+                    ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
+                    LastActiveAt =
+                        c.Messages.OrderByDescending(m => m.SequenceNumber)
+                            .Select(m => (DateTime?)m.CreatedAt)
+                            .FirstOrDefault()
+                        ?? c.CreatedAt,
+                    Name = c.IsGroup
+                        ? c.Name
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User!.FullName)
+                            .FirstOrDefault(),
+                    AvatarUrl = c.IsGroup
+                        ? c.AvatarUrl
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User!.Avatar)
+                            .FirstOrDefault(),
+                })
+                .Where(c => c.LastActiveAt > sinceUtc);
+
+            return await query.OrderBy(c => c.LastActiveAt).ToListAsync();
+        }
+
         public async Task<int> GetUnreadCountAsync(Guid userId)
         {
             return await _dbContext

@@ -210,7 +210,7 @@ public class RedisCacheService : ICacheService
     public async Task<List<(T Value, double Score)>> SortedSetRangeByScoreWithCursorAsync<T>(
         string key,
         double? cursor = null,
-        int limit = 20,
+        int? limit = null,
         bool desc = true
     )
     {
@@ -228,7 +228,7 @@ public class RedisCacheService : ICacheService
             stop: stop,
             exclude: exclude,
             order: desc ? Order.Descending : Order.Ascending,
-            take: limit
+            take: limit ?? -1
         );
 
         return members.Select(m => (FromRedisValue<T>(m.Element), m.Score)).ToList();

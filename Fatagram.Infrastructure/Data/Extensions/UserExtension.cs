@@ -70,6 +70,11 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .IsRequired()
                     .HasDefaultValue(false)
                     .HasSentinel(true);
+                entity
+                    .Property(mm => mm.BackgroundMetadata)
+                    .HasColumnName("bg_metadata")
+                    .HasColumnType("jsonb")
+                    .IsRequired(false);
 
                 // Relationships
                 entity

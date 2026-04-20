@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Fatagram.API.Controllers.V1;
 using Fatagram.API.Middlewares;
@@ -97,9 +98,15 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         /// <exception cref="UnauthorizedException"></exception>
         [Authorize]
         [HttpPatch("background")]
-        public async Task<IActionResult> UploadBackgroundAsync(IFormFile file)
+        public async Task<IActionResult> UploadBackgroundAsync(
+            IFormFile file,
+            [FromForm] string? metadata
+        )
         {
             var userId = GetCurrentUserId();
+            var parsedMetadata = metadata is not null
+                ? JsonSerializer.Deserialize<Dictionary<string, object?>>(metadata)
+                : null;
             var res = await _imageService.SaveImageAsync(
                 new ImageRequest()
                 {
@@ -112,7 +119,7 @@ namespace Fatagram.API.Controllers.V1.UserControllers
             );
             await _userProfileService.UpdateUserAsync(
                 userId,
-                new UpdateUserDto() { Background = res.Data }
+                new UpdateUserDto() { Background = res.Data, BackgroundMetadata = parsedMetadata }
             );
 
             return res.ToActionResult();

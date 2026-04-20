@@ -8,7 +8,7 @@ namespace Fatagram.Application.Dtos.User
 {
     public class GetUserProfileDto
     {
-        public Dictionary<string, string?>? Infos { get; set; }
+        public Dictionary<string, object?>? Infos { get; set; }
         public bool? IsOwner { get; set; }
     }
 }

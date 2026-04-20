@@ -17,6 +17,7 @@ namespace Fatagram.Application.Dtos.User.Update
         public string? Description { get; set; }
         public string? Avatar { get; set; }
         public string? Background { get; set; }
+        public Dictionary<string, object?>? BackgroundMetadata { get; set; }
         public string? Phone { get; set; }
     }
 }

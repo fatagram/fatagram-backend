@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.User;
@@ -61,7 +62,7 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                     u => u.Id.ToString() == target || u.UrlName == target
                 ) ?? throw new UserNotFoundException();
 
-            var infos = new Dictionary<string, string?>();
+            var infos = new Dictionary<string, object?>();
 
             if (user != null)
             {
@@ -76,7 +77,24 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
                             continue;
 
                         var value = prop.GetValue(userObj, null);
-                        infos[prop.Name.ToLowerFirstLetter()] = value?.ToString();
+
+                        value = value switch
+                        {
+                            JsonElement jsonEl => jsonEl.ValueKind switch
+                            {
+                                JsonValueKind.Object => JsonSerializer.Deserialize<
+                                    Dictionary<string, object?>
+                                >(jsonEl.GetRawText()),
+                                JsonValueKind.Array => JsonSerializer.Deserialize<List<object?>>(
+                                    jsonEl.GetRawText()
+                                ),
+                                _ => jsonEl.GetRawText(),
+                            },
+                            Dictionary<string, object?> dict => dict,
+                            _ => value,
+                        };
+
+                        infos[prop.Name.ToLowerFirstLetter()] = value;
                     }
                     catch (Exception ex)
                     {
@@ -182,8 +200,8 @@ namespace Fatagram.Application.Services.UserServices.UserProfileServices
             var fullName =
                 onboardingDto.FirstName.Trim()
                 + " "
-                + onboardingDto.MiddleName.Trim()
-                + (string.IsNullOrWhiteSpace(onboardingDto.MiddleName.Trim()) ? "" : " ")
+                + onboardingDto.MiddleName?.Trim()
+                + (string.IsNullOrWhiteSpace(onboardingDto.MiddleName?.Trim()) ? "" : " ")
                 + onboardingDto.LastName.Trim();
             var result = await _userRepository.UpdateAsync(
                 u => u.Id == userId,

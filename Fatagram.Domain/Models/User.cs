@@ -52,6 +52,9 @@ namespace Fatagram.Domain.Models
         /// </summary>
         public string? Background { get; set; }
 
+        public Dictionary<string, object?> BackgroundMetadata { get; set; } =
+            new Dictionary<string, object?>();
+
         /// <summary>
         /// Gets or sets the birth date of the user.
         /// </summary>

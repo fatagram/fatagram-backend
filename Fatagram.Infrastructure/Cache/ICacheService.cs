@@ -157,5 +157,8 @@ namespace Fatagram.Infrastructure.Cache
 
         /// <summary> Thực thi nhiều lệnh cùng lúc để giảm Round-trip time (RTT). </summary>
         Task ExecuteBatchAsync(Action<ICacheService> batchAction);
+
+        // Lock atomic
+        Task SetIfNotExistsAsync(string key, string value, TimeSpan expiration);
     }
 }

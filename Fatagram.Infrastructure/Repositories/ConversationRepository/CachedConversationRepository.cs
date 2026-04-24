@@ -303,25 +303,17 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
         public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)
         {
             var key = $"conv:{conversationId}:seq";
-            if (!_cacheService.ExistsAsync(key).Result)
-            {
-                var inner = (IConversationRepository)_inner;
-                var currentLastSeq =
-                    inner
-                        .GetConversationById(
-                            Guid.Empty,
-                            conversationId,
-                            c => new ConversationProjection
-                            {
-                                LastMessageNumber = c.LastMessageNumber,
-                            }
-                        )
-                        .Result?.LastMessageNumber
-                    ?? 0;
 
-                _cacheService.SetAsync(key, currentLastSeq, TimeSpan.FromHours(1)).Wait();
+            var newValue = await _cacheService.IncrementAsync(key);
+
+            if (newValue == 1)
+            {
+                var dbLastSeq = await GetLastMessageNumberAsync(conversationId);
+                newValue = await _cacheService.IncrementAsync(key, dbLastSeq);
+                await _cacheService.KeyExpireAsync(key, TimeSpan.FromHours(1));
             }
-            return (int)await _cacheService.IncrementAsync(key);
+
+            return (int)newValue;
         }
 
         public async Task NotifyNewMessage(

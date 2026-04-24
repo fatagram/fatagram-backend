@@ -298,4 +298,9 @@ public class RedisCacheService : ICacheService
         var count = await _db.SortedSetAddAsync(key, entries);
         return count > 0;
     }
+
+    public async Task SetIfNotExistsAsync(string key, string value, TimeSpan expiration)
+    {
+        await _db.StringSetAsync(key, value, expiration, when: When.NotExists);
+    }
 }

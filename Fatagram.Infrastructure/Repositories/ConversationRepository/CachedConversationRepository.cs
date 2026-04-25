@@ -196,6 +196,18 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             return result;
         }
 
+        private async Task<List<Guid>> GetAllConversationIdsFromCacheAsync(Guid userId)
+        {
+            var key = $"user:{userId}:conversations_rank";
+            var redisResults = await _cacheService.SortedSetRangeByScoreWithCursorAsync<string>(
+                key,
+                double.NegativeInfinity,
+                desc: false
+            );
+
+            return redisResults?.Select(r => r.Value.ToGuid()).ToList() ?? [];
+        }
+
         public async Task<List<ConversationProjection>> GetMyConversationsAsync(
             string userId,
             DateTime? cursor,
@@ -213,6 +225,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 return topConvsFromCache;
             }
 
+            var allIdsFromCache = await GetAllConversationIdsFromCacheAsync(userId.ToGuid());
             var remainingLimit = limit - topConvsFromCache.Count;
             DateTime? cursorForDb = null;
             if (topConvsFromCache.Count > 0)
@@ -230,7 +243,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 userId,
                 cursorForDb,
                 remainingLimit,
-                [.. topConvsFromCache.Select(c => c.Id)]
+                allIdsFromCache
             );
 
             var unreadConvs = await GetUnreadConversationsAsync(userId.ToGuid());

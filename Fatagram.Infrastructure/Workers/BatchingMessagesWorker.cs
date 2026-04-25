@@ -87,7 +87,71 @@ namespace Fatagram.Infrastructure.Workers
 
                     try
                     {
-                        var messagesToPersist = pendingMessages
+                        var conversationId = pendingMessages.First().ConversationId;
+
+                        // ── 1. Dedup trong batch: trùng SequenceNumber giữ cái UpdatedAt mới nhất ──
+                        var dedupedMessages = pendingMessages
+                            .GroupBy(m => new { m.ConversationId, m.SequenceNumber })
+                            .Select(g => g.OrderByDescending(m => m.UpdatedAt).First())
+                            .OrderBy(m => m.CreatedAt)
+                            .ToList();
+
+                        // ── 2. Loại Id và SequenceNumber đã có trong DB ──
+                        var incomingIds = dedupedMessages.Select(m => m.Id).ToList();
+                        var incomingSeqs = dedupedMessages.Select(m => m.SequenceNumber).ToList();
+
+                        var existingIds = await dbContext
+                            .Messages.Where(m => incomingIds.Contains(m.Id))
+                            .Select(m => m.Id)
+                            .ToHashSetAsync(cancellationToken);
+
+                        var existingSeqs = await dbContext
+                            .Messages.Where(m =>
+                                m.ConversationId == conversationId
+                                && incomingSeqs.Contains(m.SequenceNumber)
+                            )
+                            .Select(m => m.SequenceNumber)
+                            .ToHashSetAsync(cancellationToken);
+
+                        var filteredMessages = dedupedMessages
+                            .Where(m =>
+                                !existingIds.Contains(m.Id)
+                                && !existingSeqs.Contains(m.SequenceNumber)
+                            )
+                            .ToList();
+
+                        // ── 3. Nếu không còn gì mới → chỉ xóa cache rồi bỏ qua ──
+                        if (filteredMessages.Count == 0)
+                        {
+                            _logger.LogWarning(
+                                "All messages in batch for key {key} already exist in DB. Cleaning cache.",
+                                key
+                            );
+                            foreach (var msg in pendingMessages)
+                                await cacheService.SortedSetRemoveAsync(key, msg);
+
+                            await transaction.CommitAsync(cancellationToken);
+                            return;
+                        }
+
+                        // ── 4. Reassign SequenceNumber liên tục tránh gap / trùng ──
+                        var lastSeq =
+                            await dbContext
+                                .Messages.Where(m => m.ConversationId == conversationId)
+                                .MaxAsync(m => (long?)m.SequenceNumber, cancellationToken) ?? 0;
+
+                        var resequenced = filteredMessages
+                            .Select(
+                                (msg, idx) =>
+                                {
+                                    msg.SequenceNumber = (int)(lastSeq + idx + 1);
+                                    return msg;
+                                }
+                            )
+                            .ToList();
+
+                        // ── 5. Map sang entity mới để tránh EF tracking conflict ──
+                        var messagesToPersist = resequenced
                             .Select(msg => new Message
                             {
                                 Id = msg.Id,
@@ -115,7 +179,7 @@ namespace Fatagram.Infrastructure.Workers
                                         DeletedAt = media.DeletedAt,
                                         Version = media.Version,
                                         IndexInMessage = media.IndexInMessage,
-                                        MessageSequence = media.MessageSequence,
+                                        MessageSequence = msg.SequenceNumber, // sync với seq mới
                                     })
                                     .ToList(),
                             })
@@ -125,26 +189,26 @@ namespace Fatagram.Infrastructure.Workers
                             messagesToPersist,
                             cancellationToken
                         );
+
+                        // ── 6. Cập nhật LastMessageNumber theo sequence thực tế sau reassign ──
                         await dbContext
-                            .Conversations.Where(c =>
-                                c.Id == pendingMessages.First().ConversationId
-                            )
+                            .Conversations.Where(c => c.Id == conversationId)
                             .ExecuteUpdateAsync(
                                 s =>
                                     s.SetProperty(
                                         c => c.LastMessageNumber,
-                                        pendingMessages.Last().SequenceNumber
+                                        resequenced.Last().SequenceNumber
                                     ),
                                 cancellationToken
                             );
+
                         await dbContext.SaveChangesAsync(cancellationToken);
 
-                        foreach (var message in pendingMessages)
-                        {
-                            await cacheService.SortedSetRemoveAsync(key, message);
-                        }
-
+                        // ── 7. Commit DB trước, xóa cache sau ──
                         await transaction.CommitAsync(cancellationToken);
+
+                        foreach (var message in pendingMessages)
+                            await cacheService.SortedSetRemoveAsync(key, message);
                     }
                     catch (Exception ex)
                     {

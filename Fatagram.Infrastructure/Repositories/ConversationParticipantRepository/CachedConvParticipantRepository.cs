@@ -160,13 +160,17 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
                 oldSeenSeq = oldInfo?.SequenceNumber ?? 0;
             }
 
-            // if (messageSeq <= oldSeenSeq)
-            // {
-            //     return;
-            // }
+            if (messageSeq <= oldSeenSeq)
+            {
+                return;
+            }
 
             var unreadConvKey = $"user:{userId}:unread_convs";
-            await _cacheService.HashSetAsync(unreadConvKey, conversationId.ToString(), "0");
+            await _cacheService.HashSetAsync(
+                unreadConvKey,
+                conversationId.ToString(),
+                (currentLastSeq - messageSeq).ToString()
+            );
 
             var seenData = new ParticipantSeenInfoProjection
             {

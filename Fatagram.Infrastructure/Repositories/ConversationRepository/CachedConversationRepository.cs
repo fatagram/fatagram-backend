@@ -318,10 +318,10 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             var key = $"conv:{conversationId}:seq";
 
             var newValue = await _cacheService.IncrementAsync(key);
-
-            if (newValue == 1)
+            if (newValue <= 1)
             {
-                var dbLastSeq = await GetLastMessageNumberAsync(conversationId);
+                var inner = (IConversationRepository)_inner;
+                var dbLastSeq = await inner.GetLastMessageNumberAsync(conversationId);
                 newValue = await _cacheService.IncrementAsync(key, dbLastSeq);
                 await _cacheService.KeyExpireAsync(key, TimeSpan.FromHours(1));
             }

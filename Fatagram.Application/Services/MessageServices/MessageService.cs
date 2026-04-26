@@ -17,6 +17,7 @@ using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Cache;
 using Fatagram.Infrastructure.Projections;
+using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
@@ -32,6 +33,7 @@ namespace Fatagram.Application.Services.MessageServices
         IMessageRepository messageRepository,
         ISocketSender<ResponseMessageDto> messageSender,
         IConversationRepository conversationRepository,
+        IConversationParticipantRepository cpRepo,
         IUserRepository userRepository,
         ICacheService cacheService,
         IMapper mapper,
@@ -41,6 +43,7 @@ namespace Fatagram.Application.Services.MessageServices
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly ISocketSender<ResponseMessageDto> _messageSender = messageSender;
         private readonly IConversationRepository _conversationRepository = conversationRepository;
+        private readonly IConversationParticipantRepository _cpRepo = cpRepo;
         private readonly IUserRepository _userRepository = userRepository;
         private readonly ICacheService _cacheService = cacheService;
         private readonly ILogger<MessageService> _logger = logger;
@@ -51,6 +54,9 @@ namespace Fatagram.Application.Services.MessageServices
             CursorFilter<int> filter
         )
         {
+            if (filter.Cursor <= 0)
+                filter.Cursor = int.MaxValue;
+
             var messages = await _messageRepository.GetMessages(
                 conversationId,
                 filter.Cursor,
@@ -166,6 +172,13 @@ namespace Fatagram.Application.Services.MessageServices
                         ?.User!,
                     Media = _mapper.Map<List<MessageMedia>>(request.Media),
                 }
+            );
+
+            await _cpRepo.MarkAsSeenAsync(
+                conversation.Id,
+                senderId ?? Guid.Empty,
+                message.SequenceNumber,
+                DateTime.UtcNow
             );
 
             if (message is null)

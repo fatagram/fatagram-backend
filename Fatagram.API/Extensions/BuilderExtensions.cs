@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Fatagram.API.Extensions.Configuration;
 using Fatagram.API.Extensions.Hosting;
 using Fatagram.API.Extensions.Services;
+using Microsoft.OpenApi.Models;
 
 namespace Fatagram.API.Extensions
 {
@@ -26,6 +27,38 @@ namespace Fatagram.API.Extensions
             builder.WebHost.UseKestrel(option =>
             {
                 option.Limits.MaxRequestBodySize = imageMaxSize * 1024 * 1024; // 2MB
+            });
+
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition(
+                    "Bearer",
+                    new OpenApiSecurityScheme
+                    {
+                        Name = "Authorization",
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "Bearer",
+                        BearerFormat = "JWT",
+                        In = ParameterLocation.Header,
+                        Description = "Nhập token theo định dạng: Bearer {your_token}",
+                    }
+                );
+                options.AddSecurityRequirement(
+                    new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer",
+                                },
+                            },
+                            new string[] { }
+                        },
+                    }
+                );
             });
         }
     }

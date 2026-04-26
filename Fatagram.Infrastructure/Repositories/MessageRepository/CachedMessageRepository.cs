@@ -132,6 +132,9 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             int limit
         )
         {
+            Console.WriteLine(
+                $"Getting messages for conversation {conversationId}, cursor: {cursor}, desc: {desc}, limit: {limit}"
+            );
             var messagesKey = $"conv:{conversationId}:messages";
             Order redisOrder = desc ? Order.Descending : Order.Ascending;
 
@@ -163,6 +166,10 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 take: limit
             );
 
+            Console.WriteLine(
+                $"Cache returned {pendingMessages.Count} messages for conversation {conversationId}"
+            );
+
             int remainingLimit = limit - pendingMessages.Count;
 
             if (remainingLimit <= 0)
@@ -170,9 +177,12 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 return pendingMessages;
             }
 
-            int? cursorForDb = pendingMessages.Any()
-                ? pendingMessages.Last().SequenceNumber
-                : cursor;
+            int? cursorForDb =
+                pendingMessages.Count > 0 ? pendingMessages.Last().SequenceNumber : cursor;
+
+            Console.WriteLine(
+                $"Fetching from database with cursor {cursorForDb} for conversation {conversationId} remaining limit {remainingLimit}"
+            );
 
             var messageRepo = (IMessageRepository)_inner;
 
@@ -181,6 +191,10 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 cursorForDb,
                 desc,
                 remainingLimit
+            );
+
+            Console.WriteLine(
+                $"Database returned {messagesFromDb.Count} messages for conversation {conversationId}"
             );
 
             return [.. pendingMessages, .. messagesFromDb];

@@ -305,6 +305,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
                     Avatar = f.User1Id == targetId ? f.User2.Avatar : f.User1.Avatar,
                     Name = (f.User1Id == targetId ? f.User2.FullName : f.User1.FullName)!,
                     CreatedAt = f.CreatedAt,
+                    IsFriend = f.User1Id == userId || f.User2Id == userId,
                 },
                 orderBy: f => f.CreatedAt,
                 orderDesc: filter.SortDesc ?? false,

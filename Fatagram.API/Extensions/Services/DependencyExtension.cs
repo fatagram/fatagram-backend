@@ -7,6 +7,8 @@ using Fatagram.API.Scripts;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.GifServices;
+using Fatagram.Application.Services.GifServices.Interfaces;
 using Fatagram.Application.Services.MediaServices;
 using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
@@ -27,7 +29,6 @@ using Fatagram.Infrastructure.Repositories.MessageRepository;
 using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
-using Scrutor;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -49,6 +50,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IConversationParticipantService, ConversationParticipantService>();
             services.AddScoped<IMediaService, MediaService>();
+            services.AddHttpClient<IGifService, GiphyGifService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
@@ -80,6 +82,9 @@ namespace Fatagram.API.Extensions.Services
                 CachedConvParticipantRepository
             >();
             services.Decorate<IMediaRepository, CachedMediaRepository>();
+
+            // Scoped for cached services
+            services.Decorate<IGifService, CachedGifService>();
 
             // Scoped for SignalR
             services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));

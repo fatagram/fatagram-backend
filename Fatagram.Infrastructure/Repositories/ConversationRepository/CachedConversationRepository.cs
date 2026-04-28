@@ -310,7 +310,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<int> GetUnreadCountAsync(Guid userId)
         {
-            return GetUnreadConversationsAsync(userId).Result.Count;
+            return (await GetUnreadConversationsAsync(userId)).Count;
         }
 
         public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)

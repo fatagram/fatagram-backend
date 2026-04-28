@@ -341,11 +341,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 );
         }
 
-        public async Task NotifyNewMessage(
-            Guid conversationId,
-            Guid senderId,
-            List<Guid> participantIds
-        )
+        public Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds)
         {
             throw new NotImplementedException(
                 "This method is not implemented in ConversationRepository. It should be implemented in CachedConversationRepository."

@@ -7,5 +7,7 @@ namespace Fatagram.Domain.Enums
         Audio = 2,
         File = 3,
         Other = 4,
+        Gif = 5,
+        Sticker = 6,
     }
 }

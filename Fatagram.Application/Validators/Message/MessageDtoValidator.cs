@@ -44,7 +44,7 @@ namespace Fatagram.Application.Validators.Message
                 })
                 .When(x => x.Type == MessageType.Media)
                 .WithErrorCode("MEDIA_TYPE_MISMATCH")
-                .WithMessage("Can not mix iamge and non-image media in the same message.");
+                .WithMessage("Can not mix image and non-image media in the same message.");
         }
     }
 }

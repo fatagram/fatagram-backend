@@ -75,7 +75,7 @@ public class SyncSeenWorker : BackgroundService
                 _logger.LogError(ex, "SyncSeenWorker error!");
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 }

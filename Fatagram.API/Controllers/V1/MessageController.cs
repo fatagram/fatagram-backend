@@ -28,9 +28,6 @@ namespace Fatagram.API.Controllers.V1
             Guid conversationId
         )
         {
-            Console.WriteLine(
-                $"SendMessage - UserId: {GetCurrentUserId()}, ConversationId: {conversationId}, ReceiverId: {request.ReceiverId}, Content: {request.Content}, CorrelationId: {request.CorrelationId}, ClientTempId: {request.ClientTempId}, Metadata: {request.Metadata}"
-            );
             var createMessageRequest = new CreateMessageRequest
             {
                 ConversationId = conversationId,

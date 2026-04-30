@@ -22,18 +22,18 @@ namespace Fatagram.Infrastructure.Workers
         private readonly ILogger<BatchingMessagesWorker> _logger = logger;
 
         private const int BatchSize = 50;
-        private readonly TimeSpan _batchInterval = TimeSpan.FromMinutes(1);
+        private TimeSpan _batchInterval = TimeSpan.FromMilliseconds(500);
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("BatchingMessagesWorker is starting.");
+            // _logger.LogInformation("BatchingMessagesWorker is starting.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation(
-                    "BatchingMessagesWorker is running at: {time}",
-                    DateTimeOffset.Now
-                );
+                // _logger.LogInformation(
+                //     "BatchingMessagesWorker is running at: {time}",
+                //     DateTimeOffset.Now
+                // );
 
                 try
                 {
@@ -62,9 +62,13 @@ namespace Fatagram.Infrastructure.Workers
 
             var queueKeys = await cacheService.GetKeysAsync("conv:*:messages");
 
-            // FIX #3: null-guard
             if (queueKeys is null || !queueKeys.Any())
+            {
+                _batchInterval = TimeSpan.FromMinutes(1);
                 return;
+            }
+
+            _batchInterval = TimeSpan.FromMilliseconds(500);
 
             foreach (var key in queueKeys)
             {

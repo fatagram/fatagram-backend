@@ -12,5 +12,14 @@ namespace Fatagram.Application.Services.SockerServices.Interfaces
     {
         Task SendAsync(Guid userId, SocketMessage<TPayload> message);
         Task SendAllAsync(IEnumerable<Guid> userIds, SocketMessage<TPayload> message);
+        Task SendToGroupAsync(string groupName, SocketMessage<TPayload> message);
+        Task SendToGroupExceptAsync(
+            string groupName,
+            IEnumerable<string> excludedConnectionIds,
+            SocketMessage<TPayload> message
+        );
+
+        Task JoinGroupAsync(string connectionId, string groupName);
+        Task LeaveGroupAsync(string connectionId, string groupName);
     }
 }

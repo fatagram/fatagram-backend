@@ -14,6 +14,7 @@ using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Services.MessageServices.Interfaces;
 using Fatagram.Application.Services.SockerServices.Interfaces;
+using Fatagram.Application.Services.SocketServices.Interfaces;
 using Fatagram.Application.Services.UserServices.UserServices;
 using Fatagram.Application.Services.UserServices.UserServices.Interfaces;
 using Fatagram.Application.Utils;
@@ -88,6 +89,7 @@ namespace Fatagram.API.Extensions.Services
 
             // Scoped for SignalR
             services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));
+            services.AddScoped<ISockerReceiver, SockerReceiver>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
 

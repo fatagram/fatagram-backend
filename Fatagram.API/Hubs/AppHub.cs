@@ -1,34 +1,44 @@
 using System.Security.Claims;
+using Fatagram.API.Utils;
+using Fatagram.Application.Services.SocketServices.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Fatagram.API.Hubs
 {
     [Authorize]
-    public class AppHub : Hub
+    public class AppHub(ISockerReceiver receiver) : Hub
     {
+        private readonly ISockerReceiver _receiver = receiver;
         protected string? UserId => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         protected string ConnectionId => Context.ConnectionId;
 
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
             if (UserId != null)
             {
-                // Add the user to a group based on their user ID
-                Groups.AddToGroupAsync(ConnectionId, UserId);
+                await Groups.AddToGroupAsync(ConnectionId, UserId);
+                await _receiver.OnConnectedAsync(UserId, ConnectionId);
             }
-            return base.OnConnectedAsync();
+            await base.OnConnectedAsync();
         }
 
-        // DisconnectedAsync is called when a user disconnects from the hub
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             if (UserId != null)
             {
-                // Remove the user from the group when they disconnect
-                Groups.RemoveFromGroupAsync(ConnectionId, UserId);
+                await Groups.RemoveFromGroupAsync(ConnectionId, UserId);
+                await _receiver.OnDisconnectedAsync(UserId, ConnectionId, exception);
             }
-            return base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task HandleAction(string action, string targetId, object? data)
+        {
+            if (UserId != null)
+            {
+                await _receiver.OnReceiveActionAsync(UserId, ConnectionId, action, targetId, data);
+            }
         }
     }
 }

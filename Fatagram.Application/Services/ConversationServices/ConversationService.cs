@@ -25,6 +25,7 @@ using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Application.Services.ConversationServices
 {
@@ -283,6 +284,66 @@ namespace Fatagram.Application.Services.ConversationServices
                 ResponseStatusCode.Success,
                 await _conversationRepository.GetUnreadCountAsync(userId)
             );
+        }
+
+        public async Task<Result> UpdateAsync(
+            Guid conversationId,
+            UpdateConversationDto conversationDto
+        )
+        {
+            var existingConversation =
+                await _conversationRepository.GetAsync(conversationId, c => c)
+                ?? throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+
+            _mapper.Map(conversationDto, existingConversation);
+            await _conversationRepository.UpdateAsync(
+                existingConversation.NormalizeEmptyStringToNull()
+            );
+            return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result> UpdateAvatarAsync(
+            Guid conversationId,
+            string avatarUrl,
+            Guid userId
+        )
+        {
+            Console.WriteLine(
+                $"[ConversationService] UpdateAvatarAsync: conversationId={conversationId}, avatarUrl={avatarUrl}, userId={userId}"
+            );
+            var existingConversation =
+                await _conversationRepository.GetAsync(conversationId, c => c)
+                ?? throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+
+            var user =
+                await _userRepository.GetAsync(userId, u => u)
+                ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
+
+            existingConversation.AvatarUrl = avatarUrl;
+            await _conversationRepository.UpdateAsync(existingConversation);
+
+            // Send system message for avatar update
+            var message = await _messageService.SendMessageAsync(
+                null,
+                new CreateMessageRequest
+                {
+                    ConversationId = conversationId,
+                    Content = $"{user.FullName} đã cập nhật avatar",
+                    Type = MessageType.ChangeGroupAvatar,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "avatarUrl", avatarUrl },
+                        { "actorName", user.FullName! },
+                        { "actorId", userId },
+                    },
+                }
+            );
+
+            return Result.Create(ResponseStatusCode.Success);
         }
     }
 }

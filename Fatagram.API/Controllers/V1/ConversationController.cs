@@ -6,9 +6,13 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
+using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.ImageService.Enum;
 using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Application.Utils;
+using Fatagram.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -21,6 +25,7 @@ namespace Fatagram.API.Controllers.V1
         IConversationParticipantService conversationParticipantService,
         IMessageService messageService,
         IMediaService mediaService,
+        IImageService imageService,
         ILogger<ConversationController> logger
     ) : BaseApiController
     {
@@ -30,6 +35,7 @@ namespace Fatagram.API.Controllers.V1
             conversationParticipantService;
         private readonly IMessageService _messageService = messageService;
         private readonly IMediaService _mediaService = mediaService;
+        private readonly IImageService _imageService = imageService;
 
         [HttpGet]
         public async Task<IActionResult> GetConversations(
@@ -155,6 +161,33 @@ namespace Fatagram.API.Controllers.V1
         {
             var res = await _mediaService.GetMediaAroundAnchorAsync(conversationId, mediaId, count);
             return res.ToActionResult();
+        }
+
+        [HttpPatch("{conversationId}/avatar")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> UpdateConversationAvatar(
+            Guid conversationId,
+            [FromForm] IFormFile file
+        )
+        {
+            var res = await _imageService.SaveImageAsync(
+                new ImageRequest()
+                {
+                    ImageStream = file.OpenReadStream(),
+                    Format = ImageFormat.Jpeg,
+                    Quality = ImageQuality.Medium,
+                    SizePreset = ImageSizePreset.Medium,
+                },
+                "conversation-avatars"
+            );
+
+            var _res = await _conversationService.UpdateAvatarAsync(
+                conversationId,
+                res.Data!,
+                GetCurrentUserId()
+            );
+
+            return _res.ToActionResult();
         }
     }
 }

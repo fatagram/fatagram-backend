@@ -33,6 +33,21 @@ namespace Fatagram.Application.Common.Mapper.Profiles
                     dest => dest.ParticipantIds,
                     opt => opt.MapFrom(src => src.Participants.Select(p => p.UserId).ToList())
                 );
+
+            CreateMap<UpdateConversationDto, Conversation>()
+                .ForAllMembers(opt =>
+                    opt.Condition(
+                        (src, dest, srcMember) =>
+                            srcMember != null
+                            && (
+                                !(srcMember is DateTime)
+                                || !((DateTime)srcMember).Equals(default(DateTime))
+                            )
+                            && (!(srcMember is int) || !((int)srcMember).Equals(default(int)))
+                            && (!(srcMember is bool) || !((bool)srcMember).Equals(default(bool)))
+                            && (!(srcMember is Guid) || !((Guid)srcMember).Equals(default(Guid)))
+                    )
+                );
         }
     }
 }

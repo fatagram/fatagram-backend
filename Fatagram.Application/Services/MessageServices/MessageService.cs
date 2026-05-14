@@ -400,7 +400,9 @@ namespace Fatagram.Application.Services.MessageServices
 
         private bool IsSystemMessage(MessageType type)
         {
-            return type == MessageType.System || type == MessageType.CreateGroup;
+            return type == MessageType.System
+                || type == MessageType.CreateGroup
+                || type == MessageType.ChangeGroupAvatar;
         }
     }
 }

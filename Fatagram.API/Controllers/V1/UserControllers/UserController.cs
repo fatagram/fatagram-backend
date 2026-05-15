@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Services.UserServices.UserServices.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Fatagram.API.Controllers.V1.UserControllers
 {
+    [Authorize]
     public class UserController(IUserService userService, ILogger<UserController> logger)
         : BaseApiController
     {
@@ -21,6 +23,13 @@ namespace Fatagram.API.Controllers.V1.UserControllers
         public async Task<IActionResult> GetAll([FromQuery] CursorFilter<DateTime> filter)
         {
             var res = await _userService.GetAllAsync(filter);
+            return res.ToActionResult();
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] CursorFilter<DateTime> filter)
+        {
+            var res = await _userService.SearchAsync(GetCurrentUserId(), filter);
             return res.ToActionResult();
         }
     }

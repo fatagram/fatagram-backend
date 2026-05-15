@@ -273,13 +273,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
                 include: q => q.Include(fr => fr.Sender)
             );
 
-            _logger.LogInformation(
-                "Retrieved {Count} friend requests for user {UserId}",
-                result.Count(),
-                userId
-            );
-
-            var hasNext = result.Count() == filter.Limit;
+            var hasNext = result.Count == filter.Limit;
             var nextCursor = hasNext ? result.Last()?.CreatedAt : null;
 
             return Result<CursorResult<FriendRequestDto, DateTime>>.Create(

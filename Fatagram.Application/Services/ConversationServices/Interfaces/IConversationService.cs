@@ -28,5 +28,6 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
 
         Task<Result> UpdateAsync(Guid conversationId, UpdateConversationDto conversationDto);
         Task<Result> UpdateAvatarAsync(Guid conversationId, string avatarUrl, Guid userId);
+        Task<Result> UpdateNameAsync(Guid conversationId, string name, Guid userId);
     }
 }

@@ -319,6 +319,16 @@ namespace Fatagram.Application.Services.ConversationServices
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
 
+            if (!existingConversation.IsGroup)
+            {
+                throw new AppException(
+                    new Error(
+                        "INVALID_OPERATION",
+                        "Only group conversations can have their avatar updated"
+                    )
+                );
+            }
+
             var user =
                 await _userRepository.GetAsync(userId, u => u)
                 ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
@@ -337,6 +347,50 @@ namespace Fatagram.Application.Services.ConversationServices
                     Metadata = new Dictionary<string, object>
                     {
                         { "avatarUrl", avatarUrl },
+                        { "actorName", user.FullName! },
+                        { "actorId", userId },
+                    },
+                }
+            );
+
+            return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result> UpdateNameAsync(Guid conversationId, string name, Guid userId)
+        {
+            var existingConversation =
+                await _conversationRepository.GetAsync(conversationId, c => c)
+                ?? throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+
+            if (!existingConversation.IsGroup)
+            {
+                throw new AppException(
+                    new Error(
+                        "INVALID_OPERATION",
+                        "Only group conversations can have their name updated"
+                    )
+                );
+            }
+
+            var user =
+                await _userRepository.GetAsync(userId, u => u)
+                ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
+
+            existingConversation.Name = name;
+            await _conversationRepository.UpdateAsync(existingConversation);
+
+            await _messageService.SendMessageAsync(
+                null,
+                new CreateMessageRequest
+                {
+                    ConversationId = conversationId,
+                    Content = $"{user.FullName} đã đổi tên nhóm thành {name}",
+                    Type = MessageType.RenameGroup,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "newName", name },
                         { "actorName", user.FullName! },
                         { "actorId", userId },
                     },

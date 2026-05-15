@@ -23,6 +23,7 @@ using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Logging;
@@ -322,15 +323,15 @@ namespace Fatagram.Application.Services.MessageServices
                         IsGroup = false,
                         Name = string.Empty,
                         UniqueConversationKey = uniqueKey,
-                        Participants = new List<ConversationParticipant>
-                        {
+                        Participants =
+                        [
                             new ConversationParticipant
                             {
                                 UserId = request.ReceiverId ?? Guid.Empty,
                                 LastSeenNumber = 0,
                             },
                             new ConversationParticipant { UserId = senderId, LastSeenNumber = 1 },
-                        },
+                        ],
                     }
                 );
                 var conversation = _mapper.Map<ConversationProjection>(_res);
@@ -398,11 +399,12 @@ namespace Fatagram.Application.Services.MessageServices
             return Result<ResponseMessageDto>.Create(ResponseStatusCode.Success, message);
         }
 
-        private bool IsSystemMessage(MessageType type)
+        private static bool IsSystemMessage(MessageType type)
         {
             return type == MessageType.System
                 || type == MessageType.CreateGroup
-                || type == MessageType.ChangeGroupAvatar;
+                || type == MessageType.ChangeGroupAvatar
+                || type == MessageType.RenameGroup;
         }
     }
 }

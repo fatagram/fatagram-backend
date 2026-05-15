@@ -11,5 +11,9 @@ namespace Fatagram.Application.Services.UserServices.UserServices.Interfaces
     public interface IUserService
     {
         Task<Result<CursorResult<UserDto, DateTime>>> GetAllAsync(CursorFilter<DateTime> filter);
+        Task<Result<CursorResult<SearchUserDto, DateTime>>> SearchAsync(
+            Guid currentUserId,
+            CursorFilter<DateTime> filter
+        );
     }
 }

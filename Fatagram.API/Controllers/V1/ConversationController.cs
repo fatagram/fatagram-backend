@@ -189,5 +189,26 @@ namespace Fatagram.API.Controllers.V1
 
             return _res.ToActionResult();
         }
+
+        [HttpPatch("{conversationId}/name")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> UpdateConversationName(
+            Guid conversationId,
+            [FromBody] UpdateConversationDto request
+        )
+        {
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                return BadRequest("Name is required");
+            }
+
+            var res = await _conversationService.UpdateNameAsync(
+                conversationId,
+                request.Name,
+                GetCurrentUserId()
+            );
+
+            return res.ToActionResult();
+        }
     }
 }

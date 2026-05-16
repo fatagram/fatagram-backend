@@ -388,5 +388,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
             return mergedConversations.OrderBy(c => c.LastActiveAt).ToList();
         }
+
+        public async Task<List<ConversationProjection>> SearchConversations(
+            Guid userId,
+            string query,
+            int limit,
+            Guid? cursor = null
+        )
+        {
+            var inner = (IConversationRepository)_inner;
+            return await inner.SearchConversations(userId, query, limit, cursor);
+        }
     }
 }

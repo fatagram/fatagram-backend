@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using NpgsqlTypes;
 
 namespace Fatagram.Infrastructure.Data.Extensions
 {
@@ -12,6 +13,9 @@ namespace Fatagram.Infrastructure.Data.Extensions
     {
         public static void AddConversation(this ModelBuilder modelBuilder)
         {
+            modelBuilder.HasPostgresExtension("unaccent");
+            modelBuilder.HasPostgresExtension("pg_trgm");
+
             modelBuilder.Entity<Conversation>(entity =>
             {
                 entity.ConfigureBaseEntity();
@@ -38,7 +42,26 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("integer")
                     .HasDefaultValue(0)
                     .IsRequired();
+
+                entity
+                    .Property(c => c.SearchText)
+                    .HasColumnName("search_text")
+                    .HasColumnType("text")
+                    .IsRequired(false);
+
+                entity.HasIndex(c => c.SearchText).HasMethod("GIN").HasOperators("gin_trgm_ops");
+
                 entity.HasIndex(c => c.UniqueConversationKey).IsUnique();
+
+                entity
+                    .Property<NpgsqlTsVector>("SearchVector")
+                    .HasColumnName("search_vector")
+                    .HasComputedColumnSql(
+                        "to_tsvector('simple', coalesce(search_text, ''))",
+                        stored: true
+                    );
+
+                entity.HasIndex("SearchVector").HasMethod("GIN");
             });
 
             modelBuilder.Entity<ConversationParticipant>(entity =>

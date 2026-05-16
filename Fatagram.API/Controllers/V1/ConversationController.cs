@@ -46,6 +46,13 @@ namespace Fatagram.API.Controllers.V1
             return res.ToActionResult();
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchConversations([FromQuery] CursorFilter<Guid> filter)
+        {
+            var res = await _conversationService.SearchAsync(GetCurrentUserId(), filter);
+            return res.ToActionResult();
+        }
+
         [HttpGet("delta")]
         public async Task<IActionResult> GetDeltaConversations([FromQuery] DateTime since)
         {

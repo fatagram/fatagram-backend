@@ -12,10 +12,8 @@ namespace Fatagram.Domain.Models
         public bool IsGroup { get; set; }
         public string? UniqueConversationKey { get; set; }
         public int LastMessageNumber { get; set; }
-
-        public virtual ICollection<ConversationParticipant> Participants { get; set; } =
-            new List<ConversationParticipant>();
-
-        public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+        public string SearchText { get; set; } = string.Empty;
+        public virtual ICollection<ConversationParticipant> Participants { get; set; } = [];
+        public virtual ICollection<Message> Messages { get; set; } = [];
     }
 }

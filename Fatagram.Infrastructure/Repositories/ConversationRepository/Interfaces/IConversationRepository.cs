@@ -35,5 +35,12 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces
         Task<int> IncreaseLastMessageNumberAsync(Guid conversationId);
         Task<int> GetLastMessageNumberAsync(Guid conversationId);
         Task<List<ConversationProjection>> GetDeltaAsync(Guid userId, DateTime since);
+
+        Task<List<ConversationProjection>> SearchConversations(
+            Guid userId,
+            string query,
+            int limit,
+            Guid? cursor = null
+        );
     }
 }

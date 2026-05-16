@@ -359,7 +359,11 @@ namespace Fatagram.Application.Services.ConversationServices
         public async Task<Result> UpdateNameAsync(Guid conversationId, string name, Guid userId)
         {
             var existingConversation =
-                await _conversationRepository.GetAsync(conversationId, c => c)
+                await _conversationRepository.GetByUniqueAsync(
+                    c => c.Id == conversationId,
+                    c => c,
+                    q => q.Include(c => c.Participants).ThenInclude(p => p.User)
+                )
                 ?? throw new NotFoundException(
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
@@ -379,6 +383,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
 
             existingConversation.Name = name;
+            UpdateSearchTextInternal(existingConversation);
             await _conversationRepository.UpdateAsync(existingConversation);
 
             await _messageService.SendMessageAsync(
@@ -398,6 +403,58 @@ namespace Fatagram.Application.Services.ConversationServices
             );
 
             return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result<CursorResult<ConversationDto, Guid>>> SearchAsync(
+            Guid userId,
+            CursorFilter<Guid> filter
+        )
+        {
+            var conversations = await _conversationRepository.SearchConversations(
+                userId,
+                filter.Keyword ?? "",
+                filter.Limit,
+                filter.Cursor
+            );
+
+            if (conversations.Count == 0)
+            {
+                return Result<CursorResult<ConversationDto, Guid>>.Create(
+                    ResponseStatusCode.Success,
+                    new CursorResult<ConversationDto, Guid>
+                    {
+                        Items = [],
+                        NextCursor = null,
+                        HasNext = false,
+                    }
+                );
+            }
+
+            var res = _mapper.Map<List<ConversationDto>>(conversations);
+
+            return Result<CursorResult<ConversationDto, Guid>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<ConversationDto, Guid>
+                {
+                    Items = res,
+                    NextCursor = conversations.Last().Id,
+                    HasNext = conversations.Count == filter.Limit,
+                }
+            );
+        }
+
+        private static void UpdateSearchTextInternal(Conversation conversation)
+        {
+            var name = conversation.Name ?? "";
+            var participantsInfo = string.Join(
+                " ",
+                conversation.Participants.Select(p =>
+                    $"{p.User?.FullName ?? ""} {p.Nickname ?? ""}"
+                )
+            );
+
+            var rawText = $"{participantsInfo} {name}".Trim();
+            conversation.SearchText = rawText.RemoveVietnameseTone().ToLowerInvariant();
         }
     }
 }

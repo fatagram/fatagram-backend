@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
@@ -12,6 +14,7 @@ using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NpgsqlTypes;
 
 namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 {
@@ -354,6 +357,109 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                 .Conversations.Where(c => c.Id == conversationId)
                 .Select(c => c.LastMessageNumber)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<ConversationProjection>> SearchConversations(
+            Guid userId,
+            string query,
+            int limit,
+            Guid? cursor
+        )
+        {
+            query = query.RemoveVietnameseTone().ToLowerInvariant().Trim();
+            if (string.IsNullOrWhiteSpace(query))
+                return [];
+
+            string prefixQueryStr = BuildPrefixTsQuery(query);
+
+            string likePattern = $"%{query}%";
+
+            var conversationsQuery = _dbContext
+                .Conversations.AsNoTracking()
+                .Where(c => c.Participants.Any(p => p.UserId == userId))
+                .Where(c =>
+                    EF.Property<NpgsqlTsVector>(c, "SearchVector")
+                        .Matches(EF.Functions.ToTsQuery("simple", prefixQueryStr))
+                    || EF.Functions.ILike(c.SearchText, likePattern)
+                    || EF.Functions.TrigramsAreSimilar(c.SearchText, query)
+                );
+
+            if (cursor.HasValue && cursor != Guid.Empty)
+            {
+                var cursorRank = await _dbContext
+                    .Conversations.Where(c => c.Id == cursor.Value)
+                    .Select(c =>
+                        EF.Property<NpgsqlTsVector>(c, "SearchVector")
+                            .Rank(EF.Functions.ToTsQuery("simple", prefixQueryStr))
+                        + EF.Functions.TrigramsSimilarity(c.SearchText, query)
+                    )
+                    .FirstOrDefaultAsync();
+
+                conversationsQuery = conversationsQuery.Where(c =>
+                    (
+                        EF.Property<NpgsqlTsVector>(c, "SearchVector")
+                            .Rank(EF.Functions.ToTsQuery("simple", prefixQueryStr))
+                        + EF.Functions.TrigramsSimilarity(c.SearchText, query)
+                    ) < cursorRank
+                    || (
+                        Math.Abs(
+                            (
+                                EF.Property<NpgsqlTsVector>(c, "SearchVector")
+                                    .Rank(EF.Functions.ToTsQuery("simple", prefixQueryStr))
+                                + EF.Functions.TrigramsSimilarity(c.SearchText, query)
+                            ) - cursorRank
+                        ) < 0.0001
+                        && c.Id.CompareTo(cursor.Value) < 0
+                    )
+                );
+            }
+
+            return await conversationsQuery
+                .OrderByDescending(c =>
+                    EF.Property<NpgsqlTsVector>(c, "SearchVector")
+                        .Rank(EF.Functions.PlainToTsQuery("simple", query))
+                    + EF.Functions.TrigramsSimilarity(c.SearchText, query)
+                )
+                .ThenByDescending(c => c.Id)
+                .Take(limit)
+                .Select(c => new ConversationProjection
+                {
+                    Id = c.Id,
+                    Name = c.IsGroup
+                        ? c.Name
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User!.FullName)
+                            .FirstOrDefault(),
+                    AvatarUrl = c.IsGroup
+                        ? c.AvatarUrl
+                        : c
+                            .Participants.Where(p => p.UserId != userId)
+                            .Select(p => p.User!.Avatar)
+                            .FirstOrDefault(),
+                    IsGroup = c.IsGroup,
+                    TopParticipantNames = c.IsGroup
+                        ? c
+                            .Participants.OrderBy(p => p.CreatedAt)
+                            .Select(p => p.User!.FullName!)
+                            .Take(2)
+                            .ToList()
+                        : null!,
+                    ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
+                })
+                .ToListAsync();
+        }
+
+        private static string BuildPrefixTsQuery(string cleanQuery)
+        {
+            if (string.IsNullOrWhiteSpace(cleanQuery))
+                return string.Empty;
+
+            string[] words = cleanQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            string tsQueryStr = string.Join(" & ", words.Select(w => $"{w}:*"));
+
+            return tsQueryStr;
         }
     }
 }

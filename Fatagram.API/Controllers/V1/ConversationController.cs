@@ -128,6 +128,21 @@ namespace Fatagram.API.Controllers.V1
             return res.ToActionResult();
         }
 
+        [HttpGet("{conversationId}/participants")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> GetParticipants(
+            Guid conversationId,
+            [FromQuery] CursorFilter<DateTime> filter
+        )
+        {
+            var res = await _conversationService.GetParticipantsAsync(
+                GetCurrentUserId(),
+                conversationId,
+                filter
+            );
+            return res.ToActionResult();
+        }
+
         [HttpPost("{conversationId}/messages/markSeen/{messageSeq}")]
         [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> MarkMessagesAsSeen(Guid conversationId, int messageSeq)

@@ -143,51 +143,54 @@ namespace Fatagram.Application.Services.ConversationServices
 
         public async Task<Result<ConversationDto>> GetByIdAsync(Guid userId, Guid conversationId)
         {
-            var conversation = await _conversationRepository.GetConversationById(
-                userId,
-                conversationId,
-                c => new ConversationProjection
-                {
-                    Id = c.Id,
-                    CreatedAt = c.CreatedAt,
-                    UpdatedAt = c.UpdatedAt,
-                    LastMessageNumber = c.LastMessageNumber,
-                    IsGroup = c.IsGroup,
-                    LastActiveAt =
-                        c.Messages.OrderByDescending(m => m.CreatedAt)
-                            .Select(m => (DateTime?)m.CreatedAt)
-                            .FirstOrDefault()
-                        ?? c.CreatedAt,
-                    TopParticipantNames =
-                        c.IsGroup && c.Name == null
-                            ? c
-                                .Participants.OrderBy(p => p.CreatedAt)
-                                .Select(p => p.User!.FullName!)
-                                .Take(2)
-                                .ToList()
-                            : null!,
-                    ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
-                    Name = c.IsGroup
-                        ? c.Name
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User!.FullName)
-                            .FirstOrDefault(),
-                    AvatarUrl = c.IsGroup
-                        ? c.AvatarUrl
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.User!.Avatar)
-                            .FirstOrDefault(),
-                }
-            );
-            if (conversation == null)
-            {
-                throw new NotFoundException(
+            var conversation =
+                await _conversationRepository.GetConversationById(
+                    userId,
+                    conversationId,
+                    c => new ConversationProjection
+                    {
+                        Id = c.Id,
+                        CreatedAt = c.CreatedAt,
+                        UpdatedAt = c.UpdatedAt,
+                        LastMessageNumber = c.LastMessageNumber,
+                        IsGroup = c.IsGroup,
+                        LastActiveAt =
+                            c.Messages.OrderByDescending(m => m.CreatedAt)
+                                .Select(m => (DateTime?)m.CreatedAt)
+                                .FirstOrDefault()
+                            ?? c.CreatedAt,
+                        TopParticipantNames =
+                            c.IsGroup && c.Name == null
+                                ? c
+                                    .Participants.OrderBy(p => p.CreatedAt)
+                                    .Select(p => p.User!.FullName!)
+                                    .Take(2)
+                                    .ToList()
+                                : null!,
+                        ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
+                        Name = c.IsGroup
+                            ? c.Name
+                            : c
+                                .Participants.OrderByDescending(p => p.UserId != userId)
+                                .Select(p => p.User!.FullName)
+                                .FirstOrDefault(),
+                        AvatarUrl = c.IsGroup
+                            ? c.AvatarUrl
+                            : c
+                                .Participants.OrderByDescending(p => p.UserId != userId)
+                                .Select(p => p.User!.Avatar)
+                                .FirstOrDefault(),
+                        OtherUserId = c.IsGroup
+                            ? null
+                            : c.Participants.OrderByDescending(p => p.UserId != userId)
+                                .Select(p => (Guid?)p.UserId)
+                                .FirstOrDefault()
+                            ?? userId,
+                    }
+                )
+                ?? throw new NotFoundException(
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
-            }
-
             var convSeq = await _cacheService.GetAsync<int>($"conv:{conversationId}:seq");
             if (convSeq > conversation.LastMessageNumber)
             {
@@ -207,17 +210,14 @@ namespace Fatagram.Application.Services.ConversationServices
                 targetUserId
             );
 
-            if (conversation == null)
-            {
-                throw new NotFoundException(
+            return conversation == null
+                ? throw new NotFoundException(
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                )
+                : Result<ConversationDto>.Create(
+                    ResponseStatusCode.Success,
+                    _mapper.Map<ConversationDto>(conversation)
                 );
-            }
-
-            return Result<ConversationDto>.Create(
-                ResponseStatusCode.Success,
-                _mapper.Map<ConversationDto>(conversation)
-            );
         }
 
         public async Task<Result<Guid>> CreateGroupAsync(
@@ -254,12 +254,9 @@ namespace Fatagram.Application.Services.ConversationServices
                 ],
             };
             var res = await _conversationRepository.AddAsync(conversation);
-            var creatorFullName = await _userRepository.GetByUniqueAsync(
-                u => u.Id == creatorId,
-                u => u.FullName
-            );
-            if (creatorFullName == null)
-                throw new AppException(new Error("CREATOR_NOT_FOUND", "Creator user not found"));
+            var creatorFullName =
+                await _userRepository.GetByUniqueAsync(u => u.Id == creatorId, u => u.FullName)
+                ?? throw new AppException(new Error("CREATOR_NOT_FOUND", "Creator user not found"));
 
             await _messageService.SendMessageAsync(
                 null,
@@ -302,6 +299,40 @@ namespace Fatagram.Application.Services.ConversationServices
                 existingConversation.NormalizeEmptyStringToNull()
             );
             return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result<CursorResult<ParticipantDto, DateTime>>> GetParticipantsAsync(
+            Guid userId,
+            Guid conversationId,
+            CursorFilter<DateTime> filter
+        )
+        {
+            var participants = await _cpRepo.GetParticipantsAsync(
+                conversationId,
+                filter.Cursor,
+                filter.Limit
+            );
+
+            var items = participants
+                .Select(p => new ParticipantDto
+                {
+                    UserId = p.UserId,
+                    Fullname = p.User!.FullName!,
+                    AvatarUrl = p.User!.Avatar,
+                    Nickname = p.Nickname,
+                    CreatedAt = p.CreatedAt,
+                })
+                .ToList();
+
+            return Result<CursorResult<ParticipantDto, DateTime>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<ParticipantDto, DateTime>
+                {
+                    Items = items,
+                    NextCursor = items.Count > 0 ? items.Last().CreatedAt : null,
+                    HasNext = items.Count == filter.Limit,
+                }
+            );
         }
 
         public async Task<Result> UpdateAvatarAsync(

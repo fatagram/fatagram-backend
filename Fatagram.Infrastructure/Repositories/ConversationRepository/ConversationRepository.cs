@@ -12,6 +12,7 @@ using Fatagram.Infrastructure.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Shared.Extensions;
+using Fatagram.Shared.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NpgsqlTypes;
@@ -86,15 +87,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         Name = c.IsGroup
                             ? c.Name
                             : c
-                                .Participants.Where(p => p.UserId != userId)
+                                .Participants.OrderByDescending(p => p.UserId != userId)
                                 .Select(p => p.User!.FullName)
                                 .FirstOrDefault(),
                         AvatarUrl = c.IsGroup
-                            ? null
+                            ? c.AvatarUrl
                             : c
-                                .Participants.Where(p => p.UserId != userId)
+                                .Participants.OrderByDescending(p => p.UserId != userId)
                                 .Select(p => p.User!.Avatar)
                                 .FirstOrDefault(),
+                        OtherUserId = c.IsGroup
+                            ? null
+                            : c.Participants.OrderByDescending(p => p.UserId != userId)
+                                .Select(p => (Guid?)p.UserId)
+                                .FirstOrDefault()
+                            ?? userId,
                     })
                     .FirstOrDefaultAsync();
             }
@@ -105,12 +112,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
             Guid targetUserId
         )
         {
+            var key = ConversationUtils.GenerateUniqueConversationKey(userId, targetUserId);
             var query = _dbContext
-                .Conversations.Where(c =>
-                    c.Participants.Any(p => p.UserId == userId)
-                    && c.Participants.Any(p => p.UserId == targetUserId)
-                    && !c.IsGroup
-                )
+                .Conversations.Where(c => c.UniqueConversationKey == key && !c.IsGroup)
                 .Select(c => new ConversationProjection
                 {
                     Id = c.Id,
@@ -150,6 +154,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         .Participants.Where(p => p.UserId == targetUserId)
                         .Select(p => p.User!.Avatar)
                         .FirstOrDefault(),
+                    OtherUserId = targetUserId,
                 });
 
             return await query.FirstOrDefaultAsync();
@@ -205,10 +210,10 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : null!,
                     OtherUserId = c.IsGroup
                         ? null
-                        : c
-                            .Participants.Where(p => p.UserId != userId.ToGuid())
-                            .Select(p => p.UserId)
-                            .FirstOrDefault(),
+                        : c.Participants.OrderByDescending(p => p.UserId != userId.ToGuid())
+                            .Select(p => (Guid?)p.UserId)
+                            .FirstOrDefault()
+                        ?? userId.ToGuid(),
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.SequenceNumber)
@@ -218,13 +223,13 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     Name = c.IsGroup
                         ? c.Name
                         : c
-                            .Participants.Where(p => p.UserId != userId.ToGuid())
+                            .Participants.OrderByDescending(p => p.UserId != userId.ToGuid())
                             .Select(p => p.User!.FullName)
                             .FirstOrDefault(),
                     AvatarUrl = c.IsGroup
                         ? c.AvatarUrl
                         : c
-                            .Participants.Where(p => p.UserId != userId.ToGuid())
+                            .Participants.OrderByDescending(p => p.UserId != userId.ToGuid())
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
                 });
@@ -280,10 +285,10 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : null!,
                     OtherUserId = c.IsGroup
                         ? null
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.UserId)
-                            .FirstOrDefault(),
+                        : c.Participants.OrderByDescending(p => p.UserId != userId)
+                            .Select(p => (Guid?)p.UserId)
+                            .FirstOrDefault()
+                        ?? userId,
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.SequenceNumber)
@@ -293,13 +298,13 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     Name = c.IsGroup
                         ? c.Name
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.FullName)
                             .FirstOrDefault(),
                     AvatarUrl = c.IsGroup
                         ? c.AvatarUrl
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
                 })
@@ -428,15 +433,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     Name = c.IsGroup
                         ? c.Name
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.FullName)
                             .FirstOrDefault(),
                     AvatarUrl = c.IsGroup
                         ? c.AvatarUrl
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
+                    OtherUserId = c.IsGroup
+                        ? null
+                        : c.Participants.OrderByDescending(p => p.UserId != userId)
+                            .Select(p => (Guid?)p.UserId)
+                            .FirstOrDefault()
+                        ?? userId,
                     IsGroup = c.IsGroup,
                     TopParticipantNames = c.IsGroup
                         ? c

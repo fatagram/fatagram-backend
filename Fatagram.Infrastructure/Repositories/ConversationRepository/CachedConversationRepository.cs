@@ -151,21 +151,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : null!,
                     OtherUserId = c.IsGroup
                         ? null
-                        : c
-                            .Participants.Where(p => p.UserId != userId)
-                            .Select(p => p.UserId)
-                            .FirstOrDefault(),
+                        : c.Participants.OrderByDescending(p => p.UserId != userId)
+                            .Select(p => (Guid?)p.UserId)
+                            .FirstOrDefault()
+                        ?? userId,
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     Name = c.IsGroup
                         ? c.Name
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.FullName)
                             .FirstOrDefault(),
                     AvatarUrl = c.IsGroup
                         ? c.AvatarUrl
                         : c
-                            .Participants.Where(p => p.UserId != userId)
+                            .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
                 });

@@ -10,13 +10,10 @@ namespace Fatagram.Application.Dtos.Conversation
     {
         public Guid UserId { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Fullname { get; set; } = null!;
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Nickname { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? AvatarUrl { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -11,6 +11,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
     public interface IConversationParticipantRepository : IBaseRepository<ConversationParticipant>
     {
         Task<List<ConversationParticipant>> GetParticipantsAsync(Guid conversationId);
+        Task<List<ConversationParticipant>> GetParticipantsAsync(
+            Guid conversationId,
+            DateTime? cursor,
+            int limit
+        );
 
         Task MarkAsSeenAsync(Guid conversationId, Guid userId, int messageSeq, DateTime seenAt);
 

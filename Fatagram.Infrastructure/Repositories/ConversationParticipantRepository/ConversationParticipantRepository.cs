@@ -59,7 +59,27 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
         {
             return await _dbContext
                 .ConversationParticipants.Where(cp => cp.ConversationId == conversationId)
+                .Include(cp => cp.User)
                 .ToListAsync();
+        }
+
+        public async Task<List<ConversationParticipant>> GetParticipantsAsync(
+            Guid conversationId,
+            DateTime? cursor,
+            int limit
+        )
+        {
+            var query = _dbContext
+                .ConversationParticipants.Where(cp => cp.ConversationId == conversationId)
+                .Include(cp => cp.User)
+                .AsQueryable();
+
+            if (cursor.HasValue && cursor.Value != DateTime.MinValue)
+            {
+                query = query.Where(cp => cp.CreatedAt > cursor.Value);
+            }
+
+            return await query.OrderBy(cp => cp.CreatedAt).Take(limit).ToListAsync();
         }
 
         public async Task MarkAsSeenAsync(

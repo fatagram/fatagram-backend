@@ -34,5 +34,11 @@ namespace Fatagram.Application.Services.ConversationServices.Interfaces
             Guid userId,
             CursorFilter<Guid> filter
         );
+
+        Task<Result<CursorResult<ParticipantDto, DateTime>>> GetParticipantsAsync(
+            Guid userId,
+            Guid conversationId,
+            CursorFilter<DateTime> filter
+        );
     }
 }

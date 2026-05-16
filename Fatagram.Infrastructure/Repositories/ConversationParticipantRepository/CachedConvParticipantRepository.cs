@@ -122,6 +122,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             return await inner.GetParticipantsAsync(conversationId);
         }
 
+        public async Task<List<ConversationParticipant>> GetParticipantsAsync(
+            Guid conversationId,
+            DateTime? cursor,
+            int limit
+        )
+        {
+            var inner = (IConversationParticipantRepository)_inner;
+            return await inner.GetParticipantsAsync(conversationId, cursor, limit);
+        }
+
         public async Task MarkAsSeenAsync(
             Guid conversationId,
             Guid userId,

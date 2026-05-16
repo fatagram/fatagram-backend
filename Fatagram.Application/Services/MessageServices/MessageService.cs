@@ -23,6 +23,7 @@ using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
+using Fatagram.Shared.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -317,21 +318,29 @@ namespace Fatagram.Application.Services.MessageServices
 
             var message = await _conversationRepository.ExecuteTransactionAction(async () =>
             {
+                var participants = new List<ConversationParticipant>
+                {
+                    new() { UserId = senderId, LastSeenNumber = 1 },
+                };
+
+                if (request.ReceiverId != senderId)
+                {
+                    participants.Add(
+                        new()
+                        {
+                            UserId = request.ReceiverId ?? Guid.Empty,
+                            LastSeenNumber = 0,
+                        }
+                    );
+                }
+
                 var _res = await _conversationRepository.AddAsync(
                     new Conversation
                     {
                         IsGroup = false,
                         Name = string.Empty,
                         UniqueConversationKey = uniqueKey,
-                        Participants =
-                        [
-                            new ConversationParticipant
-                            {
-                                UserId = request.ReceiverId ?? Guid.Empty,
-                                LastSeenNumber = 0,
-                            },
-                            new ConversationParticipant { UserId = senderId, LastSeenNumber = 1 },
-                        ],
+                        Participants = participants,
                     }
                 );
                 var conversation = _mapper.Map<ConversationProjection>(_res);

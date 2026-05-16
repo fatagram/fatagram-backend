@@ -21,8 +21,6 @@ namespace Fatagram.Application.Dtos.Conversation
         public int? OtherLastSeenMessageSeq { get; set; }
         public int? MyLastSeenMessageSeq { get; set; }
         public int? ParticipantCount { get; set; }
-
-        [JsonIgnore]
         public Guid? OtherUserId { get; set; }
     }
 }

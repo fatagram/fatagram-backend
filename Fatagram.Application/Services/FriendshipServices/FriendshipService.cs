@@ -7,6 +7,7 @@ using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
 using Fatagram.Application.Utils;
+using Fatagram.Application.Utils.Notify;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;

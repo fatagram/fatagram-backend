@@ -13,5 +13,7 @@ namespace Fatagram.Domain.Enums
         ChangeGroupAvatar = 9,
         RemoveParticipant = 10,
         AddParticipant = 11,
+        ChangeBackgroundUrl = 12,
+        ChangeTheme = 13,
     }
 }

@@ -26,6 +26,16 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnType("VARCHAR(255)")
                     .IsRequired(false);
                 entity
+                    .Property(c => c.BackgroundUrl)
+                    .HasColumnName("background_url")
+                    .HasColumnType("text")
+                    .IsRequired(false);
+                entity
+                    .Property(c => c.Theme)
+                    .HasColumnName("theme")
+                    .HasColumnType("VARCHAR(255)")
+                    .IsRequired(false);
+                entity
                     .Property(c => c.IsGroup)
                     .HasColumnName("is_group")
                     .HasColumnType("boolean")

@@ -186,6 +186,8 @@ namespace Fatagram.Application.Services.ConversationServices
                                 .Select(p => (Guid?)p.UserId)
                                 .FirstOrDefault()
                             ?? userId,
+                        BackgroundUrl = c.BackgroundUrl,
+                        Theme = c.Theme,
                     }
                 )
                 ?? throw new NotFoundException(
@@ -427,6 +429,78 @@ namespace Fatagram.Application.Services.ConversationServices
                     Metadata = new Dictionary<string, object>
                     {
                         { "newName", name },
+                        { "actorName", user.FullName! },
+                        { "actorId", userId },
+                    },
+                }
+            );
+
+            return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result> UpdateBackgroundUrlAsync(
+            Guid conversationId,
+            string backgroundUrl,
+            Guid userId
+        )
+        {
+            var existingConversation =
+                await _conversationRepository.GetAsync(conversationId, c => c)
+                ?? throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+
+            var user =
+                await _userRepository.GetAsync(userId, u => u)
+                ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
+
+            existingConversation.BackgroundUrl = backgroundUrl;
+            await _conversationRepository.UpdateAsync(existingConversation);
+
+            await _messageService.SendMessageAsync(
+                null,
+                new CreateMessageRequest
+                {
+                    ConversationId = conversationId,
+                    Content = $"{user.FullName} đã cập nhật hình nền cuộc trò chuyện",
+                    Type = MessageType.ChangeBackgroundUrl,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "backgroundUrl", backgroundUrl },
+                        { "actorName", user.FullName! },
+                        { "actorId", userId },
+                    },
+                }
+            );
+
+            return Result.Create(ResponseStatusCode.Success);
+        }
+
+        public async Task<Result> UpdateThemeAsync(Guid conversationId, string theme, Guid userId)
+        {
+            var existingConversation =
+                await _conversationRepository.GetAsync(conversationId, c => c)
+                ?? throw new NotFoundException(
+                    new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
+                );
+
+            var user =
+                await _userRepository.GetAsync(userId, u => u)
+                ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
+
+            existingConversation.Theme = theme;
+            await _conversationRepository.UpdateAsync(existingConversation);
+
+            await _messageService.SendMessageAsync(
+                null,
+                new CreateMessageRequest
+                {
+                    ConversationId = conversationId,
+                    Content = $"{user.FullName} đã đổi chủ đề cuộc trò chuyện",
+                    Type = MessageType.ChangeTheme,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "theme", theme },
                         { "actorName", user.FullName! },
                         { "actorId", userId },
                     },

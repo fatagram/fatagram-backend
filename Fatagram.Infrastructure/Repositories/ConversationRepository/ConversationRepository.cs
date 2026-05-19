@@ -102,6 +102,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                                 .Select(p => (Guid?)p.UserId)
                                 .FirstOrDefault()
                             ?? userId,
+                        BackgroundUrl = c.BackgroundUrl,
+                        Theme = c.Theme,
                     })
                     .FirstOrDefaultAsync();
             }
@@ -155,6 +157,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         .Select(p => p.User!.Avatar)
                         .FirstOrDefault(),
                     OtherUserId = targetUserId,
+                    BackgroundUrl = c.BackgroundUrl,
+                    Theme = c.Theme,
                 });
 
             return await query.FirstOrDefaultAsync();
@@ -232,6 +236,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Participants.OrderByDescending(p => p.UserId != userId.ToGuid())
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
+                    BackgroundUrl = c.BackgroundUrl,
+                    Theme = c.Theme,
                 });
 
             if (cursor.HasValue && cursor.Value != DateTime.MinValue)
@@ -307,6 +313,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
+                    BackgroundUrl = c.BackgroundUrl,
+                    Theme = c.Theme,
                 })
                 .Where(c => c.LastActiveAt > sinceUtc);
 
@@ -457,6 +465,8 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .ToList()
                         : null!,
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
+                    BackgroundUrl = c.BackgroundUrl,
+                    Theme = c.Theme,
                 })
                 .ToListAsync();
         }

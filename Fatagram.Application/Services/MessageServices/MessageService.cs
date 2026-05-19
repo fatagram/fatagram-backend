@@ -326,11 +326,7 @@ namespace Fatagram.Application.Services.MessageServices
                 if (request.ReceiverId != senderId)
                 {
                     participants.Add(
-                        new()
-                        {
-                            UserId = request.ReceiverId ?? Guid.Empty,
-                            LastSeenNumber = 0,
-                        }
+                        new() { UserId = request.ReceiverId ?? Guid.Empty, LastSeenNumber = 0 }
                     );
                 }
 
@@ -413,7 +409,9 @@ namespace Fatagram.Application.Services.MessageServices
             return type == MessageType.System
                 || type == MessageType.CreateGroup
                 || type == MessageType.ChangeGroupAvatar
-                || type == MessageType.RenameGroup;
+                || type == MessageType.RenameGroup
+                || type == MessageType.ChangeBackgroundUrl
+                || type == MessageType.ChangeTheme;
         }
     }
 }

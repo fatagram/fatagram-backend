@@ -9,6 +9,8 @@ namespace Fatagram.Domain.Models
     {
         public string? Name { get; set; }
         public string? AvatarUrl { get; set; }
+        public string? BackgroundUrl { get; set; }
+        public string? Theme { get; set; }
         public bool IsGroup { get; set; }
         public string? UniqueConversationKey { get; set; }
         public int LastMessageNumber { get; set; }

@@ -1,17 +1,12 @@
 using System.Text.Json;
-using Fatagram.Infrastructure.Cache;
 using StackExchange.Redis;
 
-public class RedisCacheService : ICacheService
-{
-    private readonly IConnectionMultiplexer _redis;
-    private readonly IDatabase _db;
+namespace Fatagram.Infrastructure.Cache;
 
-    public RedisCacheService(IConnectionMultiplexer redis)
-    {
-        _redis = redis;
-        _db = redis.GetDatabase();
-    }
+public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
+{
+    private readonly IConnectionMultiplexer _redis = redis;
+    private readonly IDatabase _db = redis.GetDatabase();
 
     public async Task<T?> GetAsync<T>(string key)
     {

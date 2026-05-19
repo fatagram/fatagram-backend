@@ -22,5 +22,7 @@ namespace Fatagram.Application.Dtos.Conversation
         public int? MyLastSeenMessageSeq { get; set; }
         public int? ParticipantCount { get; set; }
         public Guid? OtherUserId { get; set; }
+        public string? BackgroundUrl { get; set; }
+        public string? Theme { get; set; }
     }
 }

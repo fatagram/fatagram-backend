@@ -232,5 +232,42 @@ namespace Fatagram.API.Controllers.V1
 
             return res.ToActionResult();
         }
+
+        [HttpPatch("{conversationId}/background")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> UpdateConversationBackground(
+            Guid conversationId,
+            [FromBody] UpdateBackgroundDto request
+        )
+        {
+            var res = await _conversationService.UpdateBackgroundUrlAsync(
+                conversationId,
+                request.BackgroundUrl,
+                GetCurrentUserId()
+            );
+
+            return res.ToActionResult();
+        }
+
+        [HttpPatch("{conversationId}/theme")]
+        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
+        public async Task<IActionResult> UpdateConversationTheme(
+            Guid conversationId,
+            [FromBody] UpdateThemeDto request
+        )
+        {
+            if (string.IsNullOrEmpty(request.Theme))
+            {
+                return BadRequest("Theme is required");
+            }
+
+            var res = await _conversationService.UpdateThemeAsync(
+                conversationId,
+                request.Theme,
+                GetCurrentUserId()
+            );
+
+            return res.ToActionResult();
+        }
     }
 }

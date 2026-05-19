@@ -16,7 +16,7 @@ namespace Fatagram.Application.Dtos.Notification
         public string Id { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
         public string SourceId { get; set; } = string.Empty;
-        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Data { get; set; } = [];
         public string? ActorId { get; set; }
         public string ActorType { get; set; } = string.Empty;
         public string? ActorImageUrl { get; set; }
@@ -27,7 +27,5 @@ namespace Fatagram.Application.Dtos.Notification
         public NotificationType Type { get; set; } = NotificationType.System;
         public bool IsRead { get; set; } = false;
         public DateTime? CreatedAt { get; set; }
-
-        // public TimeDistance TimeDistance { get; set; } = new TimeDistance(0, TimeUnit.Miliseconds);
     }
 }

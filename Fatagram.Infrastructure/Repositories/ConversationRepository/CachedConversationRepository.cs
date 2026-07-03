@@ -1,24 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.Extensions.Logging;
 
 namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 {
@@ -272,14 +264,46 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
         {
             var dataKey = $"user:{userId}:unread_convs";
             var statusKey = $"user:{userId}:unread_convs_status";
+
             bool isSynced = await _cacheService.ExistsAsync(statusKey);
             if (!isSynced)
             {
-                var inner = (IConversationRepository)_inner;
-                var unreadConvsFromDb = await inner.GetUnreadConversationsAsync(userId);
+                await InitializeUnreadCacheAsync(userId, dataKey, statusKey);
+            }
 
-                if (unreadConvsFromDb.Count > 0)
+            var allUnreadEntries = await _cacheService.HashGetAllAsync(dataKey);
+
+            return
+            [
+                .. allUnreadEntries
+                    .Where(entry => int.TryParse(entry.Value, out int v) && v > 0)
+                    .Select(entry => new ConversationSeenInfoProjection
+                    {
+                        ConversationId = Guid.Parse(entry.Key),
+                        UnreadCount = int.Parse(entry.Value),
+                    }),
+            ];
+        }
+
+        private async Task InitializeUnreadCacheAsync(Guid userId, string dataKey, string statusKey)
+        {
+            var lockKey = $"{statusKey}:init_lock";
+            bool lockAcquired = await _cacheService.TryAcquireLockAsync(
+                lockKey,
+                TimeSpan.FromSeconds(5)
+            );
+
+            if (lockAcquired)
+            {
+                try
                 {
+                    // Double-check: another request may have initialized while we waited
+                    if (await _cacheService.ExistsAsync(statusKey))
+                        return;
+
+                    var inner = (IConversationRepository)_inner;
+                    var unreadConvsFromDb = await inner.GetUnreadConversationsAsync(userId);
+
                     foreach (var conv in unreadConvsFromDb)
                     {
                         await _cacheService.HashSetAsync(
@@ -288,24 +312,29 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             conv.UnreadCount.ToString()
                         );
                     }
+
+                    // Set dataKey TTL BEFORE statusKey so statusKey always expires first.
+                    // When statusKey is gone, dataKey is already expired â†’ clean re-init from DB.
+                    await _cacheService.KeyExpireAsync(dataKey, TimeSpan.FromDays(1));
+                    await _cacheService.SetAsync(statusKey, "synced", TimeSpan.FromHours(23));
                 }
-
-                await _cacheService.SetAsync(statusKey, "synced", TimeSpan.FromDays(1));
-                await _cacheService.KeyExpireAsync(dataKey, TimeSpan.FromDays(1));
+                finally
+                {
+                    await _cacheService.RemoveAsync(lockKey);
+                }
             }
-
-            var allUnreadEntries = await _cacheService.HashGetAllAsync(dataKey);
-
-            return
-            [
-                .. allUnreadEntries
-                    .Where(entry => int.Parse(entry.Value) > 0)
-                    .Select(entry => new ConversationSeenInfoProjection
-                    {
-                        ConversationId = Guid.Parse(entry.Key),
-                        UnreadCount = int.Parse(entry.Value),
-                    }),
-            ];
+            else
+            {
+                // Wait for the initializing request to complete
+                const int maxWaitMs = 2000;
+                const int pollIntervalMs = 50;
+                for (int elapsed = 0; elapsed < maxWaitMs; elapsed += pollIntervalMs)
+                {
+                    await Task.Delay(pollIntervalMs);
+                    if (await _cacheService.ExistsAsync(statusKey))
+                        return;
+                }
+            }
         }
 
         public async Task<int> GetUnreadCountAsync(Guid userId)
@@ -315,18 +344,9 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)
         {
-            var key = $"conv:{conversationId}:seq";
-
-            var newValue = await _cacheService.IncrementAsync(key);
-            if (newValue <= 1)
-            {
-                var inner = (IConversationRepository)_inner;
-                var dbLastSeq = await inner.GetLastMessageNumberAsync(conversationId);
-                newValue = await _cacheService.IncrementAsync(key, dbLastSeq);
-                await _cacheService.KeyExpireAsync(key, TimeSpan.FromHours(1));
-            }
-
-            return (int)newValue;
+            // Write always goes to DB â€” no Redis involvement in the write path.
+            var inner = (IConversationRepository)_inner;
+            return await inner.IncreaseLastMessageNumberAsync(conversationId);
         }
 
         public async Task NotifyNewMessage(

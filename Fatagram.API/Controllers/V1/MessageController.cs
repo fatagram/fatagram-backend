@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Message;
-using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Application.Services.MessageServices;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Microsoft.AspNetCore.Mvc;

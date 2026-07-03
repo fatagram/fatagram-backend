@@ -1,19 +1,15 @@
-using AutoMapper;
+﻿using AutoMapper;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.User;
-using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices;
-using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
 using Fatagram.Application.Utils;
 using Fatagram.Application.Utils.Notify;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -65,14 +61,14 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
             await CreateFriendshipAsync(requesterId, acceptorId);
             await _friendRequestManager.DeleteRequestAsync(acceptorId, requesterId);
 
-            // Build decorator chain: push + email (khi cần)
+            // Build decorator chain: push + email (khi cáº§n)
             var dto = NotificationFactory.CreateFriendRequestAcceptedNotification(
                 requesterId,
                 acceptorId
             );
             await _notifyBuilder
                 .WithPush()
-                // .WithEmail()  // uncomment khi muốn gửi email
+                // .WithEmail()  // uncomment khi muá»‘n gá»­i email
                 .NotifyAsync(requesterId, new NotifyOptions(dto));
 
             var userNotifications = await _userNotificationRepository.GetAllAsync<
@@ -103,7 +99,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
         public async Task<Result> RevokeFriendRequestAsync(Guid senderId, Guid receiverId)
         {
-            // Lấy friend request để lấy SourceId
+            // Láº¥y friend request Ä‘á»ƒ láº¥y SourceId
             var friendRequest = (
                 await _friendRequestRepository.GetAllAsync(
                     fr => fr.SenderId == senderId && fr.ReceiverId == receiverId,
@@ -113,7 +109,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
 
             if (friendRequest != null)
             {
-                // Query UserNotification theo SourceId thay vì ActorId + Type
+                // Query UserNotification theo SourceId thay vÃ¬ ActorId + Type
                 var userNotifications = await _userNotificationRepository.GetAllAsync<
                     UserNotification,
                     DateTime
@@ -149,7 +145,7 @@ namespace Fatagram.Application.Services.UserServices.FriendshipServices
         public async Task<Result> DeclineFriendRequestAsync(Guid declinerId, Guid requesterId)
         {
             await _friendRequestManager.DeleteRequestAsync(declinerId, requesterId);
-            // Delete notification liên quan đến friend request
+            // Delete notification liÃªn quan Ä‘áº¿n friend request
             var userNotifications = await _userNotificationRepository.GetAllAsync<
                 UserNotification,
                 DateTime

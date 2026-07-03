@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -11,17 +11,14 @@ using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.ConversationServices.Interfaces;
-using Fatagram.Application.Services.MessageServices.Interfaces;
+using Fatagram.Application.Services.ConversationServices;
+using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
-using Fatagram.Infrastructure.Projections;
-using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Cache;
+using Fatagram.Application.Common.Projections;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
@@ -193,11 +190,6 @@ namespace Fatagram.Application.Services.ConversationServices
                 ?? throw new NotFoundException(
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
-            var convSeq = await _cacheService.GetAsync<int>($"conv:{conversationId}:seq");
-            if (convSeq > conversation.LastMessageNumber)
-            {
-                conversation.LastMessageNumber = convSeq;
-            }
 
             return Result<ConversationDto>.Create(
                 ResponseStatusCode.Success,
@@ -375,7 +367,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
-                    Content = $"{user.FullName} đã cập nhật avatar",
+                    Content = $"{user.FullName} Ä‘Ã£ cáº­p nháº­t avatar",
                     Type = MessageType.ChangeGroupAvatar,
                     Metadata = new Dictionary<string, object>
                     {
@@ -424,7 +416,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
-                    Content = $"{user.FullName} đã đổi tên nhóm thành {name}",
+                    Content = $"{user.FullName} Ä‘Ã£ Ä‘á»•i tÃªn nhÃ³m thÃ nh {name}",
                     Type = MessageType.RenameGroup,
                     Metadata = new Dictionary<string, object>
                     {
@@ -462,7 +454,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
-                    Content = $"{user.FullName} đã cập nhật hình nền cuộc trò chuyện",
+                    Content = $"{user.FullName} Ä‘Ã£ cáº­p nháº­t hÃ¬nh ná»n cuá»™c trÃ² chuyá»‡n",
                     Type = MessageType.ChangeBackgroundUrl,
                     Metadata = new Dictionary<string, object>
                     {
@@ -496,7 +488,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
-                    Content = $"{user.FullName} đã đổi chủ đề cuộc trò chuyện",
+                    Content = $"{user.FullName} Ä‘Ã£ Ä‘á»•i chá»§ Ä‘á» cuá»™c trÃ² chuyá»‡n",
                     Type = MessageType.ChangeTheme,
                     Metadata = new Dictionary<string, object>
                     {

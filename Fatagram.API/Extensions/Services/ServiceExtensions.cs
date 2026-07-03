@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.API.Extensions.Services.Swagger;
 using Fatagram.API.Extensions.SignalR;
-using Fatagram.Application.Validators.Auth;
+using Fatagram.Application.Validators;
 using FluentValidation;
 
 namespace Fatagram.API.Extensions.Services

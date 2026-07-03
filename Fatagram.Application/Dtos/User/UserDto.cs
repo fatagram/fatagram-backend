@@ -9,7 +9,7 @@ using Fatagram.Domain.Models;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class UserDto
+    public record UserDto
     {
         /// <summary>
         /// Id

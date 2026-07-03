@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
+using Fatagram.Application.Services.UserServices.UserConfigServices;
 using Fatagram.Application.Utils;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 
 namespace Fatagram.Application.Services.UserServices.UserConfigServices
 {

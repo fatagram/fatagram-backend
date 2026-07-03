@@ -1,14 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.Application.Services.SockerServices.Interfaces;
-using Fatagram.Application.Services.SocketServices.Interfaces;
+using Fatagram.Application.Services.SocketServices;
 using Fatagram.Application.Utils;
 
 namespace Fatagram.API.Hubs
 {
-    public class SockerReceiver(ISocketSender<object> sender) : ISockerReceiver
+    public class SocketReceiver(ISocketSender<object> sender) : ISocketReceiver
     {
         private readonly ISocketSender<object> _sender = sender;
 

@@ -1,19 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
-using NpgsqlTypes;
 
 namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
 {
@@ -110,16 +106,22 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             return new() { ConversationId = conversationId, ParticipantsSeenInfo = dict };
         }
 
+        private static readonly TimeSpan ParticipantsCacheTtl = TimeSpan.FromMinutes(30);
+
         public async Task<List<ConversationParticipant>> GetParticipantsAsync(Guid conversationId)
         {
             var cacheKey = $"conversation:{conversationId}:participants";
             var cachedData = await _cacheService.GetAsync<List<ConversationParticipant>>(cacheKey);
             if (cachedData != null)
-            {
                 return cachedData;
-            }
+
             var inner = (IConversationParticipantRepository)_inner;
-            return await inner.GetParticipantsAsync(conversationId);
+            var participants = await inner.GetParticipantsAsync(conversationId);
+
+            if (participants.Count > 0)
+                await _cacheService.SetAsync(cacheKey, participants, ParticipantsCacheTtl);
+
+            return participants;
         }
 
         public async Task<List<ConversationParticipant>> GetParticipantsAsync(
@@ -144,15 +146,10 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             );
 
             if (messageSeq > currentLastSeq)
-            {
                 messageSeq = currentLastSeq;
-            }
 
             var lastReadKey = $"user:{userId}:last_read";
-            var oldDataRaw = await _cacheService.HashGetAsync(
-                lastReadKey,
-                conversationId.ToString()
-            );
+            var oldDataRaw = await _cacheService.HashGetAsync(lastReadKey, conversationId.ToString());
             int oldSeenSeq = 0;
 
             if (string.IsNullOrEmpty(oldDataRaw))
@@ -171,10 +168,21 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             }
 
             if (messageSeq <= oldSeenSeq)
-            {
                 return;
-            }
 
+            // Write directly to DB
+            await _dbContext
+                .ConversationParticipants.Where(cp =>
+                    cp.ConversationId == conversationId
+                    && cp.UserId == userId
+                    && cp.LastSeenNumber < messageSeq
+                )
+                .ExecuteUpdateAsync(s =>
+                    s.SetProperty(cp => cp.LastSeenNumber, messageSeq)
+                     .SetProperty(cp => cp.SeenAt, seenAt)
+                );
+
+            // Update read caches
             var unreadConvKey = $"user:{userId}:unread_convs";
             await _cacheService.HashSetAsync(
                 unreadConvKey,
@@ -182,15 +190,14 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
                 (currentLastSeq - messageSeq).ToString()
             );
 
-            var seenData = new ParticipantSeenInfoProjection
-            {
-                SequenceNumber = messageSeq,
-                SeenAt = seenAt,
-            };
             await _cacheService.HashSetAsync(
                 lastReadKey,
                 conversationId.ToString(),
-                JsonSerializer.Serialize(seenData)
+                JsonSerializer.Serialize(new ParticipantSeenInfoProjection
+                {
+                    SequenceNumber = messageSeq,
+                    SeenAt = seenAt,
+                })
             );
         }
     }

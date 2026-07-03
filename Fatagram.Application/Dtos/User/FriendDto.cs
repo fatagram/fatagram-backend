@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class GetFriendsDto
+    public record GetFriendsDto
     {
         public IEnumerable<FriendDto> Friends { get; set; } = new List<FriendDto>();
         public int Total { get; set; }
     }
 
-    public class FriendDto
+    public record FriendDto
     {
         public Guid Id { get; set; }
         public string? Avatar { get; set; } = null;

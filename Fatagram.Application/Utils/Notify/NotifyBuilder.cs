@@ -1,7 +1,5 @@
-using Fatagram.Application.Dtos.Notification;
+﻿using Fatagram.Application.Dtos.Notification;
 using Fatagram.Application.Services.NotificationServices;
-using Fatagram.Application.Services.NotificationServices.Interface;
-using Fatagram.Application.Services.NotificationServices.Interfaces;
 using Fatagram.Application.Utils.Notify;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

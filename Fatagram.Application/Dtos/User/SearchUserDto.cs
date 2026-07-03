@@ -1,8 +1,9 @@
 using System;
+using Fatagram.Domain.Enums;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class SearchUserDto
+    public record SearchUserDto
     {
         public Guid Id { get; set; }
         public string? FullName { get; set; }

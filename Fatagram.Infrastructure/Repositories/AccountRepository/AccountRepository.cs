@@ -1,6 +1,6 @@
 ﻿using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

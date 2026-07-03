@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

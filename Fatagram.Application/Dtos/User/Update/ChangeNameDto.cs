@@ -8,7 +8,7 @@ using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Dtos.User.Update
 {
-    public class ChangeNameDto
+    public record ChangeNameDto
     {
         public string FirstName { get; set; } = null!;
 

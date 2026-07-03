@@ -1,5 +1,5 @@
-using System.Threading.Tasks;
-using Fatagram.Application.Services.GifServices.Interfaces;
+﻿using System.Threading.Tasks;
+using Fatagram.Application.Services.GifServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

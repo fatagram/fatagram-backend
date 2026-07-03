@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.Filter
 {
-    public class PagedFilter : BaseFilter
+    public record PagedFilter : BaseFilter
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

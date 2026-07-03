@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos
 {
-    public class BaseFilter
+    public record BaseFilter
     {
         public string? Keyword { get; set; }
         public string? SortBy { get; set; } = "CreatedAt";

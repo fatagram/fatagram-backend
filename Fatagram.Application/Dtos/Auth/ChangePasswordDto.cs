@@ -1,6 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Fatagram.Application.Utils;
-using Fatagram.Domain.Utils;
 
 namespace Fatagram.Application.Dtos.Auth
 {
@@ -10,7 +9,6 @@ namespace Fatagram.Application.Dtos.Auth
     public class ChangePasswordDto
     {
         public string OldPassword { get; set; } = string.Empty;
-
         public string NewPassword { get; set; } = string.Empty;
     }
 }

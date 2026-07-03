@@ -6,8 +6,7 @@ using AutoMapper;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Projections;
-using SixLabors.ImageSharp.ColorSpaces.Companding;
+using Fatagram.Application.Common.Projections;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
 {

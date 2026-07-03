@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +7,7 @@ using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Message;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
 {

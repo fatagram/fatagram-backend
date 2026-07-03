@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.JwtServices.Interface;
+using Fatagram.Application.Services.JwtServices;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;

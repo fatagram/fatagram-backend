@@ -6,7 +6,7 @@ using System.Reflection.Metadata.Ecma335;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 

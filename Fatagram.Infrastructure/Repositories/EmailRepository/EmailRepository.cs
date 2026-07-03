@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 
 namespace Fatagram.Infrastructure.Repositories.EmailRepository
 {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
-using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
+using Fatagram.Application.Abstractions.Cache;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fatagram.API.Authorization

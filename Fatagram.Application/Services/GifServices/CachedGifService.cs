@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Application.Dtos.Gif;
-using Fatagram.Application.Services.GifServices.Interfaces;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Services.GifServices;
 
 namespace Fatagram.Application.Services.GifServices
 {
@@ -11,18 +11,14 @@ namespace Fatagram.Application.Services.GifServices
         private readonly IGifService _inner = inner;
         private readonly ICacheService _cacheService = cacheService;
 
-        public async Task<GifResponseDto> SearchGifsAsync(
-            string query,
-            int limit = 20,
-            string? pos = null
-        )
+        public async Task<GifsDto> SearchGifsAsync(string query, int limit = 20, string? pos = null)
         {
             var normalizedQuery = query.Trim().ToLowerInvariant();
             var key = $"v2:gifs:search:{normalizedQuery}:{limit}:{pos ?? "0"}";
 
             if (await _cacheService.ExistsAsync(key))
             {
-                var cachedResult = await _cacheService.GetAsync<GifResponseDto>(key);
+                var cachedResult = await _cacheService.GetAsync<GifsDto>(key);
                 if (cachedResult != null)
                 {
                     return cachedResult;
@@ -40,7 +36,7 @@ namespace Fatagram.Application.Services.GifServices
                 var fallbackKey = "v2:gifs:fallback:trending";
                 if (await _cacheService.ExistsAsync(fallbackKey))
                 {
-                    var fallbackResult = await _cacheService.GetAsync<GifResponseDto>(fallbackKey);
+                    var fallbackResult = await _cacheService.GetAsync<GifsDto>(fallbackKey);
                     if (fallbackResult != null)
                     {
                         return fallbackResult;
@@ -48,16 +44,16 @@ namespace Fatagram.Application.Services.GifServices
                 }
             }
 
-            return result ?? new GifResponseDto();
+            return result ?? new GifsDto();
         }
 
-        public async Task<GifResponseDto> GetTrendingGifsAsync(int limit = 20, string? pos = null)
+        public async Task<GifsDto> GetTrendingGifsAsync(int limit = 20, string? pos = null)
         {
             var key = $"v2:gifs:trending:{limit}:{pos ?? "0"}";
 
             if (await _cacheService.ExistsAsync(key))
             {
-                var cachedResult = await _cacheService.GetAsync<GifResponseDto>(key);
+                var cachedResult = await _cacheService.GetAsync<GifsDto>(key);
                 if (cachedResult != null)
                 {
                     return cachedResult;
@@ -82,7 +78,7 @@ namespace Fatagram.Application.Services.GifServices
                 // Fallback mechanism: if API fails, try to return stored fallback
                 if (await _cacheService.ExistsAsync(fallbackKey))
                 {
-                    var fallbackResult = await _cacheService.GetAsync<GifResponseDto>(fallbackKey);
+                    var fallbackResult = await _cacheService.GetAsync<GifsDto>(fallbackKey);
                     if (fallbackResult != null)
                     {
                         return fallbackResult;
@@ -90,7 +86,7 @@ namespace Fatagram.Application.Services.GifServices
                 }
             }
 
-            return result ?? new GifResponseDto();
+            return result ?? new GifsDto();
         }
     }
 }

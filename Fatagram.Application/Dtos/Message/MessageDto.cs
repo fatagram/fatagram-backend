@@ -7,7 +7,7 @@ using Fatagram.Domain.Enums;
 
 namespace Fatagram.Application.Dtos.Message
 {
-    public class SendMessageDto
+    public record SendMessageDto
     {
         public Guid? ConversationId { get; set; }
         public Guid? ReceiverId { get; set; }
@@ -21,7 +21,7 @@ namespace Fatagram.Application.Dtos.Message
         public IEnumerable<MessageMediaDto>? Media { get; set; }
     }
 
-    public class CreateMessageRequest
+    public record CreateMessageRequest
     {
         public Guid? ConversationId { get; set; }
         public Guid? ReceiverId { get; set; }
@@ -33,7 +33,7 @@ namespace Fatagram.Application.Dtos.Message
         public Dictionary<string, object>? Metadata { get; set; }
     }
 
-    public class ResponseMessageDto
+    public record ResponseMessageDto
     {
         public Guid Id { get; set; }
         public Guid? ConversationId { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class GetUserProfileDto
+    public record GetUserProfileDto
     {
         public Dictionary<string, object?>? Infos { get; set; }
         public bool? IsOwner { get; set; }

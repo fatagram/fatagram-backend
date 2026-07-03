@@ -1,4 +1,4 @@
-﻿using Fatagram.Domain.Utils;
+using Fatagram.Application.Utils;
 
 namespace Fatagram.Application.Services.RefreshTokenServices
 {

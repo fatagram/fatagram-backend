@@ -1,19 +1,15 @@
-﻿using System.Drawing;
-using System.Linq.Dynamic.Core.Tokenizer;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Application.Services.JwtServices.Interface;
+using Fatagram.Application.Services.JwtServices;
 using Fatagram.Application.Services.RefreshTokenServices;
-using Fatagram.Application.Services.TokenServices.Interface;
+using Fatagram.Application.Services.TokenServices;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
-using Fatagram.Infrastructure.Repositories.RefreshTokenRepository.Interface;
-using Fatagram.Infrastructure.Repositories.UserRepository;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
@@ -41,10 +37,10 @@ namespace Fatagram.Application.Services.TokenServices
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Task<string> GenerateAccessTokenAsync(Guid userId)
+        public string GenerateAccessTokenAsync(Guid userId)
         {
             var token = _jwtService.GenerateToken(userId) ?? throw new GenerateTokenException();
-            return Task.FromResult(token.Data!);
+            return token.Data!;
         }
 
         public async Task<string> GenerateRefreshTokenAsync(Guid userId)
@@ -71,7 +67,7 @@ namespace Fatagram.Application.Services.TokenServices
             {
                 return null;
             }
-            return await GenerateAccessTokenAsync(userId.Value);
+            return await Task.FromResult(GenerateAccessTokenAsync(userId.Value));
         }
 
         /// <summary>

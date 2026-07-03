@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Fatagram.Infrastructure.MessageQueue.Interfaces;
+using Fatagram.Application.Abstractions.MessageQueue;
 using StackExchange.Redis;
 
 namespace Fatagram.Infrastructure.MessageQueue

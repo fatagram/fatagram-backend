@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 
 namespace Fatagram.Application.Common.Mapper.Profiles
 {

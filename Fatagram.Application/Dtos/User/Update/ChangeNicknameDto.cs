@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.User.Update
 {
-    public class ChangeNicknameDto
+    public record ChangeNicknameDto
     {
         public string Nickname { get; set; } = null!;
     }

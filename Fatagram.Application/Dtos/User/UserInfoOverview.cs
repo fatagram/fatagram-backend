@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class UserInfoOverview
+    public record UserInfoOverview
     {
         public string? Bio { get; set; }
         public string? Description { get; set; }

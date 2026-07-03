@@ -1,16 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -20,6 +17,10 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
     {
         private readonly ICacheService _cacheService;
         private readonly IConversationRepository _conversationRepository;
+
+        // Keep the 100 most recent messages per conversation in Redis.
+        private const int HotWindowSize = 100;
+        private static readonly TimeSpan HotWindowTtl = TimeSpan.FromHours(2);
 
         public CachedMessageRepository(
             AppDbContext dbContext,
@@ -33,94 +34,32 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             _conversationRepository = conversationRepository;
         }
 
+        private static string HotKey(Guid conversationId) =>
+            $"conv:{conversationId}:recent_msgs";
+
         public override async Task<Message> AddAsync(Message entity)
         {
             entity.Id = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
-
-            var lastMessageNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
+            // IncreaseLastMessageNumberAsync now does an atomic DB UPDATE...RETURNING,
+            // so LastMessageNumber in the Conversations table is already up to date.
+            entity.SequenceNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
                 entity.ConversationId
             );
-            entity.SequenceNumber = lastMessageNumber;
 
-            var conversationId = entity.ConversationId;
+            var saved = await base.AddAsync(entity);
 
-            var messageZSetKey = $"conv:{conversationId}:messages";
-            var mediaMapKey = $"conv:{conversationId}:media:map";
-            var mediaTimelineKey = $"conv:{conversationId}:media:timeline";
+            // Invalidate the hot window so the next read repopulates from DB with fresh data.
+            // Write path never touches Redis directly â€” cache is for reads only.
+            await _cacheService.RemoveAsync(HotKey(entity.ConversationId));
 
-            if (entity.Media != null && entity.Media.Count > 0)
-            {
-                int i = 0;
-                var hashEntries = new List<HashEntry>();
-
-                foreach (var media in entity.Media)
-                {
-                    media.Id = Guid.NewGuid();
-                    media.CreatedAt = entity.CreatedAt;
-                    media.IndexInMessage = i++;
-                    media.MessageSequence = entity.SequenceNumber;
-
-                    await _cacheService.SortedSetAddAsync(
-                        mediaTimelineKey,
-                        media,
-                        entity.SequenceNumber
-                    );
-
-                    hashEntries.Add(
-                        new HashEntry(
-                            media.Id.ToString(),
-                            $"{entity.SequenceNumber}:{media.IndexInMessage}"
-                        )
-                    );
-                }
-
-                await _cacheService.SortedSetAddAsync(
-                    messageZSetKey,
-                    entity,
-                    entity.SequenceNumber
-                );
-
-                await _cacheService.HashSetAsync(mediaMapKey, [.. hashEntries]);
-            }
-            else
-            {
-                await _cacheService.SortedSetAddAsync(
-                    messageZSetKey,
-                    entity,
-                    entity.SequenceNumber
-                );
-            }
-
-            return entity;
+            return saved;
         }
 
         public async Task<LastMessageProjection?> GetLastMessageOfConversationAsync(
             Guid conversationId
         )
         {
-            string redisKey = $"conv:{conversationId}:messages";
-            var cachedList = await _cacheService.SortedSetRangeByScoreAsync<Message>(
-                redisKey,
-                order: Order.Descending,
-                take: 1
-            );
-            var lastMessage = cachedList?.FirstOrDefault();
-            if (lastMessage != null)
-                return new LastMessageProjection
-                {
-                    Id = lastMessage.Id,
-                    ConversationId = lastMessage.ConversationId,
-                    SenderId = lastMessage.SenderId,
-                    SenderFullName = lastMessage.Sender?.FullName,
-                    Content = lastMessage.Content,
-                    SequenceNumber = lastMessage.SequenceNumber,
-                    CreatedAt = lastMessage.CreatedAt,
-                    Type = lastMessage.Type,
-                    Media = lastMessage.Media,
-                    Metadata = lastMessage.Metadata,
-                };
-
             var inner = (IMessageRepository)_inner;
             return await inner.GetLastMessageOfConversationAsync(conversationId);
         }
@@ -132,72 +71,70 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             int limit
         )
         {
-            Console.WriteLine(
-                $"Getting messages for conversation {conversationId}, cursor: {cursor}, desc: {desc}, limit: {limit}"
-            );
-            var messagesKey = $"conv:{conversationId}:messages";
-            Order redisOrder = desc ? Order.Descending : Order.Ascending;
-
-            double start = double.NegativeInfinity;
-            double stop = double.PositiveInfinity;
-            Exclude exclude = Exclude.None;
-
-            if (cursor.HasValue && cursor > 0)
+            // Only serve from hot window for the common case: newest-first, cursor within window.
+            // ASC pagination (load from beginning) and deep-scroll always fall back to DB.
+            if (desc)
             {
-                if (desc)
+                var hotKey = HotKey(conversationId);
+                var windowCount = await _cacheService.SortedSetLengthAsync(hotKey);
+
+                if (windowCount > 0)
                 {
-                    stop = cursor.Value;
-                    exclude = Exclude.Stop;
-                }
-                else
-                {
-                    start = cursor.Value;
-                    exclude = Exclude.Start;
+                    // Cursor: exclusive upper bound on SequenceNumber (null = +âˆž = latest).
+                    double upperBound = cursor.HasValue ? cursor.Value - 1 : double.PositiveInfinity;
+
+                    // Determine the lowest seq in the hot window to know if we can serve from cache.
+                    var oldest = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                        hotKey,
+                        order: Order.Ascending,
+                        take: 1
+                    );
+                    int windowFloor = oldest.FirstOrDefault()?.SequenceNumber ?? int.MaxValue;
+
+                    // Can serve from cache only if the requested range is fully inside the window.
+                    bool cursorWithinWindow =
+                        !cursor.HasValue || cursor.Value > windowFloor;
+
+                    if (cursorWithinWindow)
+                    {
+                        var cached = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                            hotKey,
+                            start: double.NegativeInfinity,
+                            stop: upperBound,
+                            order: Order.Descending,
+                            take: limit
+                        );
+
+                        if (cached.Count == limit)
+                            return cached;
+
+                        // Partial hit: cached has fewer than `limit` items.
+                        // If the window is exhausted (oldest item is the conversation's first message)
+                        // return what we have; otherwise the cursor scrolled below the window floor
+                        // and we fall through to DB.
+                        if (cached.Count > 0 && windowFloor == 1)
+                            return cached;
+                    }
                 }
             }
 
-            var pendingMessages = await _cacheService.SortedSetRangeByScoreAsync<Message>(
-                messagesKey,
-                start,
-                stop,
-                exclude,
-                redisOrder,
-                offset: 0,
-                take: limit
-            );
+            // Fallback: read from DB.
+            var innerRepo = (IMessageRepository)_inner;
+            var dbMessages = await innerRepo.GetMessages(conversationId, cursor, desc, limit);
 
-            Console.WriteLine(
-                $"Cache returned {pendingMessages.Count} messages for conversation {conversationId}"
-            );
-
-            int remainingLimit = limit - pendingMessages.Count;
-
-            if (remainingLimit <= 0)
+            // Lazy-populate the hot window when loading the latest page (desc, no meaningful cursor)
+            // so subsequent reads for the same conversation can be served from cache.
+            bool isLatestPage = desc && (!cursor.HasValue || cursor.Value >= int.MaxValue);
+            if (isLatestPage && dbMessages.Count > 0)
             {
-                return pendingMessages;
+                var hotKey = HotKey(conversationId);
+                foreach (var msg in dbMessages)
+                    await _cacheService.SortedSetAddAsync(hotKey, msg, msg.SequenceNumber);
+                await _cacheService.SortedSetRemoveRangeByRankAsync(hotKey, 0, -(HotWindowSize + 1));
+                await _cacheService.KeyExpireAsync(hotKey, HotWindowTtl);
             }
 
-            int? cursorForDb =
-                pendingMessages.Count > 0 ? pendingMessages.Last().SequenceNumber : cursor;
-
-            Console.WriteLine(
-                $"Fetching from database with cursor {cursorForDb} for conversation {conversationId} remaining limit {remainingLimit}"
-            );
-
-            var messageRepo = (IMessageRepository)_inner;
-
-            var messagesFromDb = await messageRepo.GetMessages(
-                conversationId,
-                cursorForDb,
-                desc,
-                remainingLimit
-            );
-
-            Console.WriteLine(
-                $"Database returned {messagesFromDb.Count} messages for conversation {conversationId}"
-            );
-
-            return [.. pendingMessages, .. messagesFromDb];
+            return dbMessages;
         }
 
         public async Task<List<Message>> GetDeltaMessagesAsync(
@@ -205,29 +142,31 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             int sinceSequenceNumber
         )
         {
-            var messagesKey = $"conv:{conversationId}:messages";
+            var hotKey = HotKey(conversationId);
+            var windowCount = await _cacheService.SortedSetLengthAsync(hotKey);
 
-            var pendingMessages = await _cacheService.SortedSetRangeByScoreAsync<Message>(
-                messagesKey,
-                start: sinceSequenceNumber,
-                stop: double.PositiveInfinity,
-                exclude: Exclude.Start,
-                order: Order.Ascending
-            );
+            if (windowCount > 0)
+            {
+                var oldest = await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                    hotKey,
+                    order: Order.Ascending,
+                    take: 1
+                );
+                int windowFloor = oldest.FirstOrDefault()?.SequenceNumber ?? int.MaxValue;
 
-            var messageRepo = (IMessageRepository)_inner;
-            var messagesFromDb = await messageRepo.GetDeltaMessagesAsync(
-                conversationId,
-                sinceSequenceNumber
-            );
+                if (sinceSequenceNumber >= windowFloor)
+                {
+                    return await _cacheService.SortedSetRangeByScoreAsync<Message>(
+                        hotKey,
+                        start: sinceSequenceNumber + 1,
+                        stop: double.PositiveInfinity,
+                        order: Order.Ascending
+                    );
+                }
+            }
 
-            var pendingSeqs = pendingMessages.Select(m => m.SequenceNumber).ToHashSet();
-
-            return
-            [
-                .. pendingMessages,
-                .. messagesFromDb.Where(m => !pendingSeqs.Contains(m.SequenceNumber)),
-            ];
+            var inner = (IMessageRepository)_inner;
+            return await inner.GetDeltaMessagesAsync(conversationId, sinceSequenceNumber);
         }
     }
 }

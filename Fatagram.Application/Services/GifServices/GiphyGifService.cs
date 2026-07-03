@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos.Gif;
-using Fatagram.Application.Services.GifServices.Interfaces;
+using Fatagram.Application.Services.GifServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -21,11 +21,7 @@ namespace Fatagram.Application.Services.GifServices
             configuration["Giphy:ApiKey"] ?? "xQ8d1Qy8r902j9K0E4gB1S1873M288";
         private readonly ILogger<GiphyGifService> _logger = logger;
 
-        public async Task<GifResponseDto> SearchGifsAsync(
-            string query,
-            int limit = 20,
-            string? pos = null
-        )
+        public async Task<GifsDto> SearchGifsAsync(string query, int limit = 20, string? pos = null)
         {
             int offset = 0;
             if (!string.IsNullOrEmpty(pos) && int.TryParse(pos, out int parsedOffset))
@@ -38,7 +34,7 @@ namespace Fatagram.Application.Services.GifServices
             return await FetchGifsAsync(url);
         }
 
-        public async Task<GifResponseDto> GetTrendingGifsAsync(int limit = 20, string? pos = null)
+        public async Task<GifsDto> GetTrendingGifsAsync(int limit = 20, string? pos = null)
         {
             int offset = 0;
             if (!string.IsNullOrEmpty(pos) && int.TryParse(pos, out int parsedOffset))
@@ -51,7 +47,7 @@ namespace Fatagram.Application.Services.GifServices
             return await FetchGifsAsync(url);
         }
 
-        private async Task<GifResponseDto> FetchGifsAsync(string url)
+        private async Task<GifsDto> FetchGifsAsync(string url)
         {
             try
             {
@@ -62,7 +58,7 @@ namespace Fatagram.Application.Services.GifServices
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var giphyResponse = JsonSerializer.Deserialize<GiphyApiResponse>(content, options);
 
-                var result = new GifResponseDto();
+                var result = new GifsDto();
                 if (giphyResponse != null)
                 {
                     if (giphyResponse.Pagination != null)
@@ -100,7 +96,7 @@ namespace Fatagram.Application.Services.GifServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching GIFs from Giphy API");
-                return new GifResponseDto();
+                return new GifsDto();
             }
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -9,7 +9,7 @@ using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.User;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
+using Fatagram.Application.Services.UserServices.FriendshipServices;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 

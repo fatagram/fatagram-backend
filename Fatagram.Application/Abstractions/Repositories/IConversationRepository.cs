@@ -1,0 +1,41 @@
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using Fatagram.Domain.Models;
+using Fatagram.Application.Common.Projections;
+
+namespace Fatagram.Application.Abstractions.Repositories
+{
+    public interface IConversationRepository : IBaseRepository<Conversation>
+    {
+        Task<List<ConversationProjection>> GetMyConversationsAsync(
+            string userId,
+            DateTime? cursor,
+            int limit,
+            List<Guid>? notInConvIds = null
+        );
+
+        Task<ConversationProjection?> GetConversationWith(Guid userId, Guid targetUserId);
+        Task<ConversationProjection?> GetConversationById(
+            Guid userId,
+            Guid conversationId,
+            Expression<Func<Conversation, ConversationProjection>>? selector = null
+        );
+
+        Task<List<ConversationSeenInfoProjection>> GetUnreadConversationsAsync(Guid userId);
+        Task<int> GetUnreadCountAsync(Guid userId);
+
+        Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds);
+        Task<int> IncreaseLastMessageNumberAsync(Guid conversationId);
+        Task<int> GetLastMessageNumberAsync(Guid conversationId);
+        Task<List<ConversationProjection>> GetDeltaAsync(Guid userId, DateTime since);
+
+        Task<List<ConversationProjection>> SearchConversations(
+            Guid userId,
+            string query,
+            int limit,
+            Guid? cursor = null
+        );
+    }
+}

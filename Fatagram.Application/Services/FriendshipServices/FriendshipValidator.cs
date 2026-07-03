@@ -1,9 +1,7 @@
-using Fatagram.Application.Exceptions;
+﻿using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {

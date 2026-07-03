@@ -6,7 +6,7 @@ using Fatagram.Domain.Enums;
 
 namespace Fatagram.Application.Dtos.User
 {
-    public class OnboardingDto
+    public record OnboardingDto
     {
         public string FirstName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }

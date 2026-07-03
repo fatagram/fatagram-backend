@@ -1,5 +1,6 @@
 using System.Text.Json;
 using StackExchange.Redis;
+using Fatagram.Application.Abstractions.Cache;
 
 namespace Fatagram.Infrastructure.Cache;
 
@@ -194,6 +195,16 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
     public async Task<bool> SortedSetRemoveAsync<T>(string key, T value)
     {
         return await _db.SortedSetRemoveAsync(key, ToRedisValue(value));
+    }
+
+    public async Task<long> SortedSetRemoveRangeByRankAsync(string key, long start, long stop)
+    {
+        return await _db.SortedSetRemoveRangeByRankAsync(key, start, stop);
+    }
+
+    public async Task<long> SortedSetLengthAsync(string key)
+    {
+        return await _db.SortedSetLengthAsync(key);
     }
 
     public async Task<long?> SortedSetRankAsync<T>(string key, T value, bool desc = false)

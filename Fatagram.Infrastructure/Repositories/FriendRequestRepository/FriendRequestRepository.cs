@@ -2,7 +2,7 @@
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.FriendRequestRepository

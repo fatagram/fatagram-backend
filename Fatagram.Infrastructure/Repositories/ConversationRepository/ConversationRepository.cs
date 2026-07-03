@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -8,9 +8,9 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -350,11 +350,18 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)
         {
+            // Use raw SQL UPDATE...RETURNING for atomic increment that returns the new value.
+            // ExecuteUpdateAsync only returns rows-affected (always 1), not the new sequence value.
             return await _dbContext
-                .Conversations.Where(c => c.Id == conversationId)
-                .ExecuteUpdateAsync(s =>
-                    s.SetProperty(c => c.LastMessageNumber, c => c.LastMessageNumber + 1)
-                );
+                .Database.SqlQuery<int>(
+                    $"""
+                    UPDATE "Conversations"
+                    SET "LastMessageNumber" = "LastMessageNumber" + 1
+                    WHERE "Id" = {conversationId}
+                    RETURNING "LastMessageNumber"
+                    """
+                )
+                .FirstOrDefaultAsync();
         }
 
         public Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds)

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.UserServices.FriendshipServices.Interface;
+using Fatagram.Application.Services.UserServices.FriendshipServices;
 using Fatagram.Application.Utils;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Enums;
 

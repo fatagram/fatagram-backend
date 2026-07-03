@@ -2,7 +2,7 @@ using System;
 
 namespace Fatagram.Application.Dtos.Gif
 {
-    public class GifDto
+    public record GifDto
     {
         public string Id { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;

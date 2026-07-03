@@ -1,15 +1,15 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Fatagram.API.Utils;
-using Fatagram.Application.Services.SocketServices.Interfaces;
+using Fatagram.Application.Services.SocketServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Fatagram.API.Hubs
 {
     [Authorize]
-    public class AppHub(ISockerReceiver receiver) : Hub
+    public class AppHub(ISocketReceiver receiver) : Hub
     {
-        private readonly ISockerReceiver _receiver = receiver;
+        private readonly ISocketReceiver _receiver = receiver;
         protected string? UserId => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         protected string ConnectionId => Context.ConnectionId;
 

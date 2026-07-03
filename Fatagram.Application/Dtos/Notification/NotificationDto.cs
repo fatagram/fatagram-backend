@@ -7,11 +7,10 @@ using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Fatagram.Application.Dtos.Notification
 {
-    public class NotificationDto
+    public record NotificationDto
     {
         public string Id { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;

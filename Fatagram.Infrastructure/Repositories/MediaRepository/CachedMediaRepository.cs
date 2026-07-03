@@ -1,15 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.MediaRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -225,7 +224,7 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
 
                         if (inCacheCorrect.Count >= count)
                         {
-                            inCacheCorrect.Reverse(); // Đảo ngược để đúng thứ tự thời gian (Reverse for chronological order)
+                            inCacheCorrect.Reverse(); // Äáº£o ngÆ°á»£c Ä‘á»ƒ Ä‘Ãºng thá»© tá»± thá»i gian (Reverse for chronological order)
                             return inCacheCorrect;
                         }
 
@@ -238,7 +237,7 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
                                     || (
                                         m.MessageSequence == anchorSeq
                                         && m.IndexInMessage < anchorIndex
-                                    ) // Sửa lỗi dấu > thành < (Fixed operator bug)
+                                    ) // Sá»­a lá»—i dáº¥u > thÃ nh < (Fixed operator bug)
                                 )
                             )
                             .OrderByDescending(m => m.MessageSequence)
@@ -246,17 +245,17 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
                             .Take(missingCount)
                             .ToListAsync();
 
-                        // Tối ưu hóa hiệu năng bằng HashSet (Optimize performance using HashSet for O(1) lookup)
+                        // Tá»‘i Æ°u hÃ³a hiá»‡u nÄƒng báº±ng HashSet (Optimize performance using HashSet for O(1) lookup)
                         var cachedIds = inCacheCorrect.Select(c => c.Id).ToHashSet();
 
                         var result = new List<MessageMedia>(inCacheCorrect);
                         result.AddRange(inDb.Where(dbMedia => !cachedIds.Contains(dbMedia.Id)));
 
-                        result.Reverse(); // Đảo ngược mảng cuối cùng (Reverse final array)
+                        result.Reverse(); // Äáº£o ngÆ°á»£c máº£ng cuá»‘i cÃ¹ng (Reverse final array)
                         return result;
                     }
 
-                    // Trường hợp after (After case)
+                    // TrÆ°á»ng há»£p after (After case)
                     var inCacheAfter = await _cacheService.SortedSetRangeByScoreAsync<MessageMedia>(
                         mediaTimelineKey,
                         order: Order.Ascending,
@@ -363,7 +362,7 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
                 return mergedResult;
             }
 
-            // Trường hợp after (After case)
+            // TrÆ°á»ng há»£p after (After case)
             var inDbFirstAfter = await _dbContext
                 .MessageMedias.Where(m =>
                     m.Message.ConversationId == conversationId

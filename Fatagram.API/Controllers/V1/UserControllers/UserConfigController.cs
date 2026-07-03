@@ -3,7 +3,7 @@ using Fatagram.API.Controllers.V1;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Application.Services.UserServices.UserConfigServices.Interfaces;
+using Fatagram.Application.Services.UserServices.UserConfigServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

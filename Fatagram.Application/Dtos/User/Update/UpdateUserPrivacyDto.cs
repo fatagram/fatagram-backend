@@ -7,7 +7,7 @@ using Fatagram.Domain.Enums;
 
 namespace Fatagram.Application.Dtos.User.Update
 {
-    public class UpdateUserPrivacyDto
+    public record UpdateUserPrivacyDto
     {
         public string Field { get; set; } = string.Empty;
         public PrivacyLevel PrivacyLevel { get; set; }

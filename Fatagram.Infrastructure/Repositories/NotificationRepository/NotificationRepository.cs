@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Projections;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fatagram.Infrastructure.Repositories.NotificationRepository

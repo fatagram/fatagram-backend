@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.Conversation
 {
-    public class ParticipantDto
+    public record ParticipantDto
     {
         public Guid UserId { get; set; }
 

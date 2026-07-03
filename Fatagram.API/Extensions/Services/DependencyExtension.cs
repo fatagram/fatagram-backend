@@ -4,33 +4,22 @@ using System.Linq;
 using System.Reflection;
 using Fatagram.API.Hubs;
 using Fatagram.API.Scripts;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
-using Fatagram.Application.Services.ConversationServices.Interfaces;
 using Fatagram.Application.Services.GifServices;
-using Fatagram.Application.Services.GifServices.Interfaces;
 using Fatagram.Application.Services.MediaServices;
-using Fatagram.Application.Services.MediaServices.Interfaces;
 using Fatagram.Application.Services.MessageServices;
-using Fatagram.Application.Services.MessageServices.Interfaces;
-using Fatagram.Application.Services.SockerServices.Interfaces;
-using Fatagram.Application.Services.SocketServices.Interfaces;
+using Fatagram.Application.Services.SocketServices;
 using Fatagram.Application.Services.UserServices.UserServices;
-using Fatagram.Application.Services.UserServices.UserServices.Interfaces;
 using Fatagram.Application.Utils;
 using Fatagram.Application.Utils.Notify;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
-using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.ConversationRepository;
-using Fatagram.Infrastructure.Repositories.ConversationRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
-using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MediaRepository;
-using Fatagram.Infrastructure.Repositories.MediaRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.MessageRepository;
-using Fatagram.Infrastructure.Repositories.MessageRepository.Interfaces;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository;
-using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
 
 namespace Fatagram.API.Extensions.Services
 {
@@ -39,6 +28,7 @@ namespace Fatagram.API.Extensions.Services
         public static void AddDependencyServices(this IServiceCollection services)
         {
             // Scoped for services
+            services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserProfileService, UserProfileService>();
             services.AddScoped<IFriendshipService, FriendshipService>();
@@ -83,14 +73,12 @@ namespace Fatagram.API.Extensions.Services
                 IConversationParticipantRepository,
                 CachedConvParticipantRepository
             >();
-            services.Decorate<IMediaRepository, CachedMediaRepository>();
-
             // Scoped for cached services
             services.Decorate<IGifService, CachedGifService>();
 
             // Scoped for SignalR
             services.AddScoped(typeof(ISocketSender<>), typeof(SocketSender<>));
-            services.AddScoped<ISockerReceiver, SockerReceiver>();
+            services.AddScoped<ISocketReceiver, SocketReceiver>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<NotificationInfoService>();
 

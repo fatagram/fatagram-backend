@@ -7,7 +7,7 @@ namespace Fatagram.Application.Dtos.Auth
     /// <summary>
     /// Data Transfer Object for user registration.
     /// </summary>
-    public class RegisterDto
+    public record RegisterDto
     {
         public string Username { get; set; } = string.Empty;
 

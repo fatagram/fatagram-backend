@@ -2,7 +2,7 @@ namespace Fatagram.Application.Dtos.User
 {
     using Fatagram.Domain.Enums;
 
-    public class OnboardingDefaultDataDto
+    public record OnboardingDefaultDataDto
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

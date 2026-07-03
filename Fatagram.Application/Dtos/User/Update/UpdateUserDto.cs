@@ -1,13 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Fatagram.Application.Utils;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Fatagram.Application.Dtos.User.Update
 {
     /// <summary>
     /// Data transfer object for updating user
     /// </summary>
-    public class UpdateUserDto
+    public record UpdateUserDto
     {
         public string? Username { get; set; }
         public string? FirstName { get; set; }

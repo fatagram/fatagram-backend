@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Fatagram.Application.Services.SockerServices.Interfaces;
+using Fatagram.Application.Services.SocketServices;
 using Fatagram.Application.Utils;
 using Microsoft.AspNetCore.SignalR;
 

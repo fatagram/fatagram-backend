@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos;
 using Fatagram.Application.Dtos.Filter;
-using Fatagram.Application.Services.ConversationServices.Interfaces;
+using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 

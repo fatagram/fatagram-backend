@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.NotificationServices.Interface;
+using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 

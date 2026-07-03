@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AutoMapper.Configuration.Annotations;
-using Fatagram.Infrastructure.Repositories.FriendRequestRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.FriendshipRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 
 namespace Fatagram.Application.Services.UserServices.FriendshipServices
 {

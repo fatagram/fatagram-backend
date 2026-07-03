@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.Conversation
 {
-    public class UpdateThemeDto
+    public record UpdateThemeDto
     {
         public string Theme { get; set; } = null!;
     }

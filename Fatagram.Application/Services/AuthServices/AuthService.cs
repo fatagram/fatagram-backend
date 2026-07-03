@@ -1,21 +1,18 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using AutoMapper;
+using Fatagram.Application.Abstractions.Repositories;
+using Fatagram.Application.Abstractions.Security;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.AuthServices.Interface;
+using Fatagram.Application.Services.AuthServices;
 using Fatagram.Application.Services.AuthServices.OAuth;
-using Fatagram.Application.Services.TokenServices.Interface;
+using Fatagram.Application.Services.TokenServices;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Data.Extensions;
-using Fatagram.Infrastructure.Repositories.AccountRepository.Interface;
-using Fatagram.Infrastructure.Repositories.EmailRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.UserEmailRepository.Interfaces;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
 using Fatagram.Shared.Common;
 using Fatagram.Shared.Constants;
 using Fatagram.Shared.Enums;
@@ -32,6 +29,7 @@ namespace Fatagram.Application.Services.AuthServices
         IUserEmailRepository userEmailRepository,
         ITokenService tokenService,
         OAuthServiceFactory oauthServiceFactory,
+        IPasswordHasher passwordHasher,
         IMapper mapper,
         ILogger<AuthService> logger
     ) : IAuthService
@@ -41,6 +39,7 @@ namespace Fatagram.Application.Services.AuthServices
         private readonly IUserEmailRepository _userEmailRepository = userEmailRepository;
         private readonly ITokenService _tokenService = tokenService;
         private readonly OAuthServiceFactory _oauthServiceFactory = oauthServiceFactory;
+        private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<AuthService> _logger = logger;
 
@@ -51,37 +50,33 @@ namespace Fatagram.Application.Services.AuthServices
         ///     Information about user's login
         /// </param>
         /// <returns></returns>
-        public async Task<Result<TokenResponseDto>> Login(LoginDto request)
+        public async Task<Result<TokenDto>> Login(LoginDto request)
         {
-            var account = await _accountRepository.GetByUsernameOrEmailAsync(
-                request.UsernameOrEmail
-            );
+            var account = await ResolveLoginAccountAsync(request.UsernameOrEmail);
+            VerifyPasswordAsync(account, request.Password);
 
-            _logger.LogInformation(
-                "Attempting login for user: {UsernameOrEmail}",
-                request.UsernameOrEmail
-            );
-
-            if (string.IsNullOrEmpty(account?.PasswordHash))
-            {
-                _logger.LogWarning(
-                    "Account not found or password hash is null for user: {UsernameOrEmail}",
-                    request.UsernameOrEmail
-                );
-                throw new AccountNotFoundException();
-            }
-
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, account?.PasswordHash))
-            {
-                throw new BadRequestException(Errors.Auth.PasswordIncorrect);
-            }
-
-            var accessToken = await _tokenService.GenerateAccessTokenAsync(account!.UserId);
+            var accessToken = _tokenService.GenerateAccessTokenAsync(account!.UserId);
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.UserId);
-            return Result<TokenResponseDto>.Create(
+
+            return Result<TokenDto>.Create(
                 ResponseStatusCode.Success,
-                new TokenResponseDto { AccessToken = accessToken, RefreshToken = refreshToken }
+                new TokenDto { AccessToken = accessToken, RefreshToken = refreshToken }
             );
+        }
+
+        private async Task<Account> ResolveLoginAccountAsync(string usernameOrEmail)
+        {
+            var account = await _accountRepository.GetByUsernameOrEmailAsync(usernameOrEmail);
+            if (account == null)
+                throw new AccountNotFoundException();
+            return account;
+        }
+
+        private bool VerifyPasswordAsync(Account account, string password)
+        {
+            if (account.PasswordHash == null)
+                throw new AppException(Errors.Auth.PasswordIncorrect);
+            return _passwordHasher.Verify(password, account.PasswordHash);
         }
 
         /// <summary>
@@ -96,24 +91,21 @@ namespace Fatagram.Application.Services.AuthServices
                 s => s.Username
             );
             if (account?.Count > 0)
-            {
                 throw new AppException(Errors.Auth.UsernameExisted);
-            }
             var emailExists = await _userEmailRepository.IsEmailInUseAsync(registerDto.Email);
             if (emailExists)
-            {
                 throw new AppException(Errors.Auth.EmailExisted);
-            }
+
             // Get email, phone, name from registerDto to newUser
             var newUser = _mapper.Map<User>(registerDto);
-
-            // Get username and password from registerDto to newAccount
             var newAccount = _mapper.Map<Account>(registerDto);
-            newAccount.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+
+            newAccount.PasswordHash = _passwordHasher.HashPassword(registerDto.Password);
             newUser.Accounts.Add(newAccount);
+
             var user = await _userRepository.AddAsync(newUser);
 
-            return Result<TokenResponseDto>.Create(ResponseStatusCode.Success);
+            return Result<TokenDto>.Create(ResponseStatusCode.Success);
         }
 
         /// <summary>
@@ -150,20 +142,15 @@ namespace Fatagram.Application.Services.AuthServices
         /// <param name="provider">OAuth provider type</param>
         /// <param name="code">OAuth authorization code</param>
         /// <returns>Token response</returns>
-        public async Task<Result<TokenResponseDto>> OAuthCallback(
-            OAuthProvider provider,
-            string code
-        )
+        public async Task<Result<TokenDto>> OAuthCallback(OAuthProvider provider, string code)
         {
             _logger.LogInformation(
                 "{Provider} OAuth callback received with code: {Code}",
                 provider,
                 code
             );
-            // Step 1: Get OAuth service for the provider
             var oauthService = _oauthServiceFactory.CreateService(provider);
 
-            // Step 2: Get user info from OAuth provider
             var userInfo = await oauthService.GetUserInfoAsync(code);
             _logger.LogInformation(
                 "{Provider} OAuth user info retrieved: {Email}, {Name}",
@@ -172,7 +159,6 @@ namespace Fatagram.Application.Services.AuthServices
                 userInfo.Name
             );
 
-            // Step 3: Validate user info
             if (string.IsNullOrEmpty(userInfo.Email))
             {
                 throw new AppException(
@@ -180,7 +166,6 @@ namespace Fatagram.Application.Services.AuthServices
                 );
             }
 
-            // Step 4: Check if account exists
             var account = await _accountRepository.GetByUsernameOrEmailAsync(userInfo.Email);
             _logger.LogInformation("Searching for account with email: {Email}", userInfo.Email);
 
@@ -189,7 +174,6 @@ namespace Fatagram.Application.Services.AuthServices
 
             if (account is null)
             {
-                // Step 5: Create new user and account
                 var newAccount = await CreateNewUserFromOAuthAsync(userInfo);
 
                 _logger.LogInformation(
@@ -198,12 +182,11 @@ namespace Fatagram.Application.Services.AuthServices
                     newAccount.UserId
                 );
 
-                accessToken = await _tokenService.GenerateAccessTokenAsync(newAccount.UserId);
+                accessToken = _tokenService.GenerateAccessTokenAsync(newAccount.UserId);
                 refreshToken = await _tokenService.GenerateRefreshTokenAsync(newAccount.UserId);
             }
             else
             {
-                // Step 6: Login existing user
                 _logger.LogInformation(
                     "Logging in existing user with email: {Email}",
                     userInfo.Email
@@ -214,13 +197,13 @@ namespace Fatagram.Application.Services.AuthServices
                     account.UserId
                 );
 
-                accessToken = await _tokenService.GenerateAccessTokenAsync(account.UserId);
+                accessToken = _tokenService.GenerateAccessTokenAsync(account.UserId);
                 refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.UserId);
             }
 
-            return Result<TokenResponseDto>.Create(
+            return Result<TokenDto>.Create(
                 ResponseStatusCode.Success,
-                new TokenResponseDto { AccessToken = accessToken, RefreshToken = refreshToken }
+                new TokenDto { AccessToken = accessToken, RefreshToken = refreshToken }
             );
         }
 
@@ -229,8 +212,6 @@ namespace Fatagram.Application.Services.AuthServices
         /// </summary>
         private async Task<Account> CreateNewUserFromOAuthAsync(OAuthUserInfo userInfo)
         {
-            _logger.LogInformation("Creating new user for email: {Email}", userInfo.Email);
-
             var newUser = new User
             {
                 FullName = userInfo.Name,
@@ -258,7 +239,7 @@ namespace Fatagram.Application.Services.AuthServices
         /// Google OAuth callback (deprecated - use OAuthCallback instead)
         /// </summary>
         [Obsolete("Use OAuthCallback(OAuthProvider.Google, code) instead")]
-        public async Task<Result<TokenResponseDto>> GoogleCallback(GoogleCallbackDto request)
+        public async Task<Result<TokenDto>> GoogleCallback(OAuthCallbackDto request)
         {
             return await OAuthCallback(OAuthProvider.Google, request.Code);
         }

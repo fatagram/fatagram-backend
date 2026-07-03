@@ -11,7 +11,6 @@ namespace Fatagram.Application.Exceptions
     {
         public Error Error { get; } = error;
         public List<Error>? Errors { get; set; } = errors;
-
         public AppException(string errorCode, string? errorMessage, List<Error>? errors = null)
             : this(new Error(errorCode, errorMessage ?? string.Empty), errors) { }
     }

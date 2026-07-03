@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using Fatagram.Application.Abstractions.Storage;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -13,7 +14,7 @@ using Fatagram.Application.Dtos.User.Update;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
-using Fatagram.Application.Services.ImageService.Enum;
+using Fatagram.Application.Abstractions.Storage.Enums;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Fatagram.Application.Dtos.User.Update
 {
-    public class ChangeLanguageDto
+    public record ChangeLanguageDto
     {
         [Required]
         [RegularExpression("^(en|vi)$", ErrorMessage = "Language code must be 'en' or 'vi'.")]

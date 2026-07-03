@@ -6,20 +6,19 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.Notification;
-using Fatagram.Application.Services.NotificationServices.Interfaces;
-using Fatagram.Application.Services.SockerServices.Interfaces;
+using Fatagram.Application.Services.NotificationServices;
+using Fatagram.Application.Services.SocketServices;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums.NotificationServices;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Repositories.NotificationRepository.Interface;
-using Fatagram.Infrastructure.Repositories.UserRepository.Interface;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 
-namespace Fatagram.Application.Services.NotificationServices.Interface
+namespace Fatagram.Application.Services.NotificationServices
 {
     public class NotificationService(
         INotificationRepository notificationRepository,

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Dtos.Message;
-using Fatagram.Application.Services.MediaServices.Interfaces;
+using Fatagram.Application.Services.MediaServices;
 using Fatagram.Application.Utils;
-using Fatagram.Infrastructure.Repositories.MediaRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Enums;
 
 namespace Fatagram.Application.Services.MediaServices

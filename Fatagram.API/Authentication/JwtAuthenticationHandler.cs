@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using Fatagram.Application.Services.JwtServices.Interface;
+using Fatagram.Application.Services.JwtServices;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authentication;

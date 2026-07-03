@@ -7,7 +7,7 @@ using Fatagram.Application.Dtos.Message;
 
 namespace Fatagram.Application.Dtos.Conversation
 {
-    public class UpdateConversationDto
+    public record UpdateConversationDto
     {
         public string? Name { get; set; }
         public string? AvatarUrl { get; set; }

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Fatagram.Domain.Models;
-using Fatagram.Infrastructure.Cache;
+using Fatagram.Application.Abstractions.Cache;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 
 namespace Fatagram.Infrastructure.Repositories.BaseRepository
 {

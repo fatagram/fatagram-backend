@@ -1,9 +1,9 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Infrastructure.Repositories.BaseRepository.Interfaces;
+using Fatagram.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;

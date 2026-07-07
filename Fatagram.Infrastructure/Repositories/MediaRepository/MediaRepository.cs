@@ -18,14 +18,65 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
         ILogger<BaseRepository<MessageMedia>>? logger = null
     ) : BaseRepository<MessageMedia>(dbContext, logger), IMediaRepository
     {
-        public Task<List<MessageMedia>> GetMediaAroundAsync(
+        public async Task<List<MessageMedia>> GetMediaAroundAsync(
             Guid conversationId,
             Guid mediaId,
             bool before,
             int count
         )
         {
-            throw new NotImplementedException();
+            if (count <= 0)
+                return [];
+
+            var anchor = await _dbContext
+                .MessageMedias.Where(m =>
+                    m.Id == mediaId && m.Message.ConversationId == conversationId
+                )
+                .Select(m => new { m.MessageSequence, m.IndexInMessage })
+                .FirstOrDefaultAsync();
+
+            if (anchor == null)
+                return [];
+
+            if (before)
+            {
+                var result = await _dbContext
+                    .MessageMedias.Where(m =>
+                        m.Message.ConversationId == conversationId
+                        && (
+                            m.MessageSequence < anchor.MessageSequence
+                            || (
+                                m.MessageSequence == anchor.MessageSequence
+                                && m.IndexInMessage < anchor.IndexInMessage
+                            )
+                        )
+                    )
+                    .OrderByDescending(m => m.MessageSequence)
+                    .ThenByDescending(m => m.IndexInMessage)
+                    .Take(count)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                result.Reverse();
+                return result;
+            }
+
+            return await _dbContext
+                .MessageMedias.Where(m =>
+                    m.Message.ConversationId == conversationId
+                    && (
+                        m.MessageSequence > anchor.MessageSequence
+                        || (
+                            m.MessageSequence == anchor.MessageSequence
+                            && m.IndexInMessage > anchor.IndexInMessage
+                        )
+                    )
+                )
+                .OrderBy(m => m.MessageSequence)
+                .ThenBy(m => m.IndexInMessage)
+                .Take(count)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<MessageMediaAroundAnchorProjection> GetMediaAroundAnchorAsync(

@@ -1,10 +1,7 @@
 ﻿using System.Security.Claims;
 using Asp.Versioning;
-using Fatagram.API.Extensions.Constrains;
-using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Shared.Extensions;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1
 {
@@ -85,36 +82,6 @@ namespace Fatagram.API.Controllers.V1
         protected string? GetClaimValue(string claimType)
         {
             return HttpContext.User.FindFirstValue(claimType);
-        }
-
-        /// <summary>
-        /// Checks if the current user has a specific role
-        /// </summary>
-        /// <param name="role">Role to check</param>
-        /// <returns>True if user has the role, false otherwise</returns>
-        protected bool HasRole(string role)
-        {
-            return HttpContext.User.IsInRole(role);
-        }
-
-        /// <summary>
-        /// Checks if the current user has any of the specified roles
-        /// </summary>
-        /// <param name="roles">Roles to check</param>
-        /// <returns>True if user has any of the roles, false otherwise</returns>
-        protected bool HasAnyRole(params string[] roles)
-        {
-            return roles.Any(role => HttpContext.User.IsInRole(role));
-        }
-
-        /// <summary>
-        /// Checks if the current user has all of the specified roles
-        /// </summary>
-        /// <param name="roles">Roles to check</param>
-        /// <returns>True if user has all roles, false otherwise</returns>
-        protected bool HasAllRoles(params string[] roles)
-        {
-            return roles.All(role => HttpContext.User.IsInRole(role));
         }
     }
 }

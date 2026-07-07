@@ -1,4 +1,4 @@
-﻿namespace Fatagram.API.Extensions.Constrains
+namespace Fatagram.API.Extensions.Constraints
 {
     public static class CorsPolicySettings
     {

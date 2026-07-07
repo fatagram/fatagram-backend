@@ -1,22 +1,11 @@
-﻿using System;
-using Fatagram.Application.Abstractions.Storage;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Fatagram.API.Utils;
+﻿using Fatagram.API.Utils;
+using Fatagram.Application.Abstractions.Storage.Enums;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
-using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Services.ConversationServices;
-using Fatagram.Application.Abstractions.Storage.Enums;
 using Fatagram.Application.Services.MediaServices;
 using Fatagram.Application.Services.MessageServices;
-using Fatagram.Application.Utils;
-using Fatagram.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Fatagram.API.Controllers.V1
 {

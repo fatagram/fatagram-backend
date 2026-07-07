@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Fatagram.API.Extensions.Services.Swagger
+namespace Fatagram.API.Extensions.Services
 {
     public static class SwaggerExtensions
     {
@@ -11,13 +11,40 @@ namespace Fatagram.API.Extensions.Services.Swagger
         {
             services.AddEndpointsApiExplorer();
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition(
+                    "Bearer",
+                    new OpenApiSecurityScheme
+                    {
+                        Name = "Authorization",
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "Bearer",
+                        BearerFormat = "JWT",
+                        In = ParameterLocation.Header,
+                        Description = "Nhập token theo định dạng: Bearer {your_token}",
+                    }
+                );
+                options.AddSecurityRequirement(
+                    new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer",
+                                },
+                            },
+                            new string[] { }
+                        },
+                    }
+                );
+            });
         }
     }
 
-    /// <summary>
-    /// Configures Swagger options per API version discovered by the API Explorer.
-    /// </summary>
     public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
     {
         private readonly IApiVersionDescriptionProvider _provider;

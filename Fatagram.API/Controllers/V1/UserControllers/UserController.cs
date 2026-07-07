@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
-using Fatagram.Application.Services.UserServices.UserServices;
+using Fatagram.Application.Services.UserServices.UserCoreServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

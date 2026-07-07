@@ -1,22 +1,12 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.Tracing;
-using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
-using Fatagram.API.Extensions.Constrains;
-using Fatagram.API.Utils;
+﻿using Fatagram.API.Utils;
 using Fatagram.API.Utils.Attributes;
 using Fatagram.Application.Dtos.Auth;
-using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
-using Fatagram.Application.Services.AuthServices;
 using Fatagram.Application.Services.TokenServices;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Fatagram.API.Controllers.V1
 {
@@ -33,7 +23,6 @@ namespace Fatagram.API.Controllers.V1
         private readonly ILogger<AuthController> _logger = logger;
         private readonly IWebHostEnvironment _environment = environment;
         private readonly IConfiguration _configuration = configuration;
-
         private bool IsLocal => !(_environment.IsProduction() || _environment.IsDevelopment());
 
         /// <summary>
@@ -84,7 +73,7 @@ namespace Fatagram.API.Controllers.V1
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPost("refreshToken")]
+        [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
             if (!Request.Cookies.TryGetValue("_refreshToken", out var refreshToken))
@@ -92,7 +81,12 @@ namespace Fatagram.API.Controllers.V1
                 throw new GenerateTokenException();
             }
             var res = await _tokenService.GenerateAccessTokenFromRefreshTokenAsync(refreshToken);
-            AppendAccessToken(res!);
+            if (string.IsNullOrWhiteSpace(res))
+            {
+                throw new GenerateTokenException();
+            }
+
+            AppendAccessToken(res);
             return Ok();
         }
 
@@ -105,10 +99,10 @@ namespace Fatagram.API.Controllers.V1
         public async Task<IActionResult> Logout()
         {
             if (
-                !Request.Cookies.TryGetValue("_refreshToken", out var token)
-                || string.IsNullOrWhiteSpace(token)
+                Request.Cookies.TryGetValue("_refreshToken", out var token)
+                && !string.IsNullOrWhiteSpace(token)
             )
-                await _tokenService.DeleteRefreshTokenAsync(token!);
+                await _tokenService.DeleteRefreshTokenAsync(token);
 
             RemoveAccessToken();
             RemoveRefreshToken();

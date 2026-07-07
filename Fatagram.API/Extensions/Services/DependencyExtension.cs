@@ -1,18 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Fatagram.API.Hubs;
 using Fatagram.API.Scripts;
-using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Common.Mapper;
 using Fatagram.Application.Services.ConversationServices;
 using Fatagram.Application.Services.GifServices;
 using Fatagram.Application.Services.MediaServices;
 using Fatagram.Application.Services.MessageServices;
 using Fatagram.Application.Services.SocketServices;
-using Fatagram.Application.Services.UserServices.UserServices;
-using Fatagram.Application.Utils;
+using Fatagram.Application.Services.UserServices.UserCoreServices;
 using Fatagram.Application.Utils.Notify;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
 using Fatagram.Infrastructure.Repositories.ConversationRepository;
@@ -34,6 +31,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IFriendshipService, FriendshipService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IJwtService, JwtHmacSha256Service>();
+            services.AddScoped<IJwtTokenValidator, JwtHmacSha256Service>();
             services.AddScoped<IImageService, CloudImageService>();
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<OAuthServiceFactory>();
@@ -89,7 +87,6 @@ namespace Fatagram.API.Extensions.Services
             services.AddAutoMapper(typeof(Mapping));
 
             // Singleton
-            services.AddSingleton<JwtHmacSha256Service>();
             services.AddSingleton(TimeProvider.System);
 
             var commandType = typeof(ICommand);

@@ -1,38 +1,26 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Fatagram.Application.Exceptions.MiddleLevelExceptions;
+using Fatagram.Application.Abstractions.Security;
 using Fatagram.Application.Services.JwtServices;
+using Fatagram.Application.Types;
 using Fatagram.Application.Utils;
 using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Fatagram.Application.Services.JwtServices
 {
-    /// <summary>
-    /// Service for generating JWT tokens
-    /// </summary>
-    public class JwtHmacSha256Service(IConfiguration config) : IJwtService
+    public class JwtHmacSha256Service(IOptions<JwtSettings> jwtOptions)
+        : IJwtService,
+            IJwtTokenValidator
     {
-        private readonly IConfiguration _config = config;
+        private readonly JwtSettings _settings = jwtOptions.Value;
 
-        /// <summary>
-        /// Generate a JWT token
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
         public Result<string> GenerateToken(Guid userId)
         {
-            var secretKey = _config["JwtSettings:SecretKey"] ?? "";
-            var issuer = _config["JwtSettings:Issuer"] ?? "";
-            var audience = _config["JwtSettings:Audience"] ?? "";
-            var expirationInMinutes = int.Parse(_config["JwtSettings:ExpireInMinutes"] ?? "60");
-
-            // if (secretKey == null) throw new ArgumentNullException("Secret key is null");
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
@@ -42,10 +30,10 @@ namespace Fatagram.Application.Services.JwtServices
             };
 
             var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
+                issuer: _settings.Issuer,
+                audience: _settings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expirationInMinutes),
+                expires: DateTime.UtcNow.AddMinutes(_settings.ExpireInMinutes),
                 signingCredentials: creds
             );
 
@@ -55,52 +43,35 @@ namespace Fatagram.Application.Services.JwtServices
             );
         }
 
-        /// <summary>
-        /// Generate a JWT token
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
         public Result<string> GenerateToken(string userId) => GenerateToken(userId.ToGuid());
 
-        /// <summary>
-        /// Validate a JWT token
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="errorCode"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public Result<ClaimsPrincipal> ValidateToken(string token)
+        public ClaimsPrincipal? ValidateToken(string token)
         {
-            var secretKey = _config["JwtSettings:SecretKey"] ?? "";
-            var issuer = _config["JwtSettings:Issuer"] ?? "";
-            var audience = _config["JwtSettings:Audience"] ?? "";
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
 
             try
             {
                 var principal = tokenHandler.ValidateToken(
                     token,
-                    new TokenValidationParameters()
+                    new TokenValidationParameters
                     {
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = issuer,
-                        ValidAudience = audience,
+                        ValidIssuer = _settings.Issuer,
+                        ValidAudience = _settings.Audience,
                         IssuerSigningKey = key,
                         ClockSkew = TimeSpan.Zero,
                     },
-                    out var validatedToken
+                    out _
                 );
-
-                return Result<ClaimsPrincipal>.Create(ResponseStatusCode.Success, principal);
+                return principal;
             }
-            catch (Exception)
+            catch
             {
-                return Result<ClaimsPrincipal>.Create(ResponseStatusCode.Unauthorized);
+                return null;
             }
         }
     }

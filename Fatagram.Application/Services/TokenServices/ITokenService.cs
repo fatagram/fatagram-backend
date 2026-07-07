@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using Fatagram.Application.Dtos.Token;
-using Fatagram.Application.Utils;
+﻿using Fatagram.Application.Dtos.Token;
 
 namespace Fatagram.Application.Services.TokenServices
 {
@@ -14,7 +12,7 @@ namespace Fatagram.Application.Services.TokenServices
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        string GenerateAccessTokenAsync(Guid userId);
+        string GenerateAccessToken(Guid userId);
 
         /// <summary>
         /// Generate a new refresh token

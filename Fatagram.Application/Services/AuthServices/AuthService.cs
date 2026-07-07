@@ -5,7 +5,6 @@ using Fatagram.Application.Abstractions.Security;
 using Fatagram.Application.Dtos.Auth;
 using Fatagram.Application.Dtos.Token;
 using Fatagram.Application.Exceptions;
-using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.AuthServices;
 using Fatagram.Application.Services.AuthServices.OAuth;
@@ -53,9 +52,9 @@ namespace Fatagram.Application.Services.AuthServices
         public async Task<Result<TokenDto>> Login(LoginDto request)
         {
             var account = await ResolveLoginAccountAsync(request.UsernameOrEmail);
-            VerifyPasswordAsync(account, request.Password);
+            VerifyPassword(account, request.Password);
 
-            var accessToken = _tokenService.GenerateAccessTokenAsync(account!.UserId);
+            var accessToken = _tokenService.GenerateAccessToken(account.UserId);
             var refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.UserId);
 
             return Result<TokenDto>.Create(
@@ -68,15 +67,17 @@ namespace Fatagram.Application.Services.AuthServices
         {
             var account = await _accountRepository.GetByUsernameOrEmailAsync(usernameOrEmail);
             if (account == null)
-                throw new AccountNotFoundException();
+                throw new AppException(Errors.Auth.InvalidCredentials);
             return account;
         }
 
-        private bool VerifyPasswordAsync(Account account, string password)
+        private void VerifyPassword(Account account, string password)
         {
             if (account.PasswordHash == null)
-                throw new AppException(Errors.Auth.PasswordIncorrect);
-            return _passwordHasher.Verify(password, account.PasswordHash);
+                throw new AppException(Errors.Auth.InvalidCredentials);
+
+            if (!_passwordHasher.Verify(password, account.PasswordHash))
+                throw new AppException(Errors.Auth.InvalidCredentials);
         }
 
         /// <summary>
@@ -182,7 +183,7 @@ namespace Fatagram.Application.Services.AuthServices
                     newAccount.UserId
                 );
 
-                accessToken = _tokenService.GenerateAccessTokenAsync(newAccount.UserId);
+                accessToken = _tokenService.GenerateAccessToken(newAccount.UserId);
                 refreshToken = await _tokenService.GenerateRefreshTokenAsync(newAccount.UserId);
             }
             else
@@ -197,7 +198,7 @@ namespace Fatagram.Application.Services.AuthServices
                     account.UserId
                 );
 
-                accessToken = _tokenService.GenerateAccessTokenAsync(account.UserId);
+                accessToken = _tokenService.GenerateAccessToken(account.UserId);
                 refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.UserId);
             }
 

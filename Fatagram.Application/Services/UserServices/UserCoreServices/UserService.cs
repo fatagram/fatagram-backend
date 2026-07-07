@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using AutoMapper;
 using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Dtos.Filter;
 using Fatagram.Application.Dtos.User;
-using Fatagram.Application.Services.UserServices.UserServices;
 using Fatagram.Application.Utils;
 using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
@@ -16,7 +10,7 @@ using Fatagram.Shared.Enums;
 using Fatagram.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Fatagram.Application.Services.UserServices.UserServices
+namespace Fatagram.Application.Services.UserServices.UserCoreServices
 {
     public class UserService(
         IUserRepository userRepository,

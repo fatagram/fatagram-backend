@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fatagram.API.Controllers.V1
 {
     [Authorize]
-    [Route("api/v1/gifs")]
     public class GifController(IGifService gifService) : BaseApiController
     {
         private readonly IGifService _gifService = gifService;

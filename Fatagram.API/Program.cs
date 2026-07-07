@@ -2,7 +2,7 @@ using System.Xml;
 using Asp.Versioning.ApiExplorer;
 using Fatagram.API.Extensions;
 using Fatagram.API.Extensions.Configuration;
-using Fatagram.API.Extensions.Constrains;
+using Fatagram.API.Extensions.Constraints;
 using Fatagram.API.Extensions.Middleware;
 using Fatagram.API.Hubs;
 using Fatagram.API.Middlewares;

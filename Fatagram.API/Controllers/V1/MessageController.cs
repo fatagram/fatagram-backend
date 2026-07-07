@@ -1,25 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Fatagram.API.Utils;
-using Fatagram.Application.Dtos.Filter;
+﻿using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Message;
 using Fatagram.Application.Services.MessageServices;
-using Fatagram.Domain.Enums;
-using Fatagram.Domain.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Fatagram.API.Controllers.V1
 {
     public class MessageController(
-        ILogger<MessageController> logger,
+        // ILogger<MessageController> logger,
         IMessageService messageService
     ) : BaseApiController
     {
-        private readonly ILogger<MessageController> _logger = logger;
+        // private readonly ILogger<MessageController> _logger = logger;
         private readonly IMessageService _messageService = messageService;
 
         [HttpPost("{conversationId}")]

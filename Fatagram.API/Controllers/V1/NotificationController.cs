@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Fatagram.API.Controllers.V1
 {
+    [Authorize]
     public class NotificationController(
         INotificationService notificationService,
         ILogger<NotificationController> logger
@@ -28,7 +29,6 @@ namespace Fatagram.API.Controllers.V1
         /// <param name="pageSize"></param>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetNotifications([FromQuery] CursorFilter<DateTime> filter)
         {
@@ -50,7 +50,6 @@ namespace Fatagram.API.Controllers.V1
         /// <param name="pageSize"></param>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpGet("unread")]
         public async Task<IActionResult> GetUnreadNotifications(
             [FromQuery] CursorFilter<DateTime> filter
@@ -61,7 +60,6 @@ namespace Fatagram.API.Controllers.V1
             return result.ToActionResult();
         }
 
-        [Authorize]
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadNotificationCount()
         {
@@ -76,7 +74,6 @@ namespace Fatagram.API.Controllers.V1
         /// <param name="notificationId"></param>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpPost("{notificationId}/read")]
         public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
         {
@@ -89,7 +86,6 @@ namespace Fatagram.API.Controllers.V1
         /// </summary>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpPost("read-all")]
         public async Task<IActionResult> MarkAllNotificationsAsRead()
         {
@@ -104,7 +100,6 @@ namespace Fatagram.API.Controllers.V1
         /// <param name="notificationId"></param>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpDelete("{notificationId}")]
         public async Task<IActionResult> DeleteNotification(Guid notificationId)
         {
@@ -116,7 +111,6 @@ namespace Fatagram.API.Controllers.V1
         /// </summary>
         /// <returns></returns>
         /// <exception cref="UnauthorizedException"></exception>
-        [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteAllNotifications()
         {

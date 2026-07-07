@@ -1,33 +1,21 @@
-using System.Drawing;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Application.Dtos.Token;
-using Fatagram.Application.Exceptions;
 using Fatagram.Application.Exceptions.DetailExceptions;
 using Fatagram.Application.Services.JwtServices;
-using Fatagram.Application.Services.RefreshTokenServices;
-using Fatagram.Application.Services.TokenServices;
-using Fatagram.Application.Utils;
 using Fatagram.Domain.Models;
-using Fatagram.Shared.Enums;
-using Fatagram.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 
 namespace Fatagram.Application.Services.TokenServices
 {
     public class TokenService(
         IJwtService jwtService,
-        IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IConfiguration configuration,
         ILogger<TokenService> logger
     ) : ITokenService
     {
         private readonly IJwtService _jwtService = jwtService;
-        private readonly IUserRepository _userRepository = userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository;
         private readonly IConfiguration _configuration = configuration;
         private readonly ILogger<TokenService> _logger = logger;
@@ -37,7 +25,7 @@ namespace Fatagram.Application.Services.TokenServices
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public string GenerateAccessTokenAsync(Guid userId)
+        public string GenerateAccessToken(Guid userId)
         {
             var token = _jwtService.GenerateToken(userId) ?? throw new GenerateTokenException();
             return token.Data!;
@@ -61,13 +49,13 @@ namespace Fatagram.Application.Services.TokenServices
 
         public async Task<string?> GenerateAccessTokenFromRefreshTokenAsync(string refreshToken)
         {
-            var (res, userId) = await ValidateRefreshTokenAsync(refreshToken);
-            _logger.LogInformation("Refresh token is valid: {IsValid}", res);
-            if (!res || userId is null)
+            var (isValid, userId) = await ValidateRefreshTokenAsync(refreshToken);
+            _logger.LogInformation("Refresh token is valid: {IsValid}", isValid);
+            if (!isValid || userId is null)
             {
                 return null;
             }
-            return await Task.FromResult(GenerateAccessTokenAsync(userId.Value));
+            return GenerateAccessToken(userId.Value);
         }
 
         /// <summary>
@@ -78,7 +66,7 @@ namespace Fatagram.Application.Services.TokenServices
         /// <exception cref="NotImplementedException"></exception>
         async Task<(bool IsValid, Guid? UserId)> ValidateRefreshTokenAsync(string refreshToken)
         {
-            var _tokenInfo = (
+            var tokenInfos = (
                 await _refreshTokenRepository.GetAllAsync<RefreshTokenInfo, Guid>(
                     filter: rt => rt.Token == refreshToken,
                     limit: 1,
@@ -89,7 +77,7 @@ namespace Fatagram.Application.Services.TokenServices
                     }
                 )
             );
-            var tokenInfo = _tokenInfo.FirstOrDefault();
+            var tokenInfo = tokenInfos.FirstOrDefault();
             if (tokenInfo is null)
             {
                 return (false, null);
@@ -108,12 +96,12 @@ namespace Fatagram.Application.Services.TokenServices
         /// <returns></returns>
         public async Task DeleteRefreshTokenAsync(string refreshToken)
         {
-            var rt = await _refreshTokenRepository.GetAllAsync<Guid, Guid>(
+            var refreshTokenUserIds = await _refreshTokenRepository.GetAllAsync<Guid, Guid>(
                 filter: rt => rt.Token == refreshToken,
                 limit: 1,
                 selector: rt => rt.UserId
             );
-            await _refreshTokenRepository.DeleteAsync(rt.FirstOrDefault());
+            await _refreshTokenRepository.DeleteAsync(refreshTokenUserIds.FirstOrDefault());
         }
     }
 }

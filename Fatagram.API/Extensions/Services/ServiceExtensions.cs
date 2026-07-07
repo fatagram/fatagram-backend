@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Fatagram.API.Extensions.Services.Swagger;
-using Fatagram.API.Extensions.SignalR;
 using Fatagram.Application.Validators;
 using FluentValidation;
 
@@ -15,25 +9,23 @@ namespace Fatagram.API.Extensions.Services
         {
             builder.Services.AddHttpContextAccessor();
 
-            // Turn off ModelStateInvalidFilter
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.SuppressModelStateInvalidFilter = true;
             });
 
-            // Infrastructure Services
+            // Infrastructure
             builder.Services.AddDatabaseServices(builder.Configuration);
             builder.Services.AddCacheServices(builder.Configuration);
-            builder.Services.AddWorkerServices();
-            builder.Services.AddDependencyServices();
             builder.Services.AddCloudStorageServices(builder.Configuration);
+            builder.Services.AddDependencyServices();
 
-            // Framework Services
-            builder.Services.AddAuthenticationServices();
+            // Auth
+            builder.Services.AddAuthenticationServices(builder.Configuration);
+
+            // Presentation
             builder.AddCorsServices();
             builder.Services.AddSignalRServices();
-
-            // Presentation Services
             builder.Services.AddControllerServices();
             builder.Services.AddApiVersioningServices();
             builder.Services.AddSwaggerServices();

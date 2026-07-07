@@ -143,7 +143,11 @@ namespace Fatagram.Application.Services.AuthServices
         /// <param name="provider">OAuth provider type</param>
         /// <param name="code">OAuth authorization code</param>
         /// <returns>Token response</returns>
-        public async Task<Result<TokenDto>> OAuthCallback(OAuthProvider provider, string code)
+        public async Task<Result<TokenDto>> OAuthCallback(
+            OAuthProvider provider,
+            string code,
+            string? redirectUri = null
+        )
         {
             _logger.LogInformation(
                 "{Provider} OAuth callback received with code: {Code}",
@@ -152,7 +156,7 @@ namespace Fatagram.Application.Services.AuthServices
             );
             var oauthService = _oauthServiceFactory.CreateService(provider);
 
-            var userInfo = await oauthService.GetUserInfoAsync(code);
+            var userInfo = await oauthService.GetUserInfoAsync(code, redirectUri);
             _logger.LogInformation(
                 "{Provider} OAuth user info retrieved: {Email}, {Name}",
                 provider,

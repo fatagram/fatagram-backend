@@ -9,5 +9,11 @@ namespace Fatagram.Application.Dtos.Auth
         /// OAuth authorization code returned from OAuth provider
         /// </summary>
         public required string Code { get; set; }
+
+        /// <summary>
+        /// Override redirect URI — must match what was used in the auth request.
+        /// Falls back to GoogleOAuth:RedirectUri from config when omitted.
+        /// </summary>
+        public string? RedirectUri { get; set; }
     }
 }

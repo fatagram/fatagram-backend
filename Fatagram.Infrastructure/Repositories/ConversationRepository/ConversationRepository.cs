@@ -6,11 +6,11 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Fatagram.Application.Abstractions.Repositories;
+using Fatagram.Application.Common.Projections;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data;
-using Fatagram.Application.Common.Projections;
 using Fatagram.Infrastructure.Repositories.BaseRepository;
-using Fatagram.Application.Abstractions.Repositories;
 using Fatagram.Shared.Extensions;
 using Fatagram.Shared.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -101,7 +101,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             : c.Participants.OrderByDescending(p => p.UserId != userId)
                                 .Select(p => (Guid?)p.UserId)
                                 .FirstOrDefault()
-                            ?? userId,
+                                ?? userId,
                         BackgroundUrl = c.BackgroundUrl,
                         Theme = c.Theme,
                     })
@@ -217,7 +217,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : c.Participants.OrderByDescending(p => p.UserId != userId.ToGuid())
                             .Select(p => (Guid?)p.UserId)
                             .FirstOrDefault()
-                        ?? userId.ToGuid(),
+                            ?? userId.ToGuid(),
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.SequenceNumber)
@@ -294,7 +294,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : c.Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => (Guid?)p.UserId)
                             .FirstOrDefault()
-                        ?? userId,
+                            ?? userId,
                     ParticipantCount = c.IsGroup ? c.Participants.Count() : null,
                     LastActiveAt =
                         c.Messages.OrderByDescending(m => m.SequenceNumber)
@@ -350,25 +350,22 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
 
         public async Task<int> IncreaseLastMessageNumberAsync(Guid conversationId)
         {
-            // Use raw SQL UPDATE...RETURNING for atomic increment that returns the new value.
-            // ExecuteUpdateAsync only returns rows-affected (always 1), not the new sequence value.
-            return await _dbContext
-                .Database.SqlQuery<int>(
+            var result = await _dbContext.Database
+                .SqlQuery<int>(
                     $"""
-                    UPDATE "Conversations"
-                    SET "LastMessageNumber" = "LastMessageNumber" + 1
-                    WHERE "Id" = {conversationId}
-                    RETURNING "LastMessageNumber"
+                    UPDATE conversations
+                    SET last_message_number = last_message_number + 1
+                    WHERE id = {conversationId}
+                    RETURNING last_message_number
                     """
                 )
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+            return result.FirstOrDefault();
         }
 
         public Task NotifyNewMessage(Guid conversationId, Guid senderId, List<Guid> participantIds)
         {
-            throw new NotImplementedException(
-                "This method is not implemented in ConversationRepository. It should be implemented in CachedConversationRepository."
-            );
+            return Task.CompletedTask;
         }
 
         public async Task<int> GetLastMessageNumberAsync(Guid conversationId)
@@ -462,7 +459,7 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                         : c.Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => (Guid?)p.UserId)
                             .FirstOrDefault()
-                        ?? userId,
+                            ?? userId,
                     IsGroup = c.IsGroup,
                     TopParticipantNames = c.IsGroup
                         ? c

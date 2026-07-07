@@ -79,13 +79,6 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IRoutePermissionRepository, RoutePermissionRepository>();
 
-            // Scoped for cached repositories
-            services.Decorate<IConversationRepository, CachedConversationRepository>();
-            services.Decorate<IMessageRepository, CachedMessageRepository>();
-            services.Decorate<
-                IConversationParticipantRepository,
-                CachedConvParticipantRepository
-            >();
             // Scoped for cached services
             services.Decorate<IGifService, CachedGifService>();
 

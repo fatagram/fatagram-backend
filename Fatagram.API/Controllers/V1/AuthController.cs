@@ -62,7 +62,11 @@ namespace Fatagram.API.Controllers.V1
             }
 
             _logger.LogInformation("{Provider} OAuth callback: {code}", provider, request.Code);
-            var res = await _authService.OAuthCallback(oauthProvider, request.Code);
+            var res = await _authService.OAuthCallback(
+                oauthProvider,
+                request.Code,
+                request.RedirectUri
+            );
             AppendAccessToken(res.Data!.AccessToken);
             AppendRefreshToken(res.Data!.RefreshToken);
             return Ok();

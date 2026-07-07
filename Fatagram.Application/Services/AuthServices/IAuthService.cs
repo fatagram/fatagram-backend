@@ -25,7 +25,11 @@ namespace Fatagram.Application.Services.AuthServices
         /// <param name="provider">OAuth provider type</param>
         /// <param name="code">OAuth authorization code</param>
         /// <returns>Token response</returns>
-        Task<Result<TokenDto>> OAuthCallback(OAuthProvider provider, string code);
+        Task<Result<TokenDto>> OAuthCallback(
+            OAuthProvider provider,
+            string code,
+            string? redirectUri = null
+        );
 
         [Obsolete("Use OAuthCallback(OAuthProvider.Google, code) instead")]
         Task<Result<TokenDto>> GoogleCallback(OAuthCallbackDto request);

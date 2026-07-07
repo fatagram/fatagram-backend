@@ -33,7 +33,6 @@ namespace Fatagram.Application.Services.MessageServices
         IConversationRepository conversationRepository,
         IConversationParticipantRepository cpRepo,
         IUserRepository userRepository,
-        ICacheService cacheService,
         IMapper mapper,
         ILogger<MessageService> logger
     ) : IMessageService
@@ -43,7 +42,6 @@ namespace Fatagram.Application.Services.MessageServices
         private readonly IConversationRepository _conversationRepository = conversationRepository;
         private readonly IConversationParticipantRepository _cpRepo = cpRepo;
         private readonly IUserRepository _userRepository = userRepository;
-        private readonly ICacheService _cacheService = cacheService;
         private readonly ILogger<MessageService> _logger = logger;
         private readonly IMapper _mapper = mapper;
 
@@ -157,17 +155,19 @@ namespace Fatagram.Application.Services.MessageServices
                 }
             }
 
+            var seqNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
+                conversation.Id
+            );
+
             var message = await _messageRepository.AddAsync(
                 new Message
                 {
                     ConversationId = conversation.Id,
                     SenderId = senderId,
+                    SequenceNumber = seqNumber,
                     Content = request.Content,
                     Type = request.Type,
                     Metadata = request.Metadata,
-                    Sender = conversation
-                        .Participants.FirstOrDefault(p => p.UserId == senderId)
-                        ?.User!,
                     Media = _mapper.Map<List<MessageMedia>>(request.Media),
                 }
             );
@@ -197,7 +197,6 @@ namespace Fatagram.Application.Services.MessageServices
             }
 
             var sendTasks = new List<Task>();
-            var updateTasks = new List<Task>();
 
             foreach (var p in conversation.ParticipantIds)
             {
@@ -235,16 +234,6 @@ namespace Fatagram.Application.Services.MessageServices
                         }
                     )
                 );
-
-                var userConvKeys = $"user:{p}:conversations_rank";
-
-                updateTasks.Add(
-                    _cacheService.SortedSetAddAsync(
-                        userConvKeys,
-                        conversation.Id.ToString(),
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                    )
-                );
             }
 
             var response = new ResponseMessageDto
@@ -276,15 +265,8 @@ namespace Fatagram.Application.Services.MessageServices
                     }
                 )
             );
-            updateTasks.Add(
-                _cacheService.SortedSetAddAsync(
-                    $"user:{senderId}:conversations_rank",
-                    conversation.Id.ToString(),
-                    DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                )
-            );
 
-            await Task.WhenAll([.. sendTasks, .. updateTasks]);
+            await Task.WhenAll(sendTasks);
 
             await _conversationRepository.NotifyNewMessage(
                 conversation.Id,
@@ -345,11 +327,16 @@ namespace Fatagram.Application.Services.MessageServices
                     throw new Exception("Sender user not found");
                 }
 
+                var seqNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
+                    conversation.Id
+                );
+
                 var message = await _messageRepository.AddAsync(
                     new Message
                     {
                         ConversationId = conversation.Id,
                         SenderId = senderId,
+                        SequenceNumber = seqNumber,
                         Content = request.Content,
                         Type = request.Type,
                         Metadata = request.Metadata,
@@ -384,15 +371,6 @@ namespace Fatagram.Application.Services.MessageServices
                     conversation.ParticipantIds,
                     new SocketMessage<ResponseMessageDto> { Event = "NewMessage", Payload = resp }
                 );
-
-                foreach (var participantId in conversation.ParticipantIds)
-                {
-                    await _cacheService.SortedSetAddAsync(
-                        $"user:{participantId}:conversations_rank",
-                        conversation.Id.ToString(),
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                    );
-                }
 
                 return resp;
             });

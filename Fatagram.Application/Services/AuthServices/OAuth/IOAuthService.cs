@@ -22,6 +22,6 @@ namespace Fatagram.Application.Services.AuthServices.OAuth
         /// </summary>
         /// <param name="code">OAuth authorization code</param>
         /// <returns>OAuth user information</returns>
-        Task<OAuthUserInfo> GetUserInfoAsync(string code);
+        Task<OAuthUserInfo> GetUserInfoAsync(string code, string? redirectUriOverride = null);
     }
 }

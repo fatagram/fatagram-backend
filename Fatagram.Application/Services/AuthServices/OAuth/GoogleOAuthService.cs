@@ -22,9 +22,12 @@ namespace Fatagram.Application.Services.AuthServices.OAuth.Google
         /// <summary>
         /// Get user information from Google OAuth using authorization code
         /// </summary>
-        public async Task<OAuthUserInfo> GetUserInfoAsync(string code)
+        public async Task<OAuthUserInfo> GetUserInfoAsync(
+            string code,
+            string? redirectUriOverride = null
+        )
         {
-            var oauthResponse = await ExchangeCodeAsync(code);
+            var oauthResponse = await ExchangeCodeAsync(code, redirectUriOverride);
             _logger.LogInformation(
                 "Google OAuth token received, expires in: {ExpiresIn}s",
                 oauthResponse.ExpiresIn
@@ -49,8 +52,26 @@ namespace Fatagram.Application.Services.AuthServices.OAuth.Google
             };
         }
 
-        private async Task<GoogleOAuthResponse> ExchangeCodeAsync(string code)
+        private async Task<GoogleOAuthResponse> ExchangeCodeAsync(
+            string code,
+            string? redirectUriOverride = null
+        )
         {
+            var defaultUri =
+                _config["GoogleOAuth:RedirectUri"]
+                ?? throw new Exception("Google:RedirectUri not found in appsettings.json");
+            var adminUri = _config["GoogleOAuth:AdminRedirectUri"];
+
+            if (redirectUriOverride is not null)
+            {
+                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { defaultUri };
+                if (adminUri is not null)
+                    allowed.Add(adminUri);
+
+                if (!allowed.Contains(redirectUriOverride))
+                    throw new Exception($"Redirect URI not allowed: {redirectUriOverride}");
+            }
+
             var client = new HttpClient();
             var dict = new Dictionary<string, string>
             {
@@ -61,9 +82,7 @@ namespace Fatagram.Application.Services.AuthServices.OAuth.Google
                 ["client_secret"] =
                     _config["GoogleOAuth:ClientSecret"]
                     ?? throw new Exception("Google:ClientSecret not found in appsettings.json"),
-                ["redirect_uri"] =
-                    _config["GoogleOAuth:RedirectUri"]
-                    ?? throw new Exception("Google:RedirectUri not found in appsettings.json"),
+                ["redirect_uri"] = redirectUriOverride ?? defaultUri,
                 ["grant_type"] = "authorization_code",
             };
             var content = new FormUrlEncodedContent(dict);

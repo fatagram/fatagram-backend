@@ -1,4 +1,4 @@
-﻿using Fatagram.API.Utils;
+using Fatagram.API.Utils;
 using Fatagram.Application.Abstractions.Storage.Enums;
 using Fatagram.Application.Dtos.Conversation;
 using Fatagram.Application.Dtos.Filter;
@@ -51,7 +51,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetConversationById(Guid conversationId)
         {
             var res = await _conversationService.GetByIdAsync(GetCurrentUserId(), conversationId);
@@ -79,7 +78,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/messages")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetMessages(
             Guid conversationId,
             [FromQuery] CursorFilter<int> filter
@@ -90,7 +88,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/messages/delta")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetDeltaMessages(
             Guid conversationId,
             [FromQuery] int sinceSequenceNumber = 0
@@ -111,7 +108,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/participants/seen")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetParticipantsSeen(Guid conversationId)
         {
             var res = await _conversationParticipantService.GetParticipantSeenAsync(conversationId);
@@ -119,7 +115,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/participants")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetParticipants(
             Guid conversationId,
             [FromQuery] CursorFilter<DateTime> filter
@@ -134,7 +129,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPost("{conversationId}/messages/markSeen/{messageSeq}")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> MarkMessagesAsSeen(Guid conversationId, int messageSeq)
         {
             var res = await _conversationParticipantService.MarkAsSeenAsync(
@@ -146,7 +140,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/media/around/{mediaId}")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetMediaAround(
             Guid conversationId,
             Guid mediaId,
@@ -164,7 +157,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpGet("{conversationId}/media/around-anchor/{mediaId}")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> GetMediaAroundAnchor(
             Guid conversationId,
             Guid mediaId,
@@ -176,7 +168,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPatch("{conversationId}/avatar")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> UpdateConversationAvatar(
             Guid conversationId,
             [FromForm] IFormFile file
@@ -203,7 +194,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPatch("{conversationId}/name")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> UpdateConversationName(
             Guid conversationId,
             [FromBody] UpdateConversationDto request
@@ -224,7 +214,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPatch("{conversationId}/background")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> UpdateConversationBackground(
             Guid conversationId,
             [FromBody] UpdateBackgroundDto request
@@ -240,7 +229,6 @@ namespace Fatagram.API.Controllers.V1
         }
 
         [HttpPatch("{conversationId}/theme")]
-        [ResourceAuth(ResourceType = "MemberConversation", RouteKey = "conversationId")]
         public async Task<IActionResult> UpdateConversationTheme(
             Guid conversationId,
             [FromBody] UpdateThemeDto request

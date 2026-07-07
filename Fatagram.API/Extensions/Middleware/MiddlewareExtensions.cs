@@ -12,7 +12,7 @@ namespace Fatagram.API.Extensions.Middleware
         {
             app.UseMiddleware<GlobalExceptionMiddleware>();
             app.UseMiddleware<CheckOnboardingMiddleware>();
-            app.UseMiddleware<AuthorizationMiddleware>();
+            app.UseMiddleware<RoutePermissionMiddleware>();
         }
     }
 }

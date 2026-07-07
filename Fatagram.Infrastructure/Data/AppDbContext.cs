@@ -20,6 +20,10 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; } = null!;
         public DbSet<Message> Messages { get; set; } = null!;
         public DbSet<MessageMedia> MessageMedias { get; set; } = null!;
+        public DbSet<Permission> Permissions { get; set; } = null!;
+        public DbSet<Role> Roles { get; set; } = null!;
+        public DbSet<UserRole> UserRoles { get; set; } = null!;
+        public DbSet<RoutePermission> RoutePermissions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +38,7 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddLanguage();
             modelBuilder.AddLocalized();
             modelBuilder.AddConversation();
+            modelBuilder.AddRbac();
         }
     }
 }

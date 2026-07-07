@@ -14,8 +14,12 @@ using Fatagram.Application.Utils.Notify;
 using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
 using Fatagram.Infrastructure.Repositories.ConversationRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
+using Fatagram.Application.Abstractions.Services;
+using Fatagram.Application.Services.PermissionServices;
 using Fatagram.Infrastructure.Repositories.MediaRepository;
 using Fatagram.Infrastructure.Repositories.MessageRepository;
+using Fatagram.Infrastructure.Repositories.PermissionRepository;
+using Fatagram.Infrastructure.Repositories.RoutePermissionRepository;
 using Fatagram.Infrastructure.Repositories.UserEmailRepository;
 
 namespace Fatagram.API.Extensions.Services
@@ -40,6 +44,7 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IConversationParticipantService, ConversationParticipantService>();
             services.AddScoped<IMediaService, MediaService>();
+            services.AddScoped<IPermissionService, PermissionService>();
             services.AddHttpClient<IGifService, GiphyGifService>();
 
             // Friendship service dependencies
@@ -63,6 +68,8 @@ namespace Fatagram.API.Extensions.Services
             >();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IMediaRepository, MediaRepository>();
+            services.AddScoped<IPermissionRepository, PermissionRepository>();
+            services.AddScoped<IRoutePermissionRepository, RoutePermissionRepository>();
 
             // Scoped for cached repositories
             services.Decorate<IConversationRepository, CachedConversationRepository>();

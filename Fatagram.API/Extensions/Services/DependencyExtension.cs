@@ -15,7 +15,9 @@ using Fatagram.Infrastructure.Repositories.ConversationParticipantRepository;
 using Fatagram.Infrastructure.Repositories.ConversationRepository;
 using Fatagram.Infrastructure.Repositories.EmailRepository;
 using Fatagram.Application.Abstractions.Services;
+using Fatagram.Application.Services.AdminServices;
 using Fatagram.Application.Services.PermissionServices;
+using Fatagram.Infrastructure.Repositories.BaseRepository;
 using Fatagram.Infrastructure.Repositories.MediaRepository;
 using Fatagram.Infrastructure.Repositories.MessageRepository;
 using Fatagram.Infrastructure.Repositories.PermissionRepository;
@@ -45,11 +47,17 @@ namespace Fatagram.API.Extensions.Services
             services.AddScoped<IConversationParticipantService, ConversationParticipantService>();
             services.AddScoped<IMediaService, MediaService>();
             services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IAdminRoutePermissionService, AdminRoutePermissionService>();
+            services.AddScoped<IAdminRoleService, AdminRoleService>();
+            services.AddScoped<IAdminUserService, AdminUserService>();
             services.AddHttpClient<IGifService, GiphyGifService>();
 
             // Friendship service dependencies
             services.AddScoped<IFriendRequestManager, FriendRequestManager>();
             services.AddScoped<FriendshipValidator>();
+
+            // Generic base repository — covers IBaseRepository<T> for any entity without a dedicated repo
+            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 
             // Scoped for repositories
             services.AddScoped<IUserRepository, UserRepository>();

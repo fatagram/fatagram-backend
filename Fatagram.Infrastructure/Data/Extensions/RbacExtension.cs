@@ -7,10 +7,9 @@ namespace Fatagram.Infrastructure.Data.Extensions
     {
         private static readonly Guid AdminRoleId = new("10000000-0000-0000-0000-000000000001");
         private static readonly Guid UserRoleId = new("10000000-0000-0000-0000-000000000002");
-        private static readonly Guid ConversationMemberPermId = new(
-            "20000000-0000-0000-0000-000000000001"
-        );
+        private static readonly Guid ConversationMemberPermId = new("20000000-0000-0000-0000-000000000001");
         private static readonly Guid UserOwnerPermId = new("20000000-0000-0000-0000-000000000002");
+        private static readonly Guid AdminAccessPermId = new("20000000-0000-0000-0000-000000000003");
 
         public static void AddRbac(this ModelBuilder modelBuilder)
         {
@@ -182,8 +181,23 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         Name = "user.owner",
                         Description = "Modify own user resources",
                         CreatedAt = now,
+                    },
+                    new Permission
+                    {
+                        Id = AdminAccessPermId,
+                        Name = "admin.access",
+                        Description = "Access admin panel",
+                        CreatedAt = now,
                     }
                 );
+
+            // Seed Admin role → admin.access permission via implicit join table
+            modelBuilder.Entity<Permission>()
+                .HasMany(p => p.Roles)
+                .WithMany(r => r.Permissions)
+                .UsingEntity(j => j.HasData(
+                    new { PermissionsId = AdminAccessPermId, RolesId = AdminRoleId }
+                ));
 
             modelBuilder
                 .Entity<RoutePermission>()
@@ -230,6 +244,17 @@ namespace Fatagram.Infrastructure.Data.Extensions
                         ResourceParam = "userId",
                         IsActive = true,
                         Order = 20,
+                        CreatedAt = now,
+                    },
+                    new RoutePermission
+                    {
+                        Id = new Guid("30000000-0000-0000-0000-000000000005"),
+                        HttpMethod = "*",
+                        RoutePattern = "api/v1/admin/*",
+                        PermissionName = "admin.access",
+                        ResourceParam = null,
+                        IsActive = true,
+                        Order = 1,
                         CreatedAt = now,
                     }
                 );

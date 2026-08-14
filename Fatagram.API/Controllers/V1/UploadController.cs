@@ -13,8 +13,7 @@ namespace Fatagram.API.Controllers.V1
         : BaseApiController
     {
         private readonly IImageService _imageService = imageService;
-
-        // private readonly ILogger<UploadController> _logger = logger;
+        private readonly ILogger<UploadController> _logger = logger;
 
         [HttpGet("signature")]
         public async Task<IActionResult> GetUploadSignature(

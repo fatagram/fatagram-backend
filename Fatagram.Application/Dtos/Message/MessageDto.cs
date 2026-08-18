@@ -71,6 +71,8 @@ namespace Fatagram.Application.Dtos.Message
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Dictionary<string, object>? Metadata { get; set; }
+        public int MessageSequence { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class MediaAroundAnchorDto

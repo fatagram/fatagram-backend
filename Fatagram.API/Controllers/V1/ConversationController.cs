@@ -139,6 +139,21 @@ namespace Fatagram.API.Controllers.V1
             return res.ToActionResult();
         }
 
+        [HttpGet("{conversationId}/media")]
+        public async Task<IActionResult> GetConversationMedia(
+            Guid conversationId,
+            [FromQuery] List<Fatagram.Domain.Enums.MediaType>? types,
+            [FromQuery] CursorFilter<int> filter
+        )
+        {
+            var res = await _mediaService.GetConversationMediaAsync(
+                conversationId,
+                types,
+                filter
+            );
+            return res.ToActionResult();
+        }
+
         [HttpGet("{conversationId}/media/around/{mediaId}")]
         public async Task<IActionResult> GetMediaAround(
             Guid conversationId,

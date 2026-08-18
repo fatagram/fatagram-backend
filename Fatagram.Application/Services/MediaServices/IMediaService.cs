@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +14,12 @@ namespace Fatagram.Application.Services.MediaServices
             Guid mediaId,
             bool before,
             int count
+        );
+
+        Task<Result<CursorResult<MessageMediaDto, int>>> GetConversationMediaAsync(
+            Guid conversationId,
+            List<Fatagram.Domain.Enums.MediaType>? types,
+            Fatagram.Application.Dtos.Filter.CursorFilter<int> filter
         );
 
         Task<Result<MediaAroundAnchorDto>> GetMediaAroundAnchorAsync(

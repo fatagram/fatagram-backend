@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -57,6 +57,33 @@ namespace Fatagram.Application.Services.MediaServices
             return Result<List<MessageMediaDto>>.Create(
                 ResponseStatusCode.Success,
                 _mapper.Map<List<MessageMediaDto>>(media)
+            );
+        }
+
+        public async Task<Result<CursorResult<MessageMediaDto, int>>> GetConversationMediaAsync(
+            Guid conversationId,
+            List<Fatagram.Domain.Enums.MediaType>? types,
+            Fatagram.Application.Dtos.Filter.CursorFilter<int> filter
+        )
+        {
+            if (filter.Cursor <= 0)
+                filter.Cursor = int.MaxValue;
+
+            var mediaList = await _mediaRepository.GetConversationMediaAsync(
+                conversationId,
+                types,
+                filter.Cursor,
+                filter.Limit
+            );
+
+            return Result<CursorResult<MessageMediaDto, int>>.Create(
+                ResponseStatusCode.Success,
+                new CursorResult<MessageMediaDto, int>
+                {
+                    Items = _mapper.Map<List<MessageMediaDto>>(mediaList),
+                    NextCursor = mediaList.Count > 0 ? mediaList.Last().MessageSequence : null,
+                    HasNext = mediaList.Count == filter.Limit,
+                }
             );
         }
     }

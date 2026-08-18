@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +21,17 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
     ) : BaseRepositoryDecorator<MessageMedia>(inner, dbContext), IMediaRepository
     {
         private readonly ICacheService _cacheService = cacheService;
+
+        public Task<List<MessageMedia>> GetConversationMediaAsync(
+            Guid conversationId,
+            List<MediaType>? types,
+            int cursor,
+            int limit
+        )
+        {
+            var inner = (IMediaRepository)_inner;
+            return inner.GetConversationMediaAsync(conversationId, types, cursor, limit);
+        }
 
         public async Task<MessageMediaAroundAnchorProjection> GetMediaAroundAnchorAsync(
             Guid conversationId,

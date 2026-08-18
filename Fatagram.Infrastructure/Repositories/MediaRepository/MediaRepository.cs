@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +18,37 @@ namespace Fatagram.Infrastructure.Repositories.MediaRepository
         ILogger<BaseRepository<MessageMedia>>? logger = null
     ) : BaseRepository<MessageMedia>(dbContext, logger), IMediaRepository
     {
+        public async Task<List<MessageMedia>> GetConversationMediaAsync(
+            Guid conversationId,
+            List<MediaType>? types,
+            int cursor,
+            int limit
+        )
+        {
+            if (limit <= 0)
+                limit = 30;
+
+            var query = _dbContext.MessageMedias
+                .Where(m => m.Message.ConversationId == conversationId);
+
+            if (types != null && types.Count > 0)
+            {
+                query = query.Where(m => types.Contains(m.Type));
+            }
+
+            if (cursor > 0)
+            {
+                query = query.Where(m => m.MessageSequence < cursor);
+            }
+
+            return await query
+                .OrderByDescending(m => m.MessageSequence)
+                .ThenByDescending(m => m.IndexInMessage)
+                .Take(limit)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<List<MessageMedia>> GetMediaAroundAsync(
             Guid conversationId,
             Guid mediaId,

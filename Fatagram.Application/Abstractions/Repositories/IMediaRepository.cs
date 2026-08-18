@@ -15,6 +15,13 @@ namespace Fatagram.Application.Abstractions.Repositories
             int count
         );
 
+        Task<List<MessageMedia>> GetConversationMediaAsync(
+            Guid conversationId,
+            List<Fatagram.Domain.Enums.MediaType>? types,
+            int cursor,
+            int limit
+        );
+
         Task<MessageMediaAroundAnchorProjection> GetMediaAroundAnchorAsync(
             Guid conversationId,
             Guid? anchorMediaId,

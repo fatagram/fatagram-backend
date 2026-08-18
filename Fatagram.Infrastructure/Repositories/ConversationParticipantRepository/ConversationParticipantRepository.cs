@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -97,6 +97,27 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
                     s.SetProperty(cp => cp.LastSeenNumber, messageSeq)
                         .SetProperty(cp => cp.SeenAt, seenAt)
                 );
+        }
+
+        public async Task<bool> TogglePinAsync(Guid conversationId, Guid userId)
+        {
+            var participant = await _dbContext.ConversationParticipants
+                .FirstOrDefaultAsync(cp => cp.ConversationId == conversationId && cp.UserId == userId);
+
+            if (participant == null)
+                return false;
+
+            if (participant.PinnedAt == null)
+            {
+                participant.PinnedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                participant.PinnedAt = null;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return participant.PinnedAt != null;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Fatagram.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -13,9 +14,11 @@ using NpgsqlTypes;
 namespace Fatagram.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816110409_AddPinnedAtColumnToConversationParticipant")]
+    partial class AddPinnedAtColumnToConversationParticipant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,10 +206,6 @@ namespace Fatagram.Infrastructure.Migrations
                     b.Property<string>("Nickname")
                         .HasColumnType("VARCHAR(255)")
                         .HasColumnName("nickname");
-
-                    b.Property<DateTime?>("PinnedAt")
-                        .HasColumnType("timestamptz")
-                        .HasColumnName("pinned_at");
 
                     b.Property<int>("Role")
                         .ValueGeneratedOnAdd()

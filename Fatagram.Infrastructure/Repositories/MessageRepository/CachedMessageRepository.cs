@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
 
         public CachedMessageRepository(
             AppDbContext dbContext,
-            IBaseRepository<Message> inner,
+            IMessageRepository inner,
             ICacheService cacheService,
             IConversationRepository conversationRepository
         )
@@ -34,15 +34,12 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             _conversationRepository = conversationRepository;
         }
 
-        private static string HotKey(Guid conversationId) =>
-            $"conv:{conversationId}:recent_msgs";
+        private static string HotKey(Guid conversationId) => $"conv:{conversationId}:recent_msgs";
 
         public override async Task<Message> AddAsync(Message entity)
         {
             entity.Id = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
-            // IncreaseLastMessageNumberAsync now does an atomic DB UPDATE...RETURNING,
-            // so LastMessageNumber in the Conversations table is already up to date.
             entity.SequenceNumber = await _conversationRepository.IncreaseLastMessageNumberAsync(
                 entity.ConversationId
             );
@@ -50,7 +47,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
             var saved = await base.AddAsync(entity);
 
             // Invalidate the hot window so the next read repopulates from DB with fresh data.
-            // Write path never touches Redis directly â€” cache is for reads only.
+            // Write path never touches Redis directly — cache is for reads only.
             await _cacheService.RemoveAsync(HotKey(entity.ConversationId));
 
             return saved;
@@ -80,8 +77,10 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
 
                 if (windowCount > 0)
                 {
-                    // Cursor: exclusive upper bound on SequenceNumber (null = +âˆž = latest).
-                    double upperBound = cursor.HasValue ? cursor.Value - 1 : double.PositiveInfinity;
+                    // Cursor: exclusive upper bound on SequenceNumber (null = +∞ = latest).
+                    double upperBound = cursor.HasValue
+                        ? cursor.Value - 1
+                        : double.PositiveInfinity;
 
                     // Determine the lowest seq in the hot window to know if we can serve from cache.
                     var oldest = await _cacheService.SortedSetRangeByScoreAsync<Message>(
@@ -92,8 +91,7 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                     int windowFloor = oldest.FirstOrDefault()?.SequenceNumber ?? int.MaxValue;
 
                     // Can serve from cache only if the requested range is fully inside the window.
-                    bool cursorWithinWindow =
-                        !cursor.HasValue || cursor.Value > windowFloor;
+                    bool cursorWithinWindow = !cursor.HasValue || cursor.Value > windowFloor;
 
                     if (cursorWithinWindow)
                     {
@@ -130,7 +128,11 @@ namespace Fatagram.Infrastructure.Repositories.MessageRepository
                 var hotKey = HotKey(conversationId);
                 foreach (var msg in dbMessages)
                     await _cacheService.SortedSetAddAsync(hotKey, msg, msg.SequenceNumber);
-                await _cacheService.SortedSetRemoveRangeByRankAsync(hotKey, 0, -(HotWindowSize + 1));
+                await _cacheService.SortedSetRemoveRangeByRankAsync(
+                    hotKey,
+                    0,
+                    -(HotWindowSize + 1)
+                );
                 await _cacheService.KeyExpireAsync(hotKey, HotWindowTtl);
             }
 

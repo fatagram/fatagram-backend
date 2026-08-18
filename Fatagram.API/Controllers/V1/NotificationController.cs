@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Fatagram.API.Utils;
 using Fatagram.Application.Dtos.Filter;
+using Fatagram.Application.Dtos.Notification;
 using Fatagram.Application.Exceptions.MiddleLevelExceptions;
 using Fatagram.Application.Services.NotificationServices;
 using Fatagram.Shared.Extensions;
@@ -103,7 +104,24 @@ namespace Fatagram.API.Controllers.V1
         [HttpDelete("{notificationId}")]
         public async Task<IActionResult> DeleteNotification(Guid notificationId)
         {
-            return (await _notificationService.DeleteAsync(notificationId)).ToActionResult();
+            var userId = GetCurrentUserId();
+            return (await _notificationService.DeleteAsync(userId, notificationId)).ToActionResult();
+        }
+
+        /// <summary>
+        /// Delete multiple notifications for the authenticated user.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("batch-delete")]
+        public async Task<IActionResult> DeleteBatchNotifications(
+            [FromBody] BatchDeleteNotificationDto request
+        )
+        {
+            var userId = GetCurrentUserId();
+            return (
+                await _notificationService.DeleteRangeAsync(userId, request.NotificationIds)
+            ).ToActionResult();
         }
 
         /// <summary>

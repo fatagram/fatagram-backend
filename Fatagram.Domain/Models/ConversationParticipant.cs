@@ -15,6 +15,7 @@ namespace Fatagram.Domain.Models
         public string? Nickname { get; set; }
         public DateTime? SeenAt { get; set; }
         public int LastSeenNumber { get; set; }
+        public DateTime? PinnedAt { get; set; }
         public virtual Conversation Conversation { get; set; } = null!;
         public virtual User? User { get; set; } = null!;
         public virtual Message? LastSeenMessage { get; set; }

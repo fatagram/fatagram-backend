@@ -247,5 +247,12 @@ namespace Fatagram.API.Controllers.V1
 
             return res.ToActionResult();
         }
+
+        [HttpPost("{conversationId}/toggle-pin")]
+        public async Task<IActionResult> TogglePin(Guid conversationId)
+        {
+            var res = await _conversationService.TogglePinAsync(conversationId, GetCurrentUserId());
+            return res.ToActionResult();
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -160,6 +160,13 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .Participants.OrderByDescending(p => p.UserId != userId)
                             .Select(p => p.User!.Avatar)
                             .FirstOrDefault(),
+                    BackgroundUrl = c.BackgroundUrl,
+                    Theme = c.Theme,
+                    PinnedAt = c.Participants
+                        .Where(p => p.UserId == userId)
+                        .Select(p => p.PinnedAt)
+                        .FirstOrDefault(),
+                    IsPinned = c.Participants.Any(p => p.UserId == userId && p.PinnedAt != null),
                 });
 
             var scoreMap = redisResults.ToDictionary(r => r.Value, r => r.Score);
@@ -177,12 +184,26 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     }
                     return c;
                 })
-                .OrderBy(c => c.LastActiveAt)
+                .OrderByDescending(c => c.IsPinned)
+                .ThenBy(c => c.LastActiveAt)
                 .ToList();
 
             if (desc)
             {
-                result.Reverse();
+                result = conversations
+                    .Select(c =>
+                    {
+                        if (scoreMap.TryGetValue(c.Id.ToString(), out double score))
+                        {
+                            c.LastActiveAt = DateTimeOffset
+                                .FromUnixTimeMilliseconds((long)score)
+                                .UtcDateTime;
+                        }
+                        return c;
+                    })
+                    .OrderByDescending(c => c.IsPinned)
+                    .ThenByDescending(c => c.LastActiveAt)
+                    .ToList();
             }
 
             return result;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -199,6 +199,12 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
                     SeenAt = seenAt,
                 })
             );
+        }
+
+        public async Task<bool> TogglePinAsync(Guid conversationId, Guid userId)
+        {
+            var inner = (IConversationParticipantRepository)_inner;
+            return await inner.TogglePinAsync(conversationId, userId);
         }
     }
 }

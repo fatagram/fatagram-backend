@@ -19,6 +19,8 @@ namespace Fatagram.Application.Common.Projections
         public List<string> TopParticipantNames { get; set; } = [];
         public Guid? OtherUserId { get; set; }
         public int? ParticipantCount { get; set; }
+        public DateTime? PinnedAt { get; set; }
+        public bool IsPinned { get; set; }
     }
 
     public class ConversationSeenInfoProjection

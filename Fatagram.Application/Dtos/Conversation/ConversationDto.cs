@@ -24,5 +24,7 @@ namespace Fatagram.Application.Dtos.Conversation
         public Guid? OtherUserId { get; set; }
         public string? BackgroundUrl { get; set; }
         public string? Theme { get; set; }
+        public DateTime? PinnedAt { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

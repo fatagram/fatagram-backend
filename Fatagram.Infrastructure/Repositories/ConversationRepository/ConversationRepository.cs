@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -104,6 +104,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                                 ?? userId,
                         BackgroundUrl = c.BackgroundUrl,
                         Theme = c.Theme,
+                        PinnedAt = c.Participants
+                            .Where(p => p.UserId == userId)
+                            .Select(p => p.PinnedAt)
+                            .FirstOrDefault(),
+                        IsPinned = c.Participants.Any(p => p.UserId == userId && p.PinnedAt != null),
                     })
                     .FirstOrDefaultAsync();
             }
@@ -159,6 +164,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                     OtherUserId = targetUserId,
                     BackgroundUrl = c.BackgroundUrl,
                     Theme = c.Theme,
+                    PinnedAt = c.Participants
+                        .Where(p => p.UserId == userId)
+                        .Select(p => p.PinnedAt)
+                        .FirstOrDefault(),
+                    IsPinned = c.Participants.Any(p => p.UserId == userId && p.PinnedAt != null),
                 });
 
             return await query.FirstOrDefaultAsync();
@@ -238,15 +248,24 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .FirstOrDefault(),
                     BackgroundUrl = c.BackgroundUrl,
                     Theme = c.Theme,
+                    PinnedAt = c.Participants
+                        .Where(p => p.UserId == userId.ToGuid())
+                        .Select(p => p.PinnedAt)
+                        .FirstOrDefault(),
+                    IsPinned = c.Participants.Any(p => p.UserId == userId.ToGuid() && p.PinnedAt != null),
                 });
 
             if (cursor.HasValue && cursor.Value != DateTime.MinValue)
             {
                 var cursorUtc = ToUtcDateTime(cursor.Value);
-                query = query.Where(c => c.LastActiveAt < cursorUtc);
+                query = query.Where(c => !c.IsPinned && c.LastActiveAt < cursorUtc);
             }
 
-            return await query.OrderByDescending(c => c.LastActiveAt).Take(limit).ToListAsync();
+            return await query
+                .OrderByDescending(c => c.IsPinned)
+                .ThenByDescending(c => c.LastActiveAt)
+                .Take(limit)
+                .ToListAsync();
         }
 
         public async Task<List<ConversationProjection>> GetDeltaAsync(Guid userId, DateTime since)
@@ -315,6 +334,11 @@ namespace Fatagram.Infrastructure.Repositories.ConversationRepository
                             .FirstOrDefault(),
                     BackgroundUrl = c.BackgroundUrl,
                     Theme = c.Theme,
+                    PinnedAt = c.Participants
+                        .Where(p => p.UserId == userId)
+                        .Select(p => p.PinnedAt)
+                        .FirstOrDefault(),
+                    IsPinned = c.Participants.Any(p => p.UserId == userId && p.PinnedAt != null),
                 })
                 .Where(c => c.LastActiveAt > sinceUtc);
 

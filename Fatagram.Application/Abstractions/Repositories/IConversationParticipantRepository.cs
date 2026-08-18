@@ -21,5 +21,7 @@ namespace Fatagram.Application.Abstractions.Repositories
             Guid conversationId,
             List<Guid>? userIds = null
         );
+
+        Task<bool> TogglePinAsync(Guid conversationId, Guid userId);
     }
 }

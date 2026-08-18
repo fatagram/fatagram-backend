@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +25,8 @@ namespace Fatagram.Application.Services.NotificationServices
         Task<Result<int>> GetUnreadCountAsync(Guid userId);
         Task MarkAsReadAsync(Guid notificationId);
         Task MarkAllAsReadAsync(Guid userId);
-        Task<Result> DeleteAsync(Guid notificationId);
+        Task<Result> DeleteAsync(Guid userId, Guid notificationId);
+        Task<Result> DeleteRangeAsync(Guid userId, List<Guid> notificationIds);
         Task<Result> DeleteAllAsync(Guid userId);
     }
 }

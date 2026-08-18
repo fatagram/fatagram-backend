@@ -167,9 +167,24 @@ namespace Fatagram.Application.Services.NotificationServices
             return Result.Create();
         }
 
-        public async Task<Result> DeleteAsync(Guid notificationId)
+        public async Task<Result> DeleteAsync(Guid userId, Guid notificationId)
         {
-            await _userNotificationRepository.SoftDeleteAsync(notificationId);
+            await _userNotificationRepository.SoftDeleteRangeAsync(un =>
+                un.UserId == userId && un.Id == notificationId
+            );
+            return Result.Create();
+        }
+
+        public async Task<Result> DeleteRangeAsync(Guid userId, List<Guid> notificationIds)
+        {
+            if (notificationIds == null || notificationIds.Count == 0)
+            {
+                return Result.Create();
+            }
+
+            await _userNotificationRepository.SoftDeleteRangeAsync(un =>
+                un.UserId == userId && notificationIds.Contains(un.Id)
+            );
             return Result.Create();
         }
 

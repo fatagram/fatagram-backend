@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -185,6 +185,11 @@ namespace Fatagram.Application.Services.ConversationServices
                             ?? userId,
                         BackgroundUrl = c.BackgroundUrl,
                         Theme = c.Theme,
+                        PinnedAt = c.Participants
+                            .Where(p => p.UserId == userId)
+                            .Select(p => p.PinnedAt)
+                            .FirstOrDefault(),
+                        IsPinned = c.Participants.Any(p => p.UserId == userId && p.PinnedAt != null),
                     }
                 )
                 ?? throw new NotFoundException(
@@ -552,6 +557,12 @@ namespace Fatagram.Application.Services.ConversationServices
 
             var rawText = $"{participantsInfo} {name}".Trim();
             conversation.SearchText = rawText.RemoveVietnameseTone().ToLowerInvariant();
+        }
+
+        public async Task<Result<bool>> TogglePinAsync(Guid conversationId, Guid userId)
+        {
+            var isPinned = await _cpRepo.TogglePinAsync(conversationId, userId);
+            return Result<bool>.Create(ResponseStatusCode.Success, isPinned);
         }
     }
 }

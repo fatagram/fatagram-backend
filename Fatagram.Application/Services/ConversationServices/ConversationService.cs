@@ -34,6 +34,7 @@ namespace Fatagram.Application.Services.ConversationServices
         IMessageService messageService,
         IPermissionRepository permissionRepository,
         ICacheService cacheService,
+        IChatThemeRepository chatThemeRepository,
         IMapper mapper
     ) : IConversationService
     {
@@ -45,6 +46,7 @@ namespace Fatagram.Application.Services.ConversationServices
         private readonly IMessageService _messageService = messageService;
         private readonly IPermissionRepository _permissionRepository = permissionRepository;
         private readonly ICacheService _cacheService = cacheService;
+        private readonly IChatThemeRepository _chatThemeRepository = chatThemeRepository;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Result<CursorResult<ConversationDto, DateTime>>> GetAllAsync(
@@ -561,16 +563,20 @@ namespace Fatagram.Application.Services.ConversationServices
             existingConversation.Theme = theme;
             await _conversationRepository.UpdateAsync(existingConversation);
 
+            var themeEntity = await _chatThemeRepository.GetByKeyAsync(theme);
+            var themeLabel = themeEntity?.Label ?? (theme == "default" ? "Mặc định" : theme.Replace("chat-", ""));
+
             await _messageService.SendMessageAsync(
                 userId,
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
-                    Content = $"{user.FullName} Ä‘Ã£ Ä‘á»•i chá»§ Ä‘á» cuá»™c trÃ² chuyá»‡n",
+                    Content = $"{user.FullName} đã đổi chủ đề cuộc trò chuyện thành {themeLabel}",
                     Type = MessageType.ChangeTheme,
                     Metadata = new Dictionary<string, object>
                     {
                         { "theme", theme },
+                        { "themeLabel", themeLabel },
                         { "actorName", user.FullName! },
                         { "actorId", userId },
                     },

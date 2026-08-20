@@ -1,4 +1,4 @@
-﻿using Fatagram.Domain.Enums;
+using Fatagram.Domain.Enums;
 using Fatagram.Domain.Models;
 using Fatagram.Infrastructure.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +24,7 @@ namespace Fatagram.Infrastructure.Data
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<UserRole> UserRoles { get; set; } = null!;
         public DbSet<RoutePermission> RoutePermissions { get; set; } = null!;
+        public DbSet<ChatTheme> ChatThemes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +40,7 @@ namespace Fatagram.Infrastructure.Data
             modelBuilder.AddLocalized();
             modelBuilder.AddConversation();
             modelBuilder.AddRbac();
+            modelBuilder.AddChatTheme();
         }
     }
 }

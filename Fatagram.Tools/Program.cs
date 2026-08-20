@@ -12,6 +12,103 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "fix-roles")
+        {
+            var adminServices = new ServiceCollection();
+            ConfigureServices(adminServices, null);
+            var adminProvider = adminServices.BuildServiceProvider();
+            var db = adminProvider.GetRequiredService<AppDbContext>();
+
+            var createGroupMessages = await db.Messages
+                .Where(m => m.Type == MessageType.CreateGroup)
+                .ToListAsync();
+
+            var creatorByConvId = new Dictionary<Guid, Guid>();
+            foreach (var m in createGroupMessages)
+            {
+                if (m.Metadata != null && m.Metadata.TryGetValue("creatorId", out var cidObj))
+                {
+                    if (Guid.TryParse(cidObj?.ToString(), out var cid))
+                    {
+                        creatorByConvId[m.ConversationId] = cid;
+                    }
+                }
+                else if (m.SenderId.HasValue)
+                {
+                    creatorByConvId[m.ConversationId] = m.SenderId.Value;
+                }
+            }
+
+            var conversations = await db.Conversations.Include(c => c.Participants).ToListAsync();
+            int updated = 0;
+            foreach (var c in conversations)
+            {
+                if (c.IsGroup)
+                {
+                    creatorByConvId.TryGetValue(c.Id, out var creatorGuid);
+
+                    bool ownerFound = false;
+                    foreach (var p in c.Participants)
+                    {
+                        if (creatorGuid != Guid.Empty && p.UserId == creatorGuid)
+                        {
+                            p.Role = ConversationRole.Owner;
+                            ownerFound = true;
+                        }
+                        else
+                        {
+                            p.Role = ConversationRole.Member;
+                        }
+                    }
+
+                    if (!ownerFound && c.Participants.Count > 0)
+                    {
+                        c.Participants.First().Role = ConversationRole.Owner;
+                    }
+                    updated++;
+                }
+                else
+                {
+                    foreach (var p in c.Participants)
+                        p.Role = ConversationRole.Member;
+                    updated++;
+                }
+            }
+            // Sync LastSeenNumber for the actors/senders so ghost unread badges disappear
+            var allMessages = await db.Messages.OrderBy(m => m.SequenceNumber).ToListAsync();
+            var lastMessageByConv = allMessages
+                .GroupBy(m => m.ConversationId)
+                .ToDictionary(g => g.Key, g => g.Last());
+
+            foreach (var c in conversations)
+            {
+                if (lastMessageByConv.TryGetValue(c.Id, out var lastMsg))
+                {
+                    Guid? actorId = lastMsg.SenderId;
+                    if (actorId == null && lastMsg.Metadata != null)
+                    {
+                        if (lastMsg.Metadata.TryGetValue("actorId", out var aObj) && Guid.TryParse(aObj?.ToString(), out var aGuid))
+                            actorId = aGuid;
+                        else if (lastMsg.Metadata.TryGetValue("creatorId", out var cObj) && Guid.TryParse(cObj?.ToString(), out var cGuid))
+                            actorId = cGuid;
+                    }
+
+                    if (actorId.HasValue)
+                    {
+                        var participant = c.Participants.FirstOrDefault(p => p.UserId == actorId.Value);
+                        if (participant != null && participant.LastSeenNumber < lastMsg.SequenceNumber)
+                        {
+                            participant.LastSeenNumber = lastMsg.SequenceNumber;
+                        }
+                    }
+                }
+            }
+
+            await db.SaveChangesAsync();
+            Console.WriteLine($"✅ Accurately updated roles and synced read status for {updated} conversations!");
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "test-login")
         {
             var adminServices = new ServiceCollection();

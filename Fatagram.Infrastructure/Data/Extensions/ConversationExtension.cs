@@ -107,7 +107,6 @@ namespace Fatagram.Infrastructure.Data.Extensions
                     .HasColumnName("role")
                     .HasColumnType("integer")
                     .HasConversion<int>()
-                    .HasDefaultValue(ConversationRole.Member)
                     .IsRequired();
                 entity
                     .Property(cp => cp.Nickname)

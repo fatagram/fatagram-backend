@@ -11,7 +11,7 @@ namespace Fatagram.Domain.Models
         public Guid ConversationId { get; set; }
         public Guid UserId { get; set; }
         public Guid? LastSeenMessageId { get; set; }
-        public ConversationRole Role { get; set; }
+        public ConversationRole Role { get; set; } = ConversationRole.Member;
         public string? Nickname { get; set; }
         public DateTime? SeenAt { get; set; }
         public int LastSeenNumber { get; set; }

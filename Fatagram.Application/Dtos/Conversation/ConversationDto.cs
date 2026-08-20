@@ -26,5 +26,7 @@ namespace Fatagram.Application.Dtos.Conversation
         public string? Theme { get; set; }
         public DateTime? PinnedAt { get; set; }
         public bool IsPinned { get; set; }
+        public Fatagram.Domain.Enums.ConversationRole? MyRole { get; set; }
+        public ConversationCapabilitiesDto Capabilities { get; set; } = new();
     }
 }

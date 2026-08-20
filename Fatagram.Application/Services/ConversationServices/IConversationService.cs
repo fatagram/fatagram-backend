@@ -48,5 +48,6 @@ namespace Fatagram.Application.Services.ConversationServices
         );
 
         Task<Result<bool>> TogglePinAsync(Guid conversationId, Guid userId);
+        Task<Result> AddParticipantsAsync(Guid conversationId, IEnumerable<Guid> participantIds, Guid actorId);
     }
 }

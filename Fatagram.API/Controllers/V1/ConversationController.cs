@@ -269,5 +269,19 @@ namespace Fatagram.API.Controllers.V1
             var res = await _conversationService.TogglePinAsync(conversationId, GetCurrentUserId());
             return res.ToActionResult();
         }
+
+        [HttpPost("{conversationId}/participants")]
+        public async Task<IActionResult> AddParticipants(
+            Guid conversationId,
+            [FromBody] AddParticipantsDto request
+        )
+        {
+            var res = await _conversationService.AddParticipantsAsync(
+                conversationId,
+                request.ParticipantIds,
+                GetCurrentUserId()
+            );
+            return res.ToActionResult();
+        }
     }
 }

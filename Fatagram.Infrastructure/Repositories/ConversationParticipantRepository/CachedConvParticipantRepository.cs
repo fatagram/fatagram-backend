@@ -168,7 +168,16 @@ namespace Fatagram.Infrastructure.Repositories.ConversationParticipantRepository
             }
 
             if (messageSeq <= oldSeenSeq)
+            {
+                var unreadCount = Math.Max(0, currentLastSeq - oldSeenSeq);
+                var unreadKey = $"user:{userId}:unread_convs";
+                await _cacheService.HashSetAsync(
+                    unreadKey,
+                    conversationId.ToString(),
+                    unreadCount.ToString()
+                );
                 return;
+            }
 
             // Write directly to DB
             await _dbContext

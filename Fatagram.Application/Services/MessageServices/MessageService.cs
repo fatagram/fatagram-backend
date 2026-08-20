@@ -298,13 +298,13 @@ namespace Fatagram.Application.Services.MessageServices
             {
                 var participants = new List<ConversationParticipant>
                 {
-                    new() { UserId = senderId, LastSeenNumber = 1 },
+                    new() { UserId = senderId, Role = ConversationRole.Member, LastSeenNumber = 1 },
                 };
 
                 if (request.ReceiverId != senderId)
                 {
                     participants.Add(
-                        new() { UserId = request.ReceiverId ?? Guid.Empty, LastSeenNumber = 0 }
+                        new() { UserId = request.ReceiverId ?? Guid.Empty, Role = ConversationRole.Member, LastSeenNumber = 0 }
                     );
                 }
 
@@ -385,7 +385,12 @@ namespace Fatagram.Application.Services.MessageServices
                 || type == MessageType.ChangeGroupAvatar
                 || type == MessageType.RenameGroup
                 || type == MessageType.ChangeBackgroundUrl
-                || type == MessageType.ChangeTheme;
+                || type == MessageType.ChangeTheme
+                || type == MessageType.AddParticipant
+                || type == MessageType.RemoveParticipant
+                || type == MessageType.LeaveGroup
+                || type == MessageType.JoinGroup
+                || type == MessageType.DeleteGroup;
         }
     }
 }

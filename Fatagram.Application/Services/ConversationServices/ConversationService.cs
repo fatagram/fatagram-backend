@@ -32,6 +32,7 @@ namespace Fatagram.Application.Services.ConversationServices
         IUserRepository userRepository,
         IMessageRepository messageRepository,
         IMessageService messageService,
+        IPermissionRepository permissionRepository,
         ICacheService cacheService,
         IMapper mapper
     ) : IConversationService
@@ -42,6 +43,7 @@ namespace Fatagram.Application.Services.ConversationServices
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly IMessageService _messageService = messageService;
+        private readonly IPermissionRepository _permissionRepository = permissionRepository;
         private readonly ICacheService _cacheService = cacheService;
         private readonly IMapper _mapper = mapper;
 
@@ -89,6 +91,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 );
                 c.LastMessage = _mapper.Map<ResponseMessageDto>(lastM);
                 c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
+                await PopulateConversationMetaAsync(userId, c);
             }
 
             return Result<CursorResult<ConversationDto, DateTime>>.Create(
@@ -133,6 +136,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 );
                 c.LastMessage = _mapper.Map<ResponseMessageDto>(lastM);
                 c.LastMessageNumber = c.LastMessage?.SequenceNumber ?? 0;
+                await PopulateConversationMetaAsync(userId, c);
             }
 
             return Result<List<ConversationDto>>.Create(ResponseStatusCode.Success, res);
@@ -196,10 +200,10 @@ namespace Fatagram.Application.Services.ConversationServices
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
                 );
 
-            return Result<ConversationDto>.Create(
-                ResponseStatusCode.Success,
-                _mapper.Map<ConversationDto>(conversation)
-            );
+            var dto = _mapper.Map<ConversationDto>(conversation);
+            await PopulateConversationMetaAsync(userId, dto);
+
+            return Result<ConversationDto>.Create(ResponseStatusCode.Success, dto);
         }
 
         public async Task<Result<ConversationDto>> GetWithAsync(Guid userId, Guid targetUserId)
@@ -209,14 +213,73 @@ namespace Fatagram.Application.Services.ConversationServices
                 targetUserId
             );
 
-            return conversation == null
-                ? throw new NotFoundException(
+            if (conversation == null)
+            {
+                throw new NotFoundException(
                     new Error("CONVERSATION_NOT_FOUND", "Conversation not found")
-                )
-                : Result<ConversationDto>.Create(
-                    ResponseStatusCode.Success,
-                    _mapper.Map<ConversationDto>(conversation)
                 );
+            }
+
+            var dto = _mapper.Map<ConversationDto>(conversation);
+            await PopulateConversationMetaAsync(userId, dto);
+
+            return Result<ConversationDto>.Create(ResponseStatusCode.Success, dto);
+        }
+
+        private async Task PopulateConversationMetaAsync(Guid userId, ConversationDto dto)
+        {
+            var convId = dto.Id.ToGuid();
+            var participant = await _cpRepo.GetByUniqueAsync(
+                cp => cp.ConversationId == convId && cp.UserId == userId,
+                cp => cp
+            );
+
+            if (dto.MyLastSeenMessageSeq == null && participant != null)
+            {
+                dto.MyLastSeenMessageSeq = participant.LastSeenNumber;
+            }
+
+            var lastSeq = dto.LastMessageNumber > 0 ? dto.LastMessageNumber : (dto.LastMessage?.SequenceNumber ?? 0);
+            var mySeenSeq = dto.MyLastSeenMessageSeq ?? participant?.LastSeenNumber ?? 0;
+            dto.UnreadMessageCount = Math.Max(0, lastSeq - mySeenSeq);
+
+            dto.MyRole = participant?.Role ?? (dto.IsGroup ? ConversationRole.Member : ConversationRole.Owner);
+
+            var perms = (await _permissionRepository.GetPermissionNamesAsync(userId, convId)).ToHashSet();
+
+            if (!dto.IsGroup)
+            {
+                dto.Capabilities = new ConversationCapabilitiesDto
+                {
+                    CanSendMessage = true,
+                    CanChangeAvatar = false,
+                    CanChangeName = false,
+                    CanChangeTheme = true,
+                    CanChangeBackground = true,
+                    CanKickMember = false,
+                    CanAddMember = false,
+                    CanPinMessage = true,
+                    CanDeleteConversation = false,
+                };
+            }
+            else
+            {
+                var isOwner = dto.MyRole == ConversationRole.Owner || perms.Contains("conversation.owner");
+                var isAdmin = isOwner || dto.MyRole == ConversationRole.Admin || perms.Contains("conversation.admin");
+
+                dto.Capabilities = new ConversationCapabilitiesDto
+                {
+                    CanSendMessage = perms.Contains("conversation.send_message") || perms.Contains("conversation.member") || isAdmin,
+                    CanChangeAvatar = perms.Contains("conversation.settings.update") || isAdmin,
+                    CanChangeName = perms.Contains("conversation.settings.update") || isAdmin,
+                    CanChangeTheme = perms.Contains("conversation.settings.update") || isAdmin,
+                    CanChangeBackground = perms.Contains("conversation.settings.update") || isAdmin,
+                    CanKickMember = perms.Contains("conversation.member.kick") || perms.Contains("conversation.member.manage") || isAdmin,
+                    CanAddMember = perms.Contains("conversation.member.manage") || isAdmin,
+                    CanPinMessage = perms.Contains("conversation.message.pin") || isAdmin,
+                    CanDeleteConversation = perms.Contains("conversation.delete") || isOwner,
+                };
+            }
         }
 
         public async Task<Result<Guid>> CreateGroupAsync(
@@ -235,22 +298,31 @@ namespace Fatagram.Application.Services.ConversationServices
                     )
                 );
             }
+            var now = DateTime.UtcNow;
+            var participants = participantIds
+                .Where(id => id != creatorId)
+                .Distinct()
+                .Select(id => new ConversationParticipant
+                {
+                    UserId = id,
+                    Role = ConversationRole.Member,
+                    CreatedAt = now,
+                })
+                .Append(
+                    new ConversationParticipant
+                    {
+                        UserId = creatorId,
+                        Role = ConversationRole.Owner,
+                        CreatedAt = now,
+                    }
+                )
+                .ToList();
+
             var conversation = new Conversation
             {
                 IsGroup = true,
                 Name = name,
-                Participants =
-                [
-                    .. participantIds
-                        .Select(id => new ConversationParticipant { UserId = id })
-                        .Append(
-                            new ConversationParticipant
-                            {
-                                UserId = creatorId,
-                                Role = ConversationRole.Owner,
-                            }
-                        ),
-                ],
+                Participants = participants,
             };
             var res = await _conversationRepository.AddAsync(conversation);
             var creatorFullName =
@@ -258,7 +330,7 @@ namespace Fatagram.Application.Services.ConversationServices
                 ?? throw new AppException(new Error("CREATOR_NOT_FOUND", "Creator user not found"));
 
             await _messageService.SendMessageAsync(
-                null,
+                creatorId,
                 new CreateMessageRequest
                 {
                     ConversationId = res.Id,
@@ -319,6 +391,7 @@ namespace Fatagram.Application.Services.ConversationServices
                     Fullname = p.User!.FullName!,
                     AvatarUrl = p.User!.Avatar,
                     Nickname = p.Nickname,
+                    Role = p.Role,
                     CreatedAt = p.CreatedAt,
                 })
                 .ToList();
@@ -368,7 +441,7 @@ namespace Fatagram.Application.Services.ConversationServices
 
             // Send system message for avatar update
             var message = await _messageService.SendMessageAsync(
-                null,
+                userId,
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
@@ -417,7 +490,7 @@ namespace Fatagram.Application.Services.ConversationServices
             await _conversationRepository.UpdateAsync(existingConversation);
 
             await _messageService.SendMessageAsync(
-                null,
+                userId,
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
@@ -455,7 +528,7 @@ namespace Fatagram.Application.Services.ConversationServices
             await _conversationRepository.UpdateAsync(existingConversation);
 
             await _messageService.SendMessageAsync(
-                null,
+                userId,
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
@@ -489,7 +562,7 @@ namespace Fatagram.Application.Services.ConversationServices
             await _conversationRepository.UpdateAsync(existingConversation);
 
             await _messageService.SendMessageAsync(
-                null,
+                userId,
                 new CreateMessageRequest
                 {
                     ConversationId = conversationId,
@@ -563,6 +636,77 @@ namespace Fatagram.Application.Services.ConversationServices
         {
             var isPinned = await _cpRepo.TogglePinAsync(conversationId, userId);
             return Result<bool>.Create(ResponseStatusCode.Success, isPinned);
+        }
+
+        public async Task<Result> AddParticipantsAsync(
+            Guid conversationId,
+            IEnumerable<Guid> participantIds,
+            Guid actorId
+        )
+        {
+            var conversation = await _conversationRepository.GetByUniqueAsync(
+                c => c.Id == conversationId,
+                c => c,
+                q => q.Include(c => c.Participants).ThenInclude(p => p.User)
+            ) ?? throw new NotFoundException(new Error("CONVERSATION_NOT_FOUND", "Conversation not found"));
+
+            if (!conversation.IsGroup)
+            {
+                throw new AppException(new Error("INVALID_OPERATION", "Cannot add members to a direct message"));
+            }
+
+            var actor = await _userRepository.GetAsync(actorId, u => u)
+                ?? throw new NotFoundException(new Error("USER_NOT_FOUND", "User not found"));
+
+            var existingParticipantIds = conversation.Participants.Select(p => p.UserId).ToHashSet();
+            var newIds = participantIds.Where(id => !existingParticipantIds.Contains(id)).Distinct().ToList();
+
+            if (newIds.Count == 0)
+            {
+                return Result.Create(ResponseStatusCode.Success);
+            }
+
+            var newUsers = await _userRepository.GetAllAsync(
+                u => newIds.Contains(u.Id),
+                u => new { u.Id, u.FullName }
+            );
+
+            foreach (var newId in newIds)
+            {
+                var participant = new ConversationParticipant
+                {
+                    ConversationId = conversationId,
+                    UserId = newId,
+                    Role = ConversationRole.Member,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                conversation.Participants.Add(participant);
+            }
+
+            UpdateSearchTextInternal(conversation);
+            await _conversationRepository.UpdateAsync(conversation);
+
+            var addedUserNames = newUsers.Select(u => u.FullName ?? "Thành viên mới").ToList();
+            var addedUserNamesStr = string.Join(", ", addedUserNames);
+
+            await _messageService.SendMessageAsync(
+                actorId,
+                new CreateMessageRequest
+                {
+                    ConversationId = conversationId,
+                    Content = $"{actor.FullName} đã thêm {addedUserNamesStr} vào nhóm",
+                    Type = MessageType.AddParticipant,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        { "actorId", actorId.ToString() },
+                        { "actorName", actor.FullName! },
+                        { "addedUserIds", newIds.Select(id => id.ToString()).ToList() },
+                        { "addedUserNames", addedUserNames },
+                    },
+                }
+            );
+
+            return Result.Create(ResponseStatusCode.Success);
         }
     }
 }

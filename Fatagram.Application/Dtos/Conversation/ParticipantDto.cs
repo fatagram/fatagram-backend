@@ -24,5 +24,7 @@ namespace Fatagram.Application.Dtos.Conversation
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DateTime? CreatedAt { get; set; }
+
+        public Fatagram.Domain.Enums.ConversationRole Role { get; set; }
     }
 }

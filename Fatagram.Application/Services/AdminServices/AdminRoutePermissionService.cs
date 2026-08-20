@@ -46,6 +46,11 @@ namespace Fatagram.Application.Services.AdminServices
             if (entity is null)
                 throw new NotFoundException(new Error("ROUTE_PERMISSION_NOT_FOUND", "Route permission not found"));
 
+            if (entity.RoutePattern == "api/v1/admin/*" && dto.IsActive == false)
+            {
+                throw new BadRequestException(new Error("CANNOT_DISABLE_ADMIN_ROUTE", "Không thể vô hiệu hóa route bảo vệ Admin 'api/v1/admin/*'"));
+            }
+
             if (dto.HttpMethod is not null) entity.HttpMethod = dto.HttpMethod;
             if (dto.RoutePattern is not null) entity.RoutePattern = dto.RoutePattern;
             if (dto.PermissionName is not null) entity.PermissionName = dto.PermissionName;
@@ -60,6 +65,13 @@ namespace Fatagram.Application.Services.AdminServices
 
         public async Task<Result> DeleteAsync(Guid id, CancellationToken ct = default)
         {
+            var entity = await routePermissionRepository.GetByUniqueAsync<RoutePermission>(
+                e => e.Id == id, selector: null);
+            if (entity is not null && entity.RoutePattern == "api/v1/admin/*")
+            {
+                throw new BadRequestException(new Error("CANNOT_DELETE_ADMIN_ROUTE", "Không thể xóa route bảo vệ Admin 'api/v1/admin/*'"));
+            }
+
             await routePermissionRepository.DeleteAsync(id);
             await cacheService.RemoveAsync(RouteCacheKey);
             return Result.Create();

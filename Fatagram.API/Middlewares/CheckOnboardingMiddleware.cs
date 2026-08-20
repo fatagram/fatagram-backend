@@ -21,6 +21,7 @@ namespace Fatagram.API.Middlewares
             if (
                 metadata?.GetMetadata<NotRequireOnBoardingAttribute>() != null
                 || metadata?.GetMetadata<AuthorizeAttribute>() == null
+                || context.Request.Path.Value?.Contains("/admin") == true
             )
             {
                 await _next(context);

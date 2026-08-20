@@ -83,6 +83,12 @@ namespace Fatagram.Application.Services.AdminServices
             var perm = role.Permissions.FirstOrDefault(p => p.Id == permissionId);
             if (perm is not null)
             {
+                if (string.Equals(role.Name, "Admin", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(perm.Name, "admin.access", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new BadRequestException(new Error("CANNOT_REMOVE_ADMIN_ACCESS", "Không thể gỡ bỏ quyền 'admin.access' khỏi Role Admin"));
+                }
+
                 role.Permissions.Remove(perm);
                 await roleRepository.UpdateAsync(role);
                 await InvalidateRolePermissionCacheAsync(roleId);

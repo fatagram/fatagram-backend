@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Fatagram.Application.Dtos;
 using Fatagram.Application.Dtos.Filter;
